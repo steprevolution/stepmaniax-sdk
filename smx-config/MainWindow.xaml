@@ -1,0 +1,798 @@
+<Window x:Class="smx_config.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:clr="clr-namespace:System;assembly=mscorlib"
+        xmlns:controls="clr-namespace:smx_config"
+        mc:Ignorable="d"
+        x:Name="root"
+        Title="StepManiaX Platform Settings"
+        Icon="Resources/window icon.png"
+        Height="700" Width="525" ResizeMode="CanMinimize">
+    <Window.Resources>
+        <clr:String x:Key="HighPresetDescription" xml:space="preserve">Lighter steps will activate the arrows.
+Use if small children are having difficulty pressing the arrows.</clr:String>
+        <clr:String x:Key="NormalPresetDescription" xml:space="preserve">This is the recommended setting.</clr:String>
+        <clr:String x:Key="LowPresetDescription" xml:space="preserve">More force is required to activate the arrows.
+Use if the platform is too sensitive.</clr:String>
+
+        <FontFamily x:Key="WarningMarkFont">Segoe UI Black</FontFamily>
+
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <SolidColorBrush x:Key="DoubleSlider.Static.Foreground" Color="#FFE5E5E5"/>
+        <SolidColorBrush x:Key="DoubleSlider.Static.Background" Color="#FFF0F0F0"/>
+        <SolidColorBrush x:Key="DoubleSlider.Static.Border" Color="#FFACACAC"/>
+        <SolidColorBrush x:Key="DoubleSlider.MouseOver.Background" Color="#FFDCECFC"/>
+        <SolidColorBrush x:Key="DoubleSlider.MouseOver.Border" Color="#FF7Eb4EA"/>
+        <SolidColorBrush x:Key="DoubleSlider.Pressed.Background" Color="#FFDAECFC"/>
+        <SolidColorBrush x:Key="DoubleSlider.Pressed.Border" Color="#FF569DE5"/>
+
+        <Style x:Key="DoubleSliderThumb" TargetType="{x:Type Thumb}">
+            <Setter Property="Height" Value="18"/>
+            <Setter Property="Width" Value="11"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Grid HorizontalAlignment="Center" UseLayoutRounding="True" VerticalAlignment="Center"
+                                                  Height="18" Width="11">
+                            <Path x:Name="grip" Data="M 0,0 C0,0 11,0 11,0 11,0 11,18 11,18 11,18 0,18 0,18 0,18 0,0 0,0 z" Fill="{StaticResource DoubleSlider.Static.Background}" Stretch="Fill" SnapsToDevicePixels="True" Stroke="{StaticResource DoubleSlider.Static.Border}" StrokeThickness="1" UseLayoutRounding="True" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Fill" TargetName="grip" Value="{StaticResource DoubleSlider.MouseOver.Background}"/>
+                                <Setter Property="Stroke" TargetName="grip" Value="{StaticResource DoubleSlider.MouseOver.Border}"/>
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="true">
+                                <Setter Property="Fill" TargetName="grip" Value="{StaticResource DoubleSlider.Pressed.Background}"/>
+                                <Setter Property="Stroke" TargetName="grip" Value="{StaticResource DoubleSlider.Pressed.Border}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ControlTemplate x:Key="DoubleSliderMiddleThumb" TargetType="{x:Type Thumb}">
+            <Grid x:Name="grip" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+                <Border x:Name="Border" Background="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"/>
+                <Border x:Name="Fill" Background="{TemplateBinding Background}" Margin="1"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter Property="Background" TargetName="Fill" Value="{StaticResource DoubleSlider.MouseOver.Background}"/>
+                    <Setter Property="Background" TargetName="Border" Value="{StaticResource DoubleSlider.MouseOver.Border}"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <Style x:Key="DoubleSliderRepeatButton" TargetType="{x:Type RepeatButton}">
+            <Setter Property="OverridesDefaultStyle" Value="true"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Focusable" Value="false"/>
+            <Setter Property="IsTabStop" Value="false"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RepeatButton}">
+                        <Rectangle Fill="#00FFFFFF" Height="{TemplateBinding Height}" Width="{TemplateBinding Width}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DoubleSlider" TargetType="{x:Type controls:DoubleSlider}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:DoubleSlider}">
+                        <Grid>
+                            <!-- The underlying bar: -->
+                            <Border BorderBrush="#FFD6D6D6"
+                                BorderThickness="1"
+                                Background="#FFE7EAEA"
+                                Height="4.0" Margin="5,0" VerticalAlignment="center"
+                            />
+
+                            <!-- These hidden buttons handle moving the slider when clicking outside of a handle. -->
+                            <RepeatButton x:Name="PART_DecreaseButton" Style="{StaticResource DoubleSliderRepeatButton}"/>
+                            <RepeatButton x:Name="PART_IncreaseButton" Style="{StaticResource DoubleSliderRepeatButton}"/>
+
+                            <Thumb x:Name="PART_UpperThumb" Style="{StaticResource DoubleSliderThumb}" />
+                            <Thumb x:Name="PART_LowerThumb" Style="{StaticResource DoubleSliderThumb}" />
+
+                            <!-- The connecting bar: -->
+                            <Thumb x:Name="PART_Middle"
+                                Template="{StaticResource DoubleSliderMiddleThumb}"
+                                Width="Auto"
+                                Height="10"
+                                Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                                Stylus.IsPressAndHoldEnabled="false"
+
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                            />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Visibility" TargetName="PART_UpperThumb" Value="Hidden"/>
+                                <Setter Property="Visibility" TargetName="PART_LowerThumb" Value="Hidden"/>
+                                <Setter Property="Visibility" TargetName="PART_Middle" Value="Hidden"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:ThresholdSlider}">
+            <Setter Property="Focusable" Value="false"/>
+            <Setter Property="AdvancedModeEnabled" Value="{Binding ElementName=AdvancedModeEnabledCheckbox, Path=AdvancedModeEnabled, Mode=OneWay}"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:ThresholdSlider}">
+                        <StackPanel Margin="0,0,0,0" Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Image 
+                                Margin="0,0,0,0"
+                                Height="28" Width="28"
+                                HorizontalAlignment="Left" VerticalAlignment="Top"
+                                Source="{TemplateBinding Icon}"
+                            />
+                            <Label Margin="5,0,0,0" x:Name="LowerValue" Content="0" Width="30" HorizontalContentAlignment="Right"
+                                   HorizontalAlignment="Left" VerticalAlignment="Top"
+                            />
+                            <controls:DoubleSlider x:Name="Slider"
+                                Margin="32,5,0,0"
+                                Minimum="20" Maximum="200" MinimumDistance="5"
+                                LowerValue="20" UpperValue="35"
+                                VerticalAlignment="Top"
+                                Width="240"
+                                Focusable="False"
+                                Style="{DynamicResource DoubleSlider}"
+                            />
+                            <Label Margin="11,0,0,0" x:Name="UpperValue" Content="0" Width="30" HorizontalContentAlignment="Center"
+                                   HorizontalAlignment="Left" VerticalAlignment="Top"
+                            />
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:PresetButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PresetButton}">
+                        <Button x:Name="PART_Button" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <Label x:Name="Checkbox" Padding="0" VerticalAlignment="Center">✔</Label>
+                                <Label Content="{TemplateBinding Label}"></Label>
+                            </StackPanel>
+                        </Button>
+
+                        <ControlTemplate.Triggers>
+                            <!-- Show the checkmark if the configuration matches this preset. -->
+                            <Trigger Property="Selected" Value="False">
+                                <Setter Property="Visibility" TargetName="Checkbox" Value="Collapsed" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:PresetWidget}">
+            <Setter Property="Focusable" Value="false" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PresetWidget}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <controls:PresetButton
+                                Width="70"
+                                Padding="5,2" Margin="5"
+                                Label="{TemplateBinding Label}"
+                                Type="{TemplateBinding Type}"
+                            />
+
+                            <TextBlock Width="350" VerticalAlignment="Center"
+                                   TextAlignment="Center" xml:space="preserve" Text="{TemplateBinding Description}" />
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Change this to any pure hue i.e. no more than 2 rgb components set and at least 1 set to FF -->
+        <Color x:Key="CurrentColor">#00FF00</Color>
+
+        <!-- http://stackoverflow.com/a/32514853/136829 -->
+        <LinearGradientBrush x:Key="HueBrush" StartPoint="0,0" EndPoint="1,0">
+            <LinearGradientBrush.GradientStops>
+                <GradientStop Color="#FF0000" Offset="0.000" />
+                <GradientStop Color="#FFFF00" Offset="0.167" />
+                <GradientStop Color="#00FF00" Offset="0.333" />
+                <GradientStop Color="#00FFFF" Offset="0.5" />
+                <GradientStop Color="#0000FF" Offset="0.667" />
+                <GradientStop Color="#FF00FF" Offset="0.833" />
+                <GradientStop Color="#FF0000" Offset="1.000" />
+            </LinearGradientBrush.GradientStops>
+        </LinearGradientBrush>
+
+        <Style x:Key="PanelButton" TargetType="{x:Type controls:PanelButton}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Width" Value="25" />
+
+            <Setter Property="FocusVisualStyle">
+                <Setter.Value>
+                    <Style>
+                        <Setter Property="Control.Template">
+                            <Setter.Value>
+                                <ControlTemplate>
+                                    <Rectangle Margin="2" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background" Value="#FFDDDDDD"/>
+            <Setter Property="BorderBrush" Value="#FF707070"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PanelButton}">
+                        <Border x:Name="border" BorderBrush="#000000" BorderThickness="1" SnapsToDevicePixels="true">
+                            <ContentPresenter
+                                SnapsToDevicePixels="true"
+                                Focusable="False"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                            />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Background" TargetName="border" Value="#FFFF0000"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Background" TargetName="border" Value="#FF00FF00"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="#FFC4E5F6"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF2C628B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:PanelColorButton}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Width" Value="25" />
+            <Setter Property="AllowDrop" Value="True" />
+
+            <Setter Property="Focusable" Value="false"/>
+            <Setter Property="Background" Value="#FFDDDDDD"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="BorderBrush" Value="#FF707070"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PanelColorButton}">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding PanelColor}"
+                                BorderBrush="#000000" BorderThickness="1" SnapsToDevicePixels="true">
+                            <ContentPresenter
+                                SnapsToDevicePixels="true"
+                                Focusable="False"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                            />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="true">
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF000000"/>
+                                <Setter Property="BorderThickness" TargetName="border" Value="2"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="false">
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF808080"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:ColorPicker}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:ColorPicker}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Label Content="Step color" Width="80" HorizontalContentAlignment="Center" />
+                                <Grid Width="400" Height="20">
+                                    <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <Rectangle DockPanel.Dock="Left" Fill="#FFFFFFFF" Width="25"
+                                            Stroke="Black" StrokeThickness="1" SnapsToDevicePixels="True" />
+                                        <Rectangle DockPanel.Dock="Left" Fill="{DynamicResource HueBrush}"
+                                            Stroke="Black" StrokeThickness="1" SnapsToDevicePixels="True" />
+                                    </DockPanel>
+                                    <controls:ColorPickerSlider x:Name="HueSlider" Minimum="-14" Maximum="359"
+                                            Focusable="false"
+                                            VerticalAlignment="Center" SmallChange="1" LargeChange="10"
+                                            Margin="7 0 0 0"
+                                            IsMoveToPointEnabled="True" IsSnapToTickEnabled="True"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:PanelSelector}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PanelSelector}">
+
+                        <Grid Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,-1">
+                            <controls:PanelButton controls:PanelButton.Button="7" x:Name="EnablePanel7" Content="↖" Style="{StaticResource PanelButton}" Margin="-60,-50,0,0" />
+                            <controls:PanelButton controls:PanelButton.Button="8" x:Name="EnablePanel8" Content="↑" Style="{StaticResource PanelButton}" Margin="0,-50,0,0" />
+                            <controls:PanelButton controls:PanelButton.Button="9" x:Name="EnablePanel9" Content="↗" Style="{StaticResource PanelButton}" Margin="60,-50,0,0" />
+
+                            <controls:PanelButton controls:PanelButton.Button="4" x:Name="EnablePanel4" Content="←" Style="{StaticResource PanelButton}" Margin="-60,0,0,0" />
+                            <controls:PanelButton controls:PanelButton.Button="5" x:Name="EnablePanel5" Content="☐" Style="{StaticResource PanelButton}" Margin="0,0,0,0" />
+                            <controls:PanelButton controls:PanelButton.Button="6" x:Name="EnablePanel6" Content="→" Style="{StaticResource PanelButton}" Margin="60,0,0,0" />
+
+                            <controls:PanelButton controls:PanelButton.Button="1" x:Name="EnablePanel1" Content="↙" Style="{StaticResource PanelButton}" Margin="-60,50,0,0" />
+                            <controls:PanelButton controls:PanelButton.Button="2" x:Name="EnablePanel2" Content="↓" Style="{StaticResource PanelButton}" Margin="0,50,0,0" />
+                            <controls:PanelButton controls:PanelButton.Button="3" x:Name="EnablePanel3" Content="↘" Style="{StaticResource PanelButton}" Margin="60,50,0,0" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:DiagnosticsPanelButton}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Width" Value="50" />
+            <Setter Property="Height" Value="50" />
+
+            <Setter Property="Focusable" Value="false"/>
+            <Setter Property="Background" Value="#FFDDDDDD"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="BorderBrush" Value="#FF707070"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:DiagnosticsPanelButton}">
+                        <Border x:Name="border"
+                                Background="#FFA0A0A0"
+                                BorderBrush="#000000" BorderThickness="1" SnapsToDevicePixels="true">
+                            <Grid
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                            >
+                                <TextBlock
+                                    x:Name="WarningIcon"
+                                    Text="!"
+                                    Visibility="{TemplateBinding Warning, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    Foreground="#FFFF4040"
+                                    Margin="0,-5,0,0"
+                                    FontSize="40"
+                                    FontFamily="{StaticResource WarningMarkFont}"
+                                />
+                                <ContentPresenter
+                                    SnapsToDevicePixels="true"
+                                    Focusable="False"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                />
+                            </Grid>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <!-- Highlight on press: -->
+                            <Trigger Property="Pressed" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="#FF20FF20"/>
+                            </Trigger>
+
+                            <!-- Show which panel is selected for displaying diagnostics: -->
+                            <Trigger Property="IsSelected" Value="true">
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF000000"/>
+                                <Setter Property="BorderThickness" TargetName="border" Value="2"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="false">
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF808080"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:LevelBar}">
+            <Setter Property="Width" Value="35" />
+            <Setter Property="Height" Value="200" />
+            <Setter Property="Focusable" Value="false"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:LevelBar}">
+                        <Grid>
+                            <!-- Black backing: -->
+                            <Rectangle
+                                x:Name="Back"
+                                Width="35" Height="200" Fill="#FF000000"
+                                   HorizontalAlignment="Center"
+                                   Stroke="Black" StrokeThickness="1" 
+                            />
+
+                            <!-- Filled portion: -->
+                            <Rectangle
+                                x:Name="Fill"
+                                Margin="0,0,0,1"
+                                Width="33" Height="100" Fill="#FF00FF00"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                            />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+        <Style TargetType="{x:Type controls:DiagnosticsControl}">
+            <Setter Property="Focusable" Value="false"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:DiagnosticsControl}">
+                        <Grid Background="#FFE5E5E5">
+                            <TextBlock HorizontalAlignment="Center"
+                                   xml:space="preserve" FontSize="16" Margin="0,15,0,0">Platform diagnostics</TextBlock>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                <Grid x:Name="P1Diagnostics"
+                                      Margin="0,50,0,0"
+                                    Background="#FFE5E5E5" Width="200" Height="200">
+                                    <controls:DiagnosticsPanelButton Panel="0" Margin="-120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="1" Margin="0,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="2" Margin="120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                                    <controls:DiagnosticsPanelButton Panel="3" Margin="-120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="4" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="5" Margin="120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                                    <controls:DiagnosticsPanelButton Panel="6" Margin="-120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="7" Margin="0,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="8" Margin="120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                </Grid>
+
+                                <Grid x:Name="P2Diagnostics" Margin="0,50,0,0"
+                                    Background="#FFE5E5E5" Width="200" Height="200"
+                                      HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    <controls:DiagnosticsPanelButton Panel="9" Margin="-120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="10" Margin="0,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="11" Margin="120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                                    <controls:DiagnosticsPanelButton Panel="12" Margin="-120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="13" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="14" Margin="120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                                    <controls:DiagnosticsPanelButton Panel="15" Margin="-120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="16" Margin="0,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton Panel="17" Margin="120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Vertical"
+                                        Margin="50,300,0,0"
+                                        Width="200"
+                                        HorizontalAlignment="Left" VerticalAlignment="Top">
+                                <DockPanel x:Name="SensorBarPanel" HorizontalAlignment="Center">
+                                    <ComboBox
+                                        x:Name="DiagnosticMode" DockPanel.Dock="Top"
+                                        Margin="0,0,0,5"
+                                        HorizontalAlignment="Left" SelectedIndex="0" Width="120">
+                                        <ListBoxItem Content="Calibrated values"/>
+                                        <ListBoxItem Content="Raw values"/>
+                                        <ListBoxItem Content="Noise"/>
+                                        <ListBoxItem Content="Tare"/>
+                                    </ComboBox>
+
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                                        <controls:LevelBar x:Name="SensorBar1" Margin="0,0,5,0"/>
+                                        <Label x:Name="SensorBarLevel1" HorizontalAlignment="Center" Content="xxx"/>
+                                    </StackPanel>
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                                        <controls:LevelBar x:Name="SensorBar2" Margin="0,0,5,0"/>
+                                        <Label x:Name="SensorBarLevel2" HorizontalAlignment="Center" Content="xxx"/>
+                                    </StackPanel>
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                                        <controls:LevelBar x:Name="SensorBar3" Margin="0,0,5,0"/>
+                                        <Label x:Name="SensorBarLevel3" HorizontalAlignment="Center" Content="xxx"/>
+                                    </StackPanel>
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                                        <controls:LevelBar x:Name="SensorBar4" Margin="0,0,0,0"/>
+                                        <Label x:Name="SensorBarLevel4" HorizontalAlignment="Center" Content="xxx"/>
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <DockPanel
+                                    x:Name="NoResponseFromPanel"
+                                    Width="200"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,-20,0,0"
+                                >
+                                    <TextBlock
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                        Foreground="#FFFF0000" FontSize="20"
+                                        FontFamily="{StaticResource WarningMarkFont}"
+                                        Text="!"
+                                    />
+
+                                    <TextBlock
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        TextWrapping="Wrap" TextAlignment="Center"
+                                        Text="No data received from this panel."
+                                    />
+                                </DockPanel>
+
+                                <DockPanel
+                                    x:Name="NoResponseFromSensors"
+                                    Width="200"
+                                >
+                                    <TextBlock
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                        Foreground="#FFFF0000" FontSize="20"
+                                        FontFamily="{StaticResource WarningMarkFont}"
+                                        Text="!"
+                                    />
+
+                                    <TextBlock
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        TextWrapping="Wrap" TextAlignment="Center"
+                                        Text="Some sensors on this panel aren't responding correctly."
+                                    />
+                                </DockPanel>
+                                <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Left" VerticalAlignment="Top"
+                                    Margin="10,10,0,0"
+                                >
+                                    <Button
+                                        x:Name="Recalibrate" Content="Recalibrate"
+                                        HorizontalAlignment="Left" VerticalAlignment="Top"
+                                        Padding="8,4"
+                                    />
+                                    <Button
+                                        x:Name="LightAll" Content="Light panels"
+                                        HorizontalAlignment="Left" VerticalAlignment="Top"
+                                        Padding="8,4"
+                                        Margin="10,0,0,0"
+                                    />
+                                </StackPanel>
+
+                            </StackPanel>
+
+                            <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Left" VerticalAlignment="Top"
+                                Margin="300,350,0,0"
+                            >
+                                <TextBlock Text="Current DIP"/>
+                                <controls:FrameImage
+                                    Image="Resources/DIP.png"
+                                    x:Name="CurrentDIP"
+                                    FramesX="16"
+                                    Frame="1"
+                                    Width="60"
+                                    Height="100"
+                                />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Vertical"
+                                HorizontalAlignment="Left" VerticalAlignment="Top"
+                                Margin="400,350,0,0"
+                            >
+                                <TextBlock Text="Expected DIP"/>
+                                <controls:FrameImage
+                                    Image="Resources/DIP.png"
+                                    x:Name="ExpectedDIP"
+                                    FramesX="16"
+                                    Frame="1"
+                                    Width="60"
+                                    Height="100"
+                                />
+                            </StackPanel>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- P1, P2 labels in the top right: -->
+        <Style x:Key="EnabledIcon" TargetType="Label">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="true">
+                    <Setter Property="Foreground" Value="#000000"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="false">
+                    <Setter Property="Foreground" Value="#A0A0A0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid>
+        <!-- A list of which pads are connected, overlapping the tab bar in the top right. -->
+        <Grid x:Name="ConnectedPads" Background="#DDD">
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal">
+                <Label Content="Connected:" FontSize="10"/>
+                <Label x:Name="P1Connected" Style="{StaticResource EnabledIcon}" Content="P1" Margin="1,0,4,0" FontSize="10"/>
+                <Label x:Name="P2Connected" Style="{StaticResource EnabledIcon}" Content="P2" Margin="0,0,4,0" FontSize="10"/>
+            </StackPanel>
+        </Grid>
+        
+        <Grid x:Name="Searching" Visibility="Hidden"  Background="#DDD">
+            <Label Content="Searching for controller..."
+                   HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="33.333"/>
+        </Grid>
+        <TabControl x:Name="Main" Margin="0,0,0,0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <TabItem Header="Settings">
+                <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
+
+                    <StackPanel Margin="0,0,0,0" VerticalAlignment="Top">
+                        <TextBlock HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
+                                   TextAlignment="Center"
+                                   xml:space="preserve" FontSize="16">Panel sensitivity</TextBlock>
+
+                        <controls:PresetWidget Type="high" Label="High"
+                            Description="{StaticResource HighPresetDescription}"
+                            Margin="0,5,0,10"
+                        />
+                        <controls:PresetWidget controls:PresetWidget.Type="normal" Label="Medium"
+                            Description="{StaticResource NormalPresetDescription}"
+                            Margin="0,5,0,10"
+                        />
+                        <controls:PresetWidget controls:PresetWidget.Type="low" Label="Low"
+                            Description="{StaticResource LowPresetDescription}"
+                            Margin="0,5,0,10"
+                        />
+
+                        <Separator Margin="0,10,0,4" />
+
+                        <TextBlock HorizontalAlignment="Center" Margin="0,15,0,0" VerticalAlignment="Top"
+                                   TextAlignment="Center"
+                                   xml:space="preserve" FontSize="16">Panel colors</TextBlock>
+
+                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
+                                   TextAlignment="Center"
+                                   xml:space="preserve"
+>Set the color each arrow lights when pressed.</TextBlock>
+
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                            
+                        <!-- The duplication here could be factored out, but with WPF it's not really worth it: -->
+                        <Grid x:Name="PanelColorP1" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <controls:PanelColorButton Panel="0" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="1" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="2" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+
+                            <controls:PanelColorButton Panel="3" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="4" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="5" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+
+                            <controls:PanelColorButton Panel="6" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="7" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="8" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                        </Grid>
+
+                        <Grid x:Name="PanelColorP2" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <controls:PanelColorButton Panel="9" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="10" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="11" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+
+                            <controls:PanelColorButton Panel="12" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="13" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="14" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+
+                            <controls:PanelColorButton Panel="15" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="16" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                            <controls:PanelColorButton Panel="17" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                        </Grid>
+                        </StackPanel>
+
+                        <controls:ColorPicker
+                            x:Name="AutoLightsColor" Focusable="false"
+                            controls:ColorPicker.SelectedPanel="0"
+                        />
+
+                        <Button x:Name="SetAllPanelsToCurrentColor" Content="Set all panels to this color" HorizontalAlignment="Center" Padding="6,2" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Sensitivity">
+                <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
+                    <DockPanel Margin="0,0,0,0" VerticalAlignment="Stretch">
+                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
+                                   TextAlignment="Center"
+                                   xml:space="preserve" FontSize="16">Custom sensitivity</TextBlock>
+                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,0,0,10" VerticalAlignment="Top"
+                                   xml:space="preserve"
+                                   TextAlignment="Center"
+>Set the force required to trigger each arrow.</TextBlock>
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-left"    controls:ThresholdSlider.Icon="Resources/pad_up_left.png"    Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up"         controls:ThresholdSlider.Icon="Resources/pad_up.png"         Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-right"   controls:ThresholdSlider.Icon="Resources/pad_up_right.png"   Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="left"       controls:ThresholdSlider.Icon="Resources/pad_left.png"       Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="center"     controls:ThresholdSlider.Icon="Resources/pad_center.png"     Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="right"      controls:ThresholdSlider.Icon="Resources/pad_right.png"      Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="down-left"  controls:ThresholdSlider.Icon="Resources/pad_down_left.png"  Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="down"       controls:ThresholdSlider.Icon="Resources/pad_down.png"       Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="down-right" controls:ThresholdSlider.Icon="Resources/pad_down_right.png" Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="cardinal"   controls:ThresholdSlider.Icon="Resources/pad_cardinal.png"   Margin="0,8,0,0" />
+                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="corner"     controls:ThresholdSlider.Icon="Resources/pad_diagonal.png"   Margin="0,8,0,0" />
+                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,25,0,0" VerticalAlignment="Top"
+                                   xml:space="preserve"
+                                   TextAlignment="Center"
+>Each slider sets the amount of weight necessary for
+a panel to activate and deactivate.
+                            
+A panel will activate when it reaches the right side of the
+slider, and deactivate when it reaches the left side of the slider.</TextBlock>
+
+                        <DockPanel DockPanel.Dock="Bottom"
+                                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="0,0,5,0">
+                            <Label Content="Presets:" VerticalAlignment="Center" />
+                            <controls:PresetButton Width="70" Padding="5,2" Margin="5" Label="Low" Type="low" />
+                            <controls:PresetButton Width="70" Padding="5,2" Margin="5" Label="Normal" Type="normal" />
+                            <controls:PresetButton Width="70" Padding="5,2" Margin="5" Label="High" Type="high" />
+                            <controls:AdvancedThresholdViewCheckbox
+                                x:Name="AdvancedModeEnabledCheckbox"
+                                DockPanel.Dock="Right" Content="Advanced view"
+                                VerticalAlignment="Center" HorizontalAlignment="Right"
+                                IsChecked="{Binding Path=AdvancedModeEnabled, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
+                            />
+                        </DockPanel>
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Advanced">
+                <StackPanel Background="#FFE5E5E5">
+                    <TextBlock HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
+                                   TextAlignment="Center"
+                                   xml:space="preserve" FontSize="16">Active panels</TextBlock>
+                    <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,0,0,0" TextAlignment="Center">Select which directions have sensors, and deselect panels that aren't in use.
+                        
+Input will be disabled from deselected panels.</TextBlock>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <controls:PanelSelector Focusable="false" />
+                    </StackPanel>
+
+                    <Separator Margin="0,10,0,10" />
+                    <TextBlock HorizontalAlignment="Center"
+                                   xml:space="preserve" FontSize="16">Reset all settings</TextBlock>
+                    <Button Content="Factory reset" Width="140" Margin="0 10 0 0" Padding="0 4" Click="FactoryReset_Click"/>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Diagnostics">
+                <StackPanel Background="#FFE5E5E5">
+                    <controls:DiagnosticsControl x:Name="Diagnostics" />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</Window>

@@ -1,0 +1,157 @@
+<html>
+<link rel=stylesheet href=style.css>
+<link rel="icon" href="icon.png" type="image/png"> 
+
+<img src=logo.png style="width: 80%; display: block; margin-left: auto; margin-right: auto;">
+
+<h2>Introduction to the StepManiaX SDK</h2>
+
+The StepManiaX SDK supports C++ development for the <a href=https://stepmaniax.com/>StepManiaX dance platform</a>.
+
+<h2>Usage</h2>
+
+You can either build the solution and link the resulting SMX.dll to your application,
+or import the source project and add it to your Visual Studio solution.  The SDK
+interface is <code>SMX.h</code>.
+<p>
+See <code>sample</code> for a sample application.
+<p>
+Up to two controllers are supported.  <code>SMX_GetInfo</code> can be used to check which
+controllers are connected.  Each <code>pad</code> argument to API calls can be 0 for the
+player 1 pad, or 1 for the player 2 pad.
+
+<h2>HID support</h2>
+
+The platform can be used as a regular USB HID input device, which works in any game
+that supports input remapping.
+<p>
+However, applications using this SDK to control the panels directly should ignore the
+HID interface, and instead use <code>SMX_GetInputState</code> to retrieve the input state.
+
+<h2>Platform lights</h2>
+
+The platform can have up to nine panels.  Each panel has a grid of 4x4 RGB LEDs, which can
+be individually controlled at up to 30 FPS.
+<p>
+See <code>SMX_SetLights</code>.
+
+<h2>Platform configuration</h2>
+
+The platform configuration can be read and modified using SMX_GetConfig and SMX_SetConfig.
+Most of the platform configuration doesn't need to be accessed by applications, since
+users can use the SMXConfig application to manage their platform.
+<p>
+<ul>
+    <li>
+    <b>enabledSensors</b>
+    <p>
+    Each platform can have up to nine panels in any configuration, but most devices have
+    a smaller number of panels installed.  If an application wants to adapt its UI to the
+    user's panel configuration, see enabledSensors to detect which sensors are enabled.
+    <p>
+    Each panel has four sensors, and if a panel is disabled, all four of its panels will be
+    disabled.  Disabling individual sensors is possible, but removing individual sensors
+    reduces the performance of the pad and isn't recommended.
+    <p>
+    Note that this indicates which panels the player is using for input.  Other panels may
+    still have lights support, and the application should always send lights data for all
+    possible panels even if it's not being used for input.
+    </li>
+</ul>
+
+<h2>Reference</h2>
+
+<h3 class=ref>void SMX_Start(SMXUpdateCallback UpdateCallback, void *pUser);</h3>
+
+Initialize, and start searching for devices.
+<p>
+UpdateCallback will be called when something happens: connection or disconnection, inputs
+changed, configuration updated, test data updated, etc.  It doesn't specify what's changed,
+and the user should check all state that it's interested in.
+<p>
+This is called asynchronously from a helper thread, so the receiver must be thread-safe.
+
+<h3 class=ref>void SMX_Stop();</h3>
+
+Shut down and disconnect from all devices.  This will wait for any user callbacks to complete,
+and no user callbacks will be called after this returns.
+
+<h3 class=ref>void SMX_SetLogCallback(SMXLogCallback callback);</h3>
+
+Set a function to receive diagnostic logs.  By default, logs are written to stdout.
+This can be called before SMX_Start, so it affects any logs sent during initialization.
+
+<h3 class=ref>void SMX_GetInfo(int pad, SMXInfo *info);</h3>
+
+Get info about a pad.  Use this to detect which pads are currently connected.
+
+<h3 class=ref>uint16_t SMX_GetInputState(int pad);</h3>
+
+Get a mask of the currently pressed panels.
+
+<h3 class=ref>void SMX_SetLights(const char lightsData[864]);</h3>
+Update the lights.  Both pads are always updated together.  lightsData is a list of 8-bit RGB
+colors, one for each LED.  Each panel has lights in the following order:
+<p>
+<pre>
+0123
+4567
+89AB
+CDEF
+</pre>
+<p>
+Panels are in the following order:
+<p>
+<pre>
+012 9AB
+345 CDE
+678 F01
+</pre>
+
+With 18 panels, 16 LEDs per panel and 3 bytes per LED, each light update has 864 bytes of data.
+<p>
+Lights will update at up to 30 FPS.  If lights data is sent more quickly, a best effort will be
+made to send the most recent lights data available, but the panels won't update more quickly.
+<p>
+The panels will return to automatic lighting if no lights are received for a while, so applications
+controlling lights should send light updates continually, even if the lights aren't changing.
+
+<h3 class=ref>void SMX_ReenableAutoLights();</h3>
+
+By default, the panels light automatically when stepped on.  If a lights command is sent by
+the application, this stops happening to allow the application to fully control lighting.
+If no lights update is received for a few seconds, automatic lighting is reenabled by the
+panels.
+<p>
+<code>SMX_ReenableAutoLights</code> can be called to immediately reenable auto-lighting, without waiting
+for the timeout period to elapse.  Games don't need to call this, since the panels will return
+to auto-lighting mode automatically after a brief period of no updates.
+
+<h3 class=ref>void SMX_GetConfig(int pad, SMXConfig *config);</h3>
+
+Get the current controller's configuration.
+
+<h3 class=ref>void SMX_SetConfig(int pad, const SMXConfig *config);</h3>
+
+Update the current controller's configuration.  This doesn't block, and the new configuration will
+be sent in the background.  SMX_GetConfig will return the new configuration as soon as this call
+returns, without waiting for it to actually be sent to the controller.
+
+<h3 class=ref>void SMX_FactoryReset(int pad);</h3>
+
+Reset a pad to its original configuration.
+
+<h3 class=ref>void SMX_ForceRecalibration(int pad);</h3>
+
+Request an immediate panel recalibration.  This is normally not necessary, but can be helpful
+for diagnostics.
+
+<h3 class=ref>
+    void SMX_SetTestMode(int pad, SensorTestMode mode);
+    <br>
+    bool SMX_GetTestData(int pad, SMXSensorTestModeData *data);
+</h3>
+
+Set a panel test mode and request test data.  This is used by the configuration tool.
+
+
