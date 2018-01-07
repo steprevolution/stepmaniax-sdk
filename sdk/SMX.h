@@ -79,7 +79,10 @@ extern "C" SMX_API void SMX_SetLights(const char lightsData[864]);
 extern "C" SMX_API void SMX_ReenableAutoLights();
 
 // Get the current controller's configuration.
-extern "C" SMX_API void SMX_GetConfig(int pad, SMXConfig *config);
+//
+// Return true if a configuration is available.  If false is returned, no panel is connected
+// and no data will be set.
+extern "C" SMX_API bool SMX_GetConfig(int pad, SMXConfig *config);
 
 // Update the current controller's configuration.  This doesn't block, and the new configuration will
 // be sent in the background.  SMX_GetConfig will return the new configuration as soon as this call

@@ -53,7 +53,7 @@ SMX_API void SMX_SetLogCallback(SMXLogCallback callback)
     });
 }
 
-SMX_API void SMX_GetConfig(int pad, SMXConfig *config) { g_pSMX->GetDevice(pad)->GetConfig(*config); }
+SMX_API bool SMX_GetConfig(int pad, SMXConfig *config) { return g_pSMX->GetDevice(pad)->GetConfig(*config); }
 SMX_API void SMX_SetConfig(int pad, const SMXConfig *config) { g_pSMX->GetDevice(pad)->SetConfig(*config); }
 SMX_API void SMX_GetInfo(int pad, SMXInfo *info) { g_pSMX->GetDevice(pad)->GetInfo(*info); }
 SMX_API uint16_t SMX_GetInputState(int pad) { return g_pSMX->GetDevice(pad)->GetInputState(); }
