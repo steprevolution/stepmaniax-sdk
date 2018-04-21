@@ -103,6 +103,7 @@
     <Compile Include="DiagnosticsWidgets.cs" />
     <Compile Include="DoubleSlider.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="SMXJSON.cs" />
     <Compile Include="SMX.cs" />
     <Compile Include="Widgets.cs" />
     <Page Include="MainWindow.xaml">

@@ -82,5 +82,56 @@ namespace smx_config
                 SMX.SMX.FactoryReset(pad);
             CurrentSMXDevice.singleton.FireConfigurationChanged(null);
         }
+
+        private void ExportSettings(object sender, RoutedEventArgs e)
+        {
+            // Save the current thresholds on the first available pad as a preset.
+            for(int pad = 0; pad < 2; ++pad)
+            {
+                SMX.SMXConfig config;
+                if(!SMX.SMX.GetConfig(pad, out config))
+                    continue;
+
+                string json = SMXHelpers.ExportSettingsToJSON(config);
+
+                Microsoft.Win32.SaveFileDialog dialog = new Microsoft.Win32.SaveFileDialog();
+                dialog.FileName = "StepManiaX settings";
+                dialog.DefaultExt = ".smxcfg";
+                dialog.Filter = "StepManiaX settings (.smxcfg)|*.smxcfg";
+                bool? result = dialog.ShowDialog();
+                if(result == null || !(bool) result)
+                    return;
+
+                System.IO.File.WriteAllText(dialog.FileName, json);
+                return;
+            }
+        }
+
+        private void ImportSettings(object sender, RoutedEventArgs e)
+        {
+            // Prompt for a file to read.
+            Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
+            dialog.FileName = "StepManiaX settings";
+            dialog.DefaultExt = ".smxcfg";
+            dialog.Filter = "StepManiaX settings (.smxcfg)|*.smxcfg";
+            bool? result = dialog.ShowDialog();
+            if(result == null || !(bool) result)
+                return;
+
+            string json = Helpers.ReadFile(dialog.FileName);
+
+            // Apply settings from the file to all connected pads.
+            for(int pad = 0; pad < 2; ++pad)
+            {
+                SMX.SMXConfig config;
+                if(!SMX.SMX.GetConfig(pad, out config))
+                    continue;
+
+                SMXHelpers.ImportSettingsFromJSON(json, ref config);
+                SMX.SMX.SetConfig(pad, config);
+            }
+
+            CurrentSMXDevice.singleton.FireConfigurationChanged(null);
+        }
     }
 } 

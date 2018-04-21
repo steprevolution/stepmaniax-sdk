@@ -456,35 +456,11 @@ namespace smx_config
             bool[] enabledPanels = config.GetEnabledPanels();
             Visibility = enabledPanels[PanelIndex]? Visibility.Visible:Visibility.Hidden;
 
-            Color rgb = ColorPicker.UnscaleColor(Color.FromRgb(
+            Color rgb = Helpers.UnscaleColor(Color.FromRgb(
                 config.stepColor[PanelIndex*3+0],
                 config.stepColor[PanelIndex*3+1],
                 config.stepColor[PanelIndex*3+2]));
             PanelColor = new SolidColorBrush(rgb);
-        }
-
-        // Return #RRGGBB for the color set on this panel.
-        private string GetColorString()
-        {
-            // WPF's Color.ToString() returns #AARRGGBB, which is just wrong.  Alpha is always
-            // last in HTML color codes.  We don't need alpha, so just strip it off.
-            return "#" + PanelColor.Color.ToString().Substring(3);
-        }
-
-        // Parse #RRGGBB and return a Color, or white if the string isn't in the correct format.
-        private static Color ParseColorString(string s)
-        {
-            // We only expect "#RRGGBB".
-            if(s.Length != 7 || !s.StartsWith("#"))
-                return Color.FromRgb(255,255,255);
-
-            try {
-                return (Color) ColorConverter.ConvertFromString(s);
-            }
-            catch(System.FormatException)
-            {
-                return Color.FromRgb(255,255,255);
-            }
         }
 
         Point MouseDownPosition;
@@ -507,7 +483,7 @@ namespace smx_config
                 if (Math.Abs(position.X - MouseDownPosition.X) >= SystemParameters.MinimumHorizontalDragDistance ||
                     Math.Abs(position.Y - MouseDownPosition.Y) >= SystemParameters.MinimumVerticalDragDistance)
                 {
-                    DragDrop.DoDragDrop(this, GetColorString(), DragDropEffects.Copy);
+                    DragDrop.DoDragDrop(this, Helpers.ColorToString(PanelColor.Color), DragDropEffects.Copy);
                 }
             }
 
@@ -527,7 +503,7 @@ namespace smx_config
                 return false;
 
             // Parse the color being dragged onto us.
-            Color color = ParseColorString(data.GetData(typeof(string)) as string);
+            Color color = Helpers.ParseColorString(data.GetData(typeof(string)) as string);
             
             // Update the panel color.
             int PanelIndex = Panel % 9;
@@ -538,9 +514,10 @@ namespace smx_config
 
             // Light colors are 8-bit values, but we only use values between 0-170.  Higher values
             // don't make the panel noticeably brighter, and just draw more power.
-            config.stepColor[PanelIndex*3+0] = ColorPicker.ScaleColor(color.R);
-            config.stepColor[PanelIndex*3+1] = ColorPicker.ScaleColor(color.G);
-            config.stepColor[PanelIndex*3+2] = ColorPicker.ScaleColor(color.B);
+            color = Helpers.ScaleColor(color);
+            config.stepColor[PanelIndex*3+0] = color.R;
+            config.stepColor[PanelIndex*3+1] = color.G;
+            config.stepColor[PanelIndex*3+2] = color.B;
 
             SMX.SMX.SetConfig(Pad, config);
             CurrentSMXDevice.singleton.FireConfigurationChanged(this);
@@ -664,29 +641,6 @@ namespace smx_config
             });
         }
 
-        // Light values are actually in the range 0-170 and not 0-255, since higher values aren't
-        // any brighter and just draw more power.  The auto-lighting colors that we're configuring
-        // need to be scaled to this range too, but show full range colors in the UI.
-        readonly static double LightsScaleFactor = 0.666666f;
-        static public Byte ScaleColor(Byte c) { return (Byte) (c * LightsScaleFactor); }
-        static public Byte UnscaleColor(Byte c) { return (Byte) Math.Min(255, c / LightsScaleFactor); }
-
-        static public Color ScaleColor(Color c)
-        {
-            return Color.FromRgb(
-                ColorPicker.ScaleColor(c.R),
-                ColorPicker.ScaleColor(c.G),
-                ColorPicker.ScaleColor(c.B));
-        }
-
-        static public Color UnscaleColor(Color c)
-        {
-            return Color.FromRgb(
-                ColorPicker.UnscaleColor(c.R),
-                ColorPicker.UnscaleColor(c.G),
-                ColorPicker.UnscaleColor(c.B));
-        }
-
         private void SaveToConfig()
         {
             if(UpdatingUI)
@@ -707,9 +661,9 @@ namespace smx_config
             // Light colors are 8-bit values, but we only use values between 0-170.  Higher values
             // don't make the panel noticeably brighter, and just draw more power.
             int PanelIndex = SelectedPanel % 9;
-            config.stepColor[PanelIndex*3+0] = ScaleColor(color.R);
-            config.stepColor[PanelIndex*3+1] = ScaleColor(color.G);
-            config.stepColor[PanelIndex*3+2] = ScaleColor(color.B);
+            config.stepColor[PanelIndex*3+0] = Helpers.ScaleColor(color.R);
+            config.stepColor[PanelIndex*3+1] = Helpers.ScaleColor(color.G);
+            config.stepColor[PanelIndex*3+2] = Helpers.ScaleColor(color.B);
 
             SMX.SMX.SetConfig(pad, config);
             CurrentSMXDevice.singleton.FireConfigurationChanged(this);
@@ -723,10 +677,10 @@ namespace smx_config
 
             // Reverse the scaling we applied in SaveToConfig.
             int PanelIndex = SelectedPanel % 9;
-            Color rgb = Color.FromRgb(
-                UnscaleColor(config.stepColor[PanelIndex*3+0]),
-                UnscaleColor(config.stepColor[PanelIndex*3+1]),
-                UnscaleColor(config.stepColor[PanelIndex*3+2]));
+            Color rgb = Helpers.UnscaleColor(Color.FromRgb(
+                config.stepColor[PanelIndex*3+0],
+                config.stepColor[PanelIndex*3+1],
+                config.stepColor[PanelIndex*3+2]));
             double h, s, v;
             Helpers.ToHSV(rgb, out h, out s, out v);
 

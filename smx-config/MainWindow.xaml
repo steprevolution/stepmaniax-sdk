@@ -783,6 +783,16 @@ Input will be disabled from deselected panels.</TextBlock>
 
                     <Separator Margin="0,10,0,10" />
                     <TextBlock HorizontalAlignment="Center"
+                        xml:space="preserve" FontSize="16">Import/export settings</TextBlock>
+                    <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,5,0,0" TextAlignment="Center"
+                               >Export current settings to a file.</TextBlock>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="Export" Width="50" Padding="5,2" Margin="5,10" Click="ExportSettings" />
+                        <Button Content="Import" Width="50" Padding="5,2" Margin="5,10" Click="ImportSettings" />
+                    </StackPanel>
+
+                    <Separator Margin="0,10,0,10" />
+                    <TextBlock HorizontalAlignment="Center"
                                    xml:space="preserve" FontSize="16">Reset all settings</TextBlock>
                     <Button Content="Factory reset" Width="140" Margin="0 10 0 0" Padding="0 4" Click="FactoryReset_Click"/>
                 </StackPanel>

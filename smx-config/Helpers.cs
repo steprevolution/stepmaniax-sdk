@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Threading;
+using SMXJSON;
 
 namespace smx_config
 {
@@ -35,6 +36,62 @@ namespace smx_config
             byte G = (byte) Math.Max(0, Math.Min(255, g * 255));
             byte B = (byte) Math.Max(0, Math.Min(255, b * 255));
             return Color.FromRgb(R, G, B);
+        }
+
+        // Return a Color as an HTML color code.
+        public static string ColorToString(Color color)
+        {
+            // WPF's Color.ToString() returns #AARRGGBB, which is just wrong.  Alpha is always
+            // last in HTML color codes.  We don't need alpha, so just strip it off.
+            return "#" + color.ToString().Substring(3);
+        }
+
+        // Parse #RRGGBB and return a Color, or white if the string isn't in the correct format.
+        public static Color ParseColorString(string s)
+        {
+            // We only expect "#RRGGBB".
+            if(s.Length != 7 || !s.StartsWith("#"))
+                return Color.FromRgb(255,255,255);
+
+            try {
+                return (Color) ColorConverter.ConvertFromString(s);
+            }
+            catch(System.FormatException)
+            {
+                return Color.FromRgb(255,255,255);
+            }
+        }
+
+        // Light values are actually in the range 0-170 and not 0-255, since higher values aren't
+        // any brighter and just draw more power.  The auto-lighting colors that we're configuring
+        // need to be scaled to this range too, but show full range colors in the UI.
+        readonly static double LightsScaleFactor = 0.666666f;
+        static public Byte ScaleColor(Byte c)
+        {
+            return (Byte) Math.Round(c * LightsScaleFactor);
+        }
+        static public Byte UnscaleColor(Byte c)
+        {
+            Byte result = (Byte) Math.Round(Math.Min(255, c / LightsScaleFactor));
+
+            // The color values we output are quantized, since we're scaling an 8-bit value.
+            // This doesn't have any real effect, but it causes #FFFFFF in the settings export
+            // file to be written out as #FDFDFD (which has the same value in hardware).  Just
+            // so the common value of white is clean, snap these values to 0xFF.  The end result
+            // will be the same.
+            if(result >= 0xFD)
+                return 0xFF;
+            return result;
+        }
+
+        static public Color ScaleColor(Color c)
+        {
+            return Color.FromRgb(ScaleColor(c.R), ScaleColor(c.G), ScaleColor(c.B));
+        }
+
+        static public Color UnscaleColor(Color c)
+        {
+            return Color.FromRgb(UnscaleColor(c.R), UnscaleColor(c.G), UnscaleColor(c.B));
         }
 
         public static Color FromHSV(double H, double S, double V)
@@ -95,6 +152,18 @@ namespace smx_config
  
             s = C / M;
             v = M;
+        }
+
+        // Read path.  If an error is encountered, return "".
+        public static string ReadFile(string path)
+        {
+            try {
+                return System.IO.File.ReadAllText(path);
+            }
+            catch(System.IO.IOException)
+            {
+                return "";
+            }
         }
     }
 
@@ -199,6 +268,121 @@ namespace smx_config
                 }
             }
             SMX.SMX.SetLights(cmd.Get());
+        }
+    };
+
+    static class SMXHelpers
+    {
+        // Export configurable values in SMXConfig to a JSON string.
+        public static string ExportSettingsToJSON(SMX.SMXConfig config)
+        {
+            Dictionary<string, Object> dict = new Dictionary<string, Object>();
+            List<int> panelLowThresholds = new List<int>();
+            panelLowThresholds.Add(config.panelThreshold0Low);
+            panelLowThresholds.Add(config.panelThreshold1Low);
+            panelLowThresholds.Add(config.panelThreshold2Low);
+            panelLowThresholds.Add(config.panelThreshold3Low);
+            panelLowThresholds.Add(config.panelThreshold4Low);
+            panelLowThresholds.Add(config.panelThreshold5Low);
+            panelLowThresholds.Add(config.panelThreshold6Low);
+            panelLowThresholds.Add(config.panelThreshold7Low);
+            panelLowThresholds.Add(config.panelThreshold8Low);
+            dict.Add("panelLowThresholds", panelLowThresholds);
+
+            List<int> panelHighThresholds = new List<int>();
+            panelHighThresholds.Add(config.panelThreshold0High);
+            panelHighThresholds.Add(config.panelThreshold1High);
+            panelHighThresholds.Add(config.panelThreshold2High);
+            panelHighThresholds.Add(config.panelThreshold3High);
+            panelHighThresholds.Add(config.panelThreshold4High);
+            panelHighThresholds.Add(config.panelThreshold5High);
+            panelHighThresholds.Add(config.panelThreshold6High);
+            panelHighThresholds.Add(config.panelThreshold7High);
+            panelHighThresholds.Add(config.panelThreshold8High);
+            dict.Add("panelHighThresholds", panelHighThresholds);
+
+            // Store the enabled panel mask as a simple list of which panels are selected.
+            bool[] enabledPanels = config.GetEnabledPanels();
+            List<int> enabledPanelList = new List<int>();
+            for(int panel = 0; panel < 9; ++panel)
+            {
+                if(enabledPanels[panel])
+                    enabledPanelList.Add(panel);
+            }
+            dict.Add("enabledPanels", enabledPanelList);
+
+            // Store panel colors.
+            List<string> panelColors = new List<string>();
+            for(int PanelIndex = 0; PanelIndex < 9; ++PanelIndex)
+            {
+                // Scale colors from the hardware value back to the 0-255 value we use in the UI.
+                Color color = Color.FromRgb(config.stepColor[PanelIndex*3+0], config.stepColor[PanelIndex*3+1], config.stepColor[PanelIndex*3+2]);
+                color = Helpers.UnscaleColor(color);
+                panelColors.Add(Helpers.ColorToString(color));
+            }
+            dict.Add("panelColors", panelColors);
+
+            return SMXJSON.SerializeJSON.Serialize(dict);
+        }
+
+        // Import a saved JSON configuration to an SMXConfig.
+        public static void ImportSettingsFromJSON(string json, ref SMX.SMXConfig config)
+        {
+            Dictionary<string, Object> dict = SMXJSON.ParseJSON.Parse<Dictionary<string, Object>>(json);
+
+            // Read the thresholds.  If any values are missing, we'll leave the value in config alone.
+            List<Object> newPanelLowThresholds = dict.Get("panelLowThresholds", new List<Object>());
+            config.panelThreshold0Low = newPanelLowThresholds.Get(0, config.panelThreshold0Low);
+            config.panelThreshold1Low = newPanelLowThresholds.Get(1, config.panelThreshold1Low);
+            config.panelThreshold2Low = newPanelLowThresholds.Get(2, config.panelThreshold2Low);
+            config.panelThreshold3Low = newPanelLowThresholds.Get(3, config.panelThreshold3Low);
+            config.panelThreshold4Low = newPanelLowThresholds.Get(4, config.panelThreshold4Low);
+            config.panelThreshold5Low = newPanelLowThresholds.Get(5, config.panelThreshold5Low);
+            config.panelThreshold6Low = newPanelLowThresholds.Get(6, config.panelThreshold6Low);
+            config.panelThreshold7Low = newPanelLowThresholds.Get(7, config.panelThreshold7Low);
+            config.panelThreshold8Low = newPanelLowThresholds.Get(8, config.panelThreshold8Low);
+
+            List<Object> newPanelHighThresholds = dict.Get("panelHighThresholds", new List<Object>());
+            config.panelThreshold0High = newPanelHighThresholds.Get(0, config.panelThreshold0High);
+            config.panelThreshold1High = newPanelHighThresholds.Get(1, config.panelThreshold1High);
+            config.panelThreshold2High = newPanelHighThresholds.Get(2, config.panelThreshold2High);
+            config.panelThreshold3High = newPanelHighThresholds.Get(3, config.panelThreshold3High);
+            config.panelThreshold4High = newPanelHighThresholds.Get(4, config.panelThreshold4High);
+            config.panelThreshold5High = newPanelHighThresholds.Get(5, config.panelThreshold5High);
+            config.panelThreshold6High = newPanelHighThresholds.Get(6, config.panelThreshold6High);
+            config.panelThreshold7High = newPanelHighThresholds.Get(7, config.panelThreshold7High);
+            config.panelThreshold8High = newPanelHighThresholds.Get(8, config.panelThreshold8High);
+
+            List<Object> enabledPanelList = dict.Get<List<Object>>("enabledPanels", null);
+            if(enabledPanelList != null)
+            {
+                bool[] enabledPanels = new bool[9];
+                for(int i = 0; i < enabledPanelList.Count; ++i)
+                {
+                    int panel = enabledPanelList.Get(i, 0);
+
+                    // Sanity check:
+                    if(panel < 0 || panel >= 9)
+                        continue;
+                    enabledPanels[panel] = true;
+                }
+                config.SetEnabledPanels(enabledPanels);
+            }
+
+            List<Object> panelColors = dict.Get<List<Object>>("panelColors", null);
+            if(panelColors != null)
+            {
+                for(int PanelIndex = 0; PanelIndex < 9 && PanelIndex < panelColors.Count; ++PanelIndex)
+                {
+                    string colorString = panelColors.Get(PanelIndex, "#FFFFFF");
+                    Color color = Helpers.ParseColorString(colorString);
+                    color = Helpers.ScaleColor(color);
+
+                    config.stepColor[PanelIndex*3+0] = color.R;
+                    config.stepColor[PanelIndex*3+1] = color.G;
+                    config.stepColor[PanelIndex*3+2] = color.B;
+                }
+            }
         }
     };
 }

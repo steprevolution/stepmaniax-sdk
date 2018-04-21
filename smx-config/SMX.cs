@@ -76,6 +76,23 @@ namespace SMX
                 (enabledSensors[4] & 0xF0) != 0,
             };
         }
+
+        // Set enabledSensors from an array returned from GetEnabledPanels.
+        public void SetEnabledPanels(bool[] panels)
+        {
+            for(int i = 0; i < 5; ++i)
+                enabledSensors[i] = 0;
+
+            if(panels[0]) enabledSensors[0] |= 0xF0;
+            if(panels[1]) enabledSensors[0] |= 0x0F;
+            if(panels[2]) enabledSensors[1] |= 0xF0;
+            if(panels[3]) enabledSensors[1] |= 0x0F;
+            if(panels[4]) enabledSensors[2] |= 0xF0;
+            if(panels[5]) enabledSensors[2] |= 0x0F;
+            if(panels[6]) enabledSensors[3] |= 0xF0;
+            if(panels[7]) enabledSensors[3] |= 0x0F;
+            if(panels[8]) enabledSensors[4] |= 0xF0;
+        }
     };  
 
     public struct SMXSensorTestModeData
