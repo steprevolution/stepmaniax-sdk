@@ -35,7 +35,7 @@ namespace smx_config
             base.OnApplyTemplate();
 
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
-                LoadUIFromConfig(args.controller[args.FirstController].config);
+                LoadUIFromConfig(ActivePad.GetFirstActivePadConfig(args));
             });
         }
 
@@ -65,12 +65,10 @@ namespace smx_config
                 // Stop forcing advanced mode on, and sync the thresholds so we exit advanced mode.
                 ForcedOn = false;
 
-                for(int pad = 0; pad < 2; ++pad)
+                foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
                 {
-                    SMX.SMXConfig config;
-                    if(!SMX.SMX.GetConfig(pad, out config))
-                        continue;
-
+                    int pad = activePad.Item1;
+                    SMX.SMXConfig config = activePad.Item2;
                     ConfigPresets.SyncUnifiedThresholds(ref config);
                     SMX.SMX.SetConfig(pad, config);
                 }
@@ -83,8 +81,7 @@ namespace smx_config
             }
 
             // Refresh the UI.
-            LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
-            LoadUIFromConfig(args.controller[args.FirstController].config);
+            LoadUIFromConfig(ActivePad.GetFirstActivePadConfig());
         }
     }
 
@@ -137,7 +134,7 @@ namespace smx_config
             slider.ValueChanged += delegate(DoubleSlider slider) { SaveToConfig(); };
 
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
-                LoadUIFromConfig(args.controller[args.FirstController].config);
+                LoadUIFromConfig(ActivePad.GetFirstActivePadConfig(args));
             });
         }
 
@@ -193,11 +190,10 @@ namespace smx_config
                 return;
 
             // Apply the change and save it to the devices.
-            for(int pad = 0; pad < 2; ++pad)
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
-                SMX.SMXConfig config;
-                if(!SMX.SMX.GetConfig(pad, out config))
-                        continue;
+                int pad = activePad.Item1;
+                SMX.SMXConfig config = activePad.Item2;
 
                 SetValueToConfig(ref config);
                 SMX.SMX.SetConfig(pad, config);
@@ -233,8 +229,7 @@ namespace smx_config
 
         void RefreshVisibility()
         {
-            LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
-            SMX.SMXConfig config = args.controller[args.FirstController].config;
+            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
             this.Visibility = ShouldBeDisplayed(config)? Visibility.Visible:Visibility.Collapsed;
         }
 
@@ -299,18 +294,22 @@ namespace smx_config
             button.Click += delegate(object sender, RoutedEventArgs e) { Select(); };
 
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
-                string CurrentPreset = ConfigPresets.GetPreset(args.controller[args.FirstController].config);
-                Selected = CurrentPreset == Type;
+                foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+                {
+                    SMX.SMXConfig config = activePad.Item2;
+                    string CurrentPreset = ConfigPresets.GetPreset(config);
+                    Selected = CurrentPreset == Type;
+                    break;
+                }
             });
         }
 
         private void Select()
         {
-            for(int pad = 0; pad < 2; ++pad)
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
-                SMX.SMXConfig config;
-                if(!SMX.SMX.GetConfig(pad, out config))
-                        continue;
+                int pad = activePad.Item1;
+                SMX.SMXConfig config = activePad.Item2;
 
                 ConfigPresets.SetPreset(Type, ref config);
                 Console.WriteLine("PresetButton::Select (" + Type + "): " +
@@ -724,7 +723,7 @@ namespace smx_config
                 button.Click += EnabledPanelButtonClicked;
 
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
-                LoadUIFromConfig(args.controller[args.FirstController].config);
+                LoadUIFromConfig(ActivePad.GetFirstActivePadConfig(args));
             });
         }
 
@@ -768,11 +767,10 @@ namespace smx_config
             Console.WriteLine("Clicked " + button);
 
             // Set the enabled sensor mask on both pads to the state of the UI.
-            for(int pad = 0; pad < 2; ++pad)
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
-                SMX.SMXConfig config;
-                if(!SMX.SMX.GetConfig(pad, out config))
-                    continue;
+                int pad = activePad.Item1;
+                SMX.SMXConfig config = activePad.Item2;
 
                 // This could be done algorithmically, but this is clearer.
                 int[] PanelButtonToSensorIndex = {

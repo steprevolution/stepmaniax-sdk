@@ -7,6 +7,65 @@ using SMXJSON;
 
 namespace smx_config
 {
+    // Track whether we're configuring one pad or both at once.
+    static class ActivePad
+    {
+        public enum SelectedPad {
+            P1,
+            P2,
+            Both,
+        };
+        
+        // The actual pad selection.  This defaults to both, and doesn't change if
+        // only one pad is selected.  We don't actually show "both" in the dropdown
+        // unless two pads are connected, but the underlying setting remains.
+        public static SelectedPad selectedPad = SelectedPad.Both;
+
+        // A shortcut for when a LoadFromConfigDelegateArgs isn't available:
+        public static IEnumerable<Tuple<int, SMX.SMXConfig>> ActivePads()
+        {
+            return ActivePads(CurrentSMXDevice.singleton.GetState());
+        }
+
+        // Yield each connected pad which is currently active for configuration.
+        public static IEnumerable<Tuple<int, SMX.SMXConfig>> ActivePads(LoadFromConfigDelegateArgs args)
+        {
+            bool Pad1Connected = args.controller[0].info.connected;
+            bool Pad2Connected = args.controller[1].info.connected;
+
+            // If both pads are connected and a single pad is selected, ignore the deselected pad.
+            if(Pad1Connected && Pad2Connected)
+            {
+                if(selectedPad == SelectedPad.P1)
+                    Pad2Connected = false;
+                if(selectedPad == SelectedPad.P2)
+                    Pad1Connected = false;
+            }
+
+            if(Pad1Connected)
+                yield return Tuple.Create(0, args.controller[0].config);
+            if(Pad2Connected)
+                yield return Tuple.Create(1, args.controller[1].config);
+        }
+
+        // We know the selected pads are synced if there are two active, and when refreshing a
+        // UI we just want one of them to set the UI to.  For convenience, return the first one.
+        public static SMX.SMXConfig GetFirstActivePadConfig(LoadFromConfigDelegateArgs args)
+        {
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePads(args))
+                return activePad.Item2;
+
+            // There aren't any pads connected.  Just return a dummy config, since the UI
+            // isn't visible.
+            return new SMX.SMXConfig();
+        }
+
+        public static SMX.SMXConfig GetFirstActivePadConfig()
+        {
+            return GetFirstActivePadConfig(CurrentSMXDevice.singleton.GetState());
+        }
+    }
+
     static class Helpers
     {
         // Return true if we're in debug mode.

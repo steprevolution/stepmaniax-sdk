@@ -31,10 +31,6 @@ namespace smx_config
         // Data for each of two controllers:
         public LoadFromConfigDelegateArgsPerController[] controller;
 
-        // For convenience, this is the index in controller of the first connected controller.
-        // If no controllers are connected, this is 0.
-        public int FirstController;
-
         // The control that changed the configuration (passed to FireConfigurationChanged).
         public object source;
     };
@@ -134,7 +130,6 @@ namespace smx_config
         public LoadFromConfigDelegateArgs GetState()
         {
             LoadFromConfigDelegateArgs args = new LoadFromConfigDelegateArgs();
-            args.FirstController = -1;
             args.controller = new LoadFromConfigDelegateArgsPerController[2];
 
             for(int pad = 0; pad < 2; ++pad)
@@ -151,14 +146,7 @@ namespace smx_config
                 SMX.SMX.GetConfig(pad, out controller.config);
                 SMX.SMX.GetTestData(pad, out controller.test_data);
                 args.controller[pad] = controller;
-
-                // If this is the first connected controller, set FirstController.
-                if(controller.info.connected && args.FirstController == -1)
-                    args.FirstController = pad;
             }
-
-            if(args.FirstController == -1)
-                    args.FirstController = 0;
 
             return args;
         }

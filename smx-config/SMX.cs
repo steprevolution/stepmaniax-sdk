@@ -93,6 +93,65 @@ namespace SMX
             if(panels[7]) enabledSensors[3] |= 0x0F;
             if(panels[8]) enabledSensors[4] |= 0xF0;
         }
+
+        // The layout of this structure (and the underlying C struct) matches the firmware configuration
+        // data.  This is a bit inconvenient for the panel thresholds which aren't contiguous, so these
+        // helpers just convert them to and from arrays.
+        public Byte[] GetLowThresholds()
+        {
+            return new Byte[] {
+                panelThreshold0Low,
+                panelThreshold1Low,
+                panelThreshold2Low,
+                panelThreshold3Low,
+                panelThreshold4Low,
+                panelThreshold5Low,
+                panelThreshold6Low,
+                panelThreshold7Low,
+                panelThreshold8Low,
+            };
+        }
+
+        public Byte[] GetHighThresholds()
+        {
+            return new Byte[] {
+                panelThreshold0High,
+                panelThreshold1High,
+                panelThreshold2High,
+                panelThreshold3High,
+                panelThreshold4High,
+                panelThreshold5High,
+                panelThreshold6High,
+                panelThreshold7High,
+                panelThreshold8High,
+            };
+        }
+
+        public void SetLowThresholds(Byte[] values)
+        {
+            panelThreshold0Low = values[0];
+            panelThreshold1Low = values[1];
+            panelThreshold2Low = values[2];
+            panelThreshold3Low = values[3];
+            panelThreshold4Low = values[4];
+            panelThreshold5Low = values[5];
+            panelThreshold6Low = values[6];
+            panelThreshold7Low = values[7];
+            panelThreshold8Low = values[8];
+        }
+        
+        public void SetHighThresholds(Byte[] values)
+        {
+            panelThreshold0High = values[0];
+            panelThreshold1High = values[1];
+            panelThreshold2High = values[2];
+            panelThreshold3High = values[3];
+            panelThreshold4High = values[4];
+            panelThreshold5High = values[5];
+            panelThreshold6High = values[6];
+            panelThreshold7High = values[7];
+            panelThreshold8High = values[8];
+        }
     };  
 
     public struct SMXSensorTestModeData

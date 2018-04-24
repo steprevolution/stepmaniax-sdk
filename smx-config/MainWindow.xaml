@@ -632,16 +632,7 @@ Use if the platform is too sensitive.</clr:String>
 
     </Window.Resources>
 
-    <Grid>
-        <!-- A list of which pads are connected, overlapping the tab bar in the top right. -->
-        <Grid x:Name="ConnectedPads" Background="#DDD">
-            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal">
-                <Label Content="Connected:" FontSize="10"/>
-                <Label x:Name="P1Connected" Style="{StaticResource EnabledIcon}" Content="P1" Margin="1,0,4,0" FontSize="10"/>
-                <Label x:Name="P2Connected" Style="{StaticResource EnabledIcon}" Content="P2" Margin="0,0,4,0" FontSize="10"/>
-            </StackPanel>
-        </Grid>
-        
+    <Grid Background="#DDD">
         <Grid x:Name="Searching" Visibility="Hidden"  Background="#DDD">
             <Label Content="Searching for controller..."
                    HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="33.333"/>
@@ -803,6 +794,19 @@ Input will be disabled from deselected panels.</TextBlock>
                 </StackPanel>
             </TabItem>
         </TabControl>
+        
+        <!-- A list of which pads are connected, overlapping the tab bar in the top right. -->
+        <StackPanel x:Name="ConnectedPads" VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Label Content="Connected:" FontSize="10"/>
+            <ComboBox x:Name="ConnectedPadList" SelectionChanged="ConnectedPadList_SelectionChanged">
+                <ComboBoxItem x:Name="ConnectedPadList_P1">Player 1</ComboBoxItem>
+                <ComboBoxItem x:Name="ConnectedPadList_P2">Player 2</ComboBoxItem>
+                <ComboBoxItem x:Name="ConnectedPadList_Both">Both</ComboBoxItem>
+            </ComboBox>
+            <Label x:Name="P1Connected" Style="{StaticResource EnabledIcon}" Content="P1" Margin="1,0,4,0" FontSize="10"/>
+            <Label x:Name="P2Connected" Style="{StaticResource EnabledIcon}" Content="P2" Margin="0,0,4,0" FontSize="10"/>
+        </StackPanel>
+        
 
     </Grid>
 </Window>
