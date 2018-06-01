@@ -68,27 +68,12 @@ wstring SMX::GetErrorString(int err)
 
 string SMX::vssprintf(const char *szFormat, va_list argList)
 {
+    int iChars = vsnprintf(NULL, 0, szFormat, argList);
+
     string sStr;
-
-    char *pBuf = NULL;
-    int iChars = 128;
-    int iUsed = 0;
-    int iTry = 0;
-
-    do
-    {
-        // Grow more than linearly (e.g. 512, 1536, 3072, etc)
-        iChars += iTry * 1024;
-        delete[] pBuf;
-        pBuf = new char[iChars];
-        iUsed = vsnprintf(pBuf, iChars-1, szFormat, argList);
-        ++iTry;
-    } while(iUsed < 0);
-
-    // assign whatever we managed to format
-    sStr.assign(pBuf, iUsed);
-
-    delete[] pBuf;
+    sStr.resize(iChars+1);
+    vsnprintf((char *) sStr.data(), iChars+1, szFormat, argList);
+    sStr.resize(iChars);
 
     return sStr;
 }
