@@ -37,7 +37,7 @@ static set<wstring> GetAllHIDDevicePaths(wstring &error)
             int iError = GetLastError();
             if(iError != ERROR_INSUFFICIENT_BUFFER)
             {
-                // Helpers::FormatWindowsError(error);
+		Log(ssprintf("SetupDiGetDeviceInterfaceDetail failed: %ls", GetErrorString(iError).c_str()));
                 continue;
             }
         }
@@ -49,7 +49,10 @@ static set<wstring> GetAllHIDDevicePaths(wstring &error)
         ZeroMemory(&DeviceInfoData, sizeof(SP_DEVINFO_DATA));
         DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
         if(!SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DeviceInterfaceDetailData, iSize, NULL, &DeviceInfoData))
+        {
+            Log(ssprintf("SetupDiGetDeviceInterfaceDetail failed: %ls", GetErrorString(GetLastError()).c_str()));
             continue;
+        }
 
         paths.insert(DeviceInterfaceDetailData->DevicePath);
     }
@@ -61,14 +64,20 @@ static set<wstring> GetAllHIDDevicePaths(wstring &error)
 
 static shared_ptr<AutoCloseHandle> OpenUSBDevice(LPCTSTR DevicePath, wstring &error)
 {
+    // Log(ssprintf("Opening device: %ls", DevicePath));
     HANDLE OpenDevice = CreateFile(
         DevicePath,
         GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL
     );
+
     if(OpenDevice == INVALID_HANDLE_VALUE)
+    {
+	// Many unrelated devices will fail to open, so don't return this as an error.
+        Log(ssprintf("Error opening device %ls: %ls", DevicePath, GetErrorString(GetLastError()).c_str()));
         return nullptr;
+    }
 
     auto result = make_shared<AutoCloseHandle>(OpenDevice);
 
@@ -77,22 +86,32 @@ static shared_ptr<AutoCloseHandle> OpenUSBDevice(LPCTSTR DevicePath, wstring &er
     HidAttributes.Size = sizeof(HidAttributes);
     if(!HidD_GetAttributes(result->value(), &HidAttributes))
     {
+        Log(ssprintf("Error opening device %ls: HidD_GetAttributes failed", DevicePath));
         error = L"HidD_GetAttributes failed";
         return nullptr;
     }
 
     if(HidAttributes.VendorID != 0x2341 || HidAttributes.ProductID != 0x8037)
+    {
+        Log(ssprintf("Device %ls: not our device (ID %04x:%04x)", DevicePath, HidAttributes.VendorID, HidAttributes.ProductID));
         return nullptr;
+    }
 
     // Since we're using the default Arduino IDs, check the product name to make sure
     // this isn't some other Arduino device.
     WCHAR ProductName[255];
     ZeroMemory(ProductName, sizeof(ProductName));
     if(!HidD_GetProductString(result->value(), ProductName, 255))
+    {
+        Log(ssprintf("Error opening device %ls: HidD_GetProductString failed", DevicePath));
         return nullptr;
+    }
 
     if(wstring(ProductName) != L"StepManiaX")
+    {
+        Log(ssprintf("Device %ls: not our device (%ls)", DevicePath, ProductName));
         return nullptr;
+    }
 
     return result;
 }
