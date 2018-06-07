@@ -229,7 +229,7 @@ namespace SMX
         private static extern bool SMX_ReenableAutoLights();
 
         // Check if the native DLL is available.  This is mostly to avoid exceptions in the designer.
-        private static bool DLLAvailable()
+        public static bool DLLAvailable()
         {
             return LoadLibrary("SMX.dll") != IntPtr.Zero;
         }

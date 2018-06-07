@@ -15,8 +15,16 @@ namespace smx_config
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionEventHandler;
 
+            if(!SMX.SMX.DLLAvailable())
+            {
+                MessageBox.Show("SMXConfig encountered an unexpected error:\n\nSMX.dll failed to load.", "SMXConfig");
+                Current.Shutdown();
+                return;
+            }
+
             if(Helpers.GetDebug())
                 SMX_Internal_OpenConsole();
+
             CurrentSMXDevice.singleton = new CurrentSMXDevice();
         }
 
@@ -32,6 +40,8 @@ namespace smx_config
 
             // Shut down cleanly, to make sure we don't run any threaded callbacks during shutdown.
             Console.WriteLine("Application exiting");
+            if(CurrentSMXDevice.singleton == null)
+                return;
             CurrentSMXDevice.singleton.Shutdown();
             CurrentSMXDevice.singleton = null;
         }
