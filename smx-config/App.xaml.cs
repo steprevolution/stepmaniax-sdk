@@ -13,9 +13,17 @@ namespace smx_config
 
         App()
         {
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionEventHandler;
+
             if(Helpers.GetDebug())
                 SMX_Internal_OpenConsole();
             CurrentSMXDevice.singleton = new CurrentSMXDevice();
+        }
+
+        private void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs e)
+        {
+            string message = e.ExceptionObject.ToString();
+            MessageBox.Show("SMXConfig encountered an unexpected error:\n\n" + message, "SMXConfig");
         }
 
         protected override void OnExit(ExitEventArgs e)
