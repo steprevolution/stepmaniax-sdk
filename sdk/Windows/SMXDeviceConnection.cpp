@@ -121,7 +121,7 @@ void SMX::SMXDeviceConnection::HandleUsbPacket(const string &buf)
 {
     if(buf.empty())
         return;
-    // Log(ssprintf("Read: %s\n", BinaryToHex(buf).c_str()));
+    // Log(ssprintf("Read: %s", BinaryToHex(buf).c_str()));
 
     int iReportId = buf[0];
     switch(iReportId)
@@ -296,6 +296,7 @@ void SMX::SMXDeviceConnection::CheckWrites(wstring &error)
         // first, unlike reads which might already be buffered), and there's no way to test it if we implement that,
         // so this assumes all writes are async.
         DWORD unused;
+        // Log(ssprintf("Write: %s", BinaryToHex(pPacket->sData).c_str()));
         if(!WriteFile(m_hDevice->value(), pPacket->sData.data(), pPacket->sData.size(), &unused, &pPacket->m_OverlappedWrite))
         {
             int windows_error = GetLastError();
