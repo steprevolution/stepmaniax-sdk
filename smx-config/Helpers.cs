@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Media;
 using System.Windows.Threading;
 using SMXJSON;
@@ -77,6 +78,15 @@ namespace smx_config
                     return true;
             }
             return false;
+        }
+
+        // Return the last Win32 error as a string.
+        public static string GetLastWin32ErrorString()
+        {
+            int error = Marshal.GetLastWin32Error();
+            if(error == 0)
+                return "";
+            return new System.ComponentModel.Win32Exception(error).Message;
         }
 
         // Work around Enumerable.SequenceEqual not checking if the arrays are null.

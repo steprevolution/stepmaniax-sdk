@@ -14,10 +14,17 @@ namespace smx_config
         App()
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionEventHandler;
-
+            
+            if(!SMX.SMX.DLLExists())
+            {
+                MessageBox.Show("SMXConfig encountered an unexpected error.\n\nSMX.dll couldn't be found:\n\n" + Helpers.GetLastWin32ErrorString(), "SMXConfig");
+                Current.Shutdown();
+                return;
+            }
+            
             if(!SMX.SMX.DLLAvailable())
             {
-                MessageBox.Show("SMXConfig encountered an unexpected error:\n\nSMX.dll failed to load.", "SMXConfig");
+                MessageBox.Show("SMXConfig encountered an unexpected error.\n\nSMX.dll failed to load:\n\n" + Helpers.GetLastWin32ErrorString(), "SMXConfig");
                 Current.Shutdown();
                 return;
             }
