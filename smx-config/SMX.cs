@@ -240,11 +240,6 @@ namespace SMX
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void InternalUpdateCallback(int PadNumber, int reason, IntPtr user);
         private static InternalUpdateCallback CurrentUpdateCallback;
-        public static void SetUpdateCallback(UpdateCallback callback)
-        {
-            if(!DLLAvailable()) return;
-
-        }
 
         public static void Start(UpdateCallback callback)
         {

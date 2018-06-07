@@ -80,7 +80,6 @@ namespace smx_config
 
         public void Shutdown()
         {
-            SMX.SMX.SetUpdateCallback(null);
             SMX.SMX.Stop();
         }
 
