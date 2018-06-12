@@ -100,6 +100,10 @@ extern "C" SMX_API void SMX_ForceRecalibration(int pad);
 extern "C" SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode);
 extern "C" SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data);
 
+// Return the build version of the DLL, which is based on the git tag at build time.  This
+// is only intended for diagnostic logging, and it's also the version we show in SMXConfig.
+extern "C" SMX_API const char *SMX_Version();
+
 // General info about a connected controller.  This can be retrieved with SMX_GetInfo.
 struct SMXInfo
 {

@@ -1,0 +1,3 @@
+# Ignore updates to the auto-generated build version.
+SMXBuildVersion.h
+

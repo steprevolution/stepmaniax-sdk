@@ -246,12 +246,29 @@ namespace SMX
         private static extern bool SMX_SetLights(byte[] buf);
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_ReenableAutoLights();
+        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern IntPtr SMX_Version();
+
+        public static string Version()
+        {
+            if(!DLLAvailable()) return "";
+
+            // I can't find any way to marshal a simple null-terminated string.  Marshalling
+            // UnmanagedType.LPStr tries to deallocate the string, which crashes since it's
+            // a static string.
+            unsafe {
+                sbyte *p = (sbyte *) SMX_Version();
+                int length = 0;
+                while(p[length] != 0)
+                    ++length;
+                return new string(p, 0, length);
+            }
+        }
 
         // Check if the native DLL is available.  This is mostly to avoid exceptions in the designer.
         // This returns false if the DLL doesn't load.
         public static bool DLLAvailable()
         {
-            
             return LoadLibrary("SMX.dll") != IntPtr.Zero;
         }
 

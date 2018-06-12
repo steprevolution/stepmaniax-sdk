@@ -6,6 +6,7 @@
 #include "../SMX.h"
 #include "SMXManager.h"
 #include "SMXDevice.h"
+#include "SMXBuildVersion.h"
 using namespace std;
 using namespace SMX;
 
@@ -63,3 +64,4 @@ SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode) { g_pSMX->GetDevice(p
 SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data) { return g_pSMX->GetDevice(pad)->GetTestData(*data); }
 SMX_API void SMX_SetLights(const char lightsData[864]) { g_pSMX->SetLights(string(lightsData, 864)); }
 SMX_API void SMX_ReenableAutoLights() { g_pSMX->ReenableAutoLights(); }
+SMX_API const char *SMX_Version() { return SMX_BUILD_VERSION; }

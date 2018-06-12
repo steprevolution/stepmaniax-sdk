@@ -24,6 +24,9 @@ namespace smx_config
         {
             base.OnApplyTemplate();
 
+            Version1.Content = "SMXConfig version " + SMX.SMX.Version();
+            Version2.Content = "SMXConfig version " + SMX.SMX.Version();
+
             AutoLightsColor.StartedDragging += delegate() { showAutoLightsColor.Start(); };
             AutoLightsColor.StoppedDragging += delegate() { showAutoLightsColor.Stop(); };
             AutoLightsColor.StoppedDragging += delegate() { showAutoLightsColor.Stop(); };

@@ -636,8 +636,11 @@ Use if the platform is too sensitive.</clr:String>
         <Grid x:Name="Searching" Visibility="Hidden"  Background="#DDD">
             <Label Content="Searching for controller..."
                    HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="33.333"/>
+            <Label x:Name="Version1" Content="Version"
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="0 0 0 10" />
         </Grid>
-        <TabControl x:Name="Main" Margin="0,0,0,0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+
+        <TabControl x:Name="Main" Margin="0,0,0,0" Visibility='Visible' HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
 
@@ -709,6 +712,13 @@ Use if the platform is too sensitive.</clr:String>
 
                         <Button x:Name="SetAllPanelsToCurrentColor" Content="Set all panels to this color" HorizontalAlignment="Center" Padding="6,2" Margin="0,6,0,0" />
                     </StackPanel>
+
+                    <!-- This version label is tweaked so it's in the same place as the one on the
+                         connecting screen.  If we use the same margin, the tab container's border
+                         shifts it by a couple pixels, which makes it fidget around when we connect
+                         and disconnect. -->
+                    <Label x:Name="Version2" Content="Version"
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="0 0 0 7" />
                 </Grid>
             </TabItem>
 
@@ -762,8 +772,8 @@ slider, and deactivate when it reaches the left side of the slider.</TextBlock>
             <TabItem Header="Advanced">
                 <StackPanel Background="#FFE5E5E5">
                     <TextBlock HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
-                                   TextAlignment="Center"
-                                   xml:space="preserve" FontSize="16">Active panels</TextBlock>
+                                    TextAlignment="Center"
+                                    xml:space="preserve" FontSize="16">Active panels</TextBlock>
                     <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,0,0,0" TextAlignment="Center">Select which directions have sensors, and deselect panels that aren't in use.
                         
 Input will be disabled from deselected panels.</TextBlock>
@@ -776,7 +786,7 @@ Input will be disabled from deselected panels.</TextBlock>
                     <TextBlock HorizontalAlignment="Center"
                         xml:space="preserve" FontSize="16">Import/export settings</TextBlock>
                     <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,5,0,0" TextAlignment="Center"
-                               >Export current settings to a file.</TextBlock>
+                                >Export current settings to a file.</TextBlock>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button Content="Export" Width="50" Padding="5,2" Margin="5,10" Click="ExportSettings" />
                         <Button Content="Import" Width="50" Padding="5,2" Margin="5,10" Click="ImportSettings" />
@@ -784,7 +794,7 @@ Input will be disabled from deselected panels.</TextBlock>
 
                     <Separator Margin="0,10,0,10" />
                     <TextBlock HorizontalAlignment="Center"
-                                   xml:space="preserve" FontSize="16">Reset all settings</TextBlock>
+                                    xml:space="preserve" FontSize="16">Reset all settings</TextBlock>
                     <Button Content="Factory reset" Width="140" Margin="0 10 0 0" Padding="0 4" Click="FactoryReset_Click"/>
                 </StackPanel>
             </TabItem>
@@ -806,7 +816,5 @@ Input will be disabled from deselected panels.</TextBlock>
             <Label x:Name="P1Connected" Style="{StaticResource EnabledIcon}" Content="P1" Margin="1,0,4,0" FontSize="10"/>
             <Label x:Name="P2Connected" Style="{StaticResource EnabledIcon}" Content="P2" Margin="0,0,4,0" FontSize="10"/>
         </StackPanel>
-        
-
     </Grid>
 </Window>

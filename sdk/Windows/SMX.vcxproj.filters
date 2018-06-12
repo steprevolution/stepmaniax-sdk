@@ -31,6 +31,9 @@
     <ClInclude Include="Helpers.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="SMXBuildVersion.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SMX.cpp">
