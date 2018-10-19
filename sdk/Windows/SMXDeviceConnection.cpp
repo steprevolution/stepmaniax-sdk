@@ -203,6 +203,18 @@ void SMX::SMXDeviceConnection::HandleUsbPacket(const string &buf)
         if(!m_bActive)
             break;
 
+        if(cmd & PACKET_FLAG_START_OF_COMMAND && !m_sCurrentReadBuffer.empty())
+        {
+            // When we get a start packet, the read buffer should already be empty.  If
+            // it isn't, we got a command that didn't end with an END_OF_COMMAND packet,
+            // and something is wrong.  This shouldn't happen, so warn about it and recover
+            // by clearing the junk in the buffer.
+            Log(ssprintf("Got PACKET_FLAG_START_OF_COMMAND, but we had %i bytes in the read buffer",
+                m_sCurrentReadBuffer.size()));
+
+            m_sCurrentReadBuffer.clear();
+        }
+
         m_sCurrentReadBuffer.append(sPacket);
 
         if(cmd & PACKET_FLAG_END_OF_COMMAND)
