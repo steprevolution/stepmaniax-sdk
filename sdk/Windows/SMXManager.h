@@ -33,6 +33,9 @@ struct SMXControllerState
 class SMXManager
 {
 public:
+    // Our singleton:
+    static shared_ptr<SMXManager> g_pSMX;
+
     // pCallback is a function to be called when something changes on any device.  This allows
     // efficiently detecting when a panel is pressed or other changes happen.
     SMXManager(function<void(int PadNumber, SMXUpdateCallbackReason reason)> pCallback);

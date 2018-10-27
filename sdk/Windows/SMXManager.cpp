@@ -13,6 +13,8 @@ namespace {
     Mutex g_Lock;
 }
 
+shared_ptr<SMXManager> SMXManager::g_pSMX;
+
 SMX::SMXManager::SMXManager(function<void(int PadNumber, SMXUpdateCallbackReason reason)> pCallback):
     m_UserCallbackThread("SMXUserCallbackThread")
 {
