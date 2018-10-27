@@ -334,12 +334,17 @@ namespace smx_config
                 {
                     for( int i = 0; i < 16; ++i )
                     {
-                        cmd.Write( color[iPanel*3+0] );
-                        cmd.Write( color[iPanel*3+1] );
-                        cmd.Write( color[iPanel*3+2] );
+                        // Auto-lights colors in the config packet are scaled so the firmware
+                        // doesn't have to do it, but here we're setting the panel color to
+                        // the auto-light color directly to preview the color.  SetLights
+                        // will apply the scaling, so we need to remove it.
+                        cmd.Write( Helpers.UnscaleColor(color[iPanel*3+0]) );
+                        cmd.Write( Helpers.UnscaleColor(color[iPanel*3+1]) );
+                        cmd.Write( Helpers.UnscaleColor(color[iPanel*3+2]) );
                     }
                 }
             }
+
             SMX.SMX.SetLights(cmd.Get());
         }
     };
