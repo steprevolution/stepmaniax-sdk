@@ -320,16 +320,16 @@ namespace smx_config
 
         private void AutoLightsColorRefreshColor()
         {
-            byte[] lights = new byte[864];
             CommandBuffer cmd = new CommandBuffer();
 
             for(int pad = 0; pad < 2; ++pad)
             {
+                // Use this panel's color.  If a panel isn't connected, we still need to run the
+                // loop below to insert data for the panel.
+                byte[] color = new byte[9*3];
                 SMX.SMXConfig config;
-                if(!SMX.SMX.GetConfig(pad, out config))
-                    continue;
-
-                byte[] color = config.stepColor;
+                if(SMX.SMX.GetConfig(pad, out config))
+                    color = config.stepColor;
                 for( int iPanel = 0; iPanel < 9; ++iPanel )
                 {
                     for( int i = 0; i < 16; ++i )

@@ -414,6 +414,9 @@ namespace SMX
         public static void SetLights(byte[] buf)
         {
             if(!DLLAvailable()) return;
+
+            if(buf.Length != 9*16*3*2)
+                throw new Exception("SetLights buffer has an invalid length: " + buf.Length);
             SMX_SetLights(buf);
         }
 
