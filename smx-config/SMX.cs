@@ -60,6 +60,10 @@ namespace SMX
         public Byte panelThreshold6Low, panelThreshold6High;
         public Byte panelThreshold8Low, panelThreshold8High;
 
+        // Pad this struct to exactly 250 bytes.
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 166)]
+        public Byte[] padding;
+
         // enabledSensors is a mask of which panels are enabled.  Return this as an array
         // for convenience.
         public bool[] GetEnabledPanels()
@@ -290,6 +294,15 @@ namespace SMX
         public static void Start(UpdateCallback callback)
         {
             if(!DLLAvailable()) return;
+
+            // Sanity check SMXConfig, which should be 250 bytes.  If this is incorrect,
+            // check the padding array.
+            {
+                SMXConfig config = new SMXConfig();
+                int bytes = Marshal.SizeOf(config);
+                if(bytes != 250)
+                    throw new Exception("SMXConfig is " + bytes + " bytes, but should be 250 bytes");
+            }
 
             // Make a wrapper to convert from the native enum to SMXUpdateCallbackReason.
             InternalUpdateCallback NewCallback = delegate(int PadNumber, int reason, IntPtr user) {

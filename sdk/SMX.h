@@ -215,8 +215,14 @@ struct SMXConfig
     uint8_t panelThreshold5Low, panelThreshold5High;
     uint8_t panelThreshold6Low, panelThreshold6High;
     uint8_t panelThreshold8Low, panelThreshold8High;
+
+    // Pad the struct to 250 bytes.  This keeps this struct size from changing
+    // as we add fields, so the ABI doesn't change.  Applications should leave
+    // any data in here unchanged when calling SMX_SetConfig.
+    uint8_t padding[166];
 };
-static_assert(sizeof(SMXConfig) == 84, "Expected 84 bytes");
+static_assert(offsetof(SMXConfig, padding) == 84, "Expected 84 bytes"); // includes one padding byte
+static_assert(sizeof(SMXConfig) == 250, "Expected 250 bytes");
 
 // The values (except for Off) correspond with the protocol and must not be changed.
 enum SensorTestMode {
