@@ -206,7 +206,8 @@ struct SMXConfig
     // - 0xFF: This is a config packet from before configVersion was added.
     // - 0x00: configVersion added
     // - 0x02: panelThreshold0Low through panelThreshold8High added
-    uint8_t configVersion = 0x02;
+    // - 0x03: debounceDelayMs added
+    uint8_t configVersion = 0x03;
 
     // The remaining thresholds (configVersion >= 2).
     uint8_t unused9[10];
@@ -216,12 +217,17 @@ struct SMXConfig
     uint8_t panelThreshold6Low, panelThreshold6High;
     uint8_t panelThreshold8Low, panelThreshold8High;
 
+    // Master delay debouncing (version >= 3).  If enabled, this will add a
+    // corresponding delay to inputs, which the game needs to compensate for.
+    // This is disabled by default.
+    uint16_t debounceDelayMs = 0;
+
     // Pad the struct to 250 bytes.  This keeps this struct size from changing
     // as we add fields, so the ABI doesn't change.  Applications should leave
     // any data in here unchanged when calling SMX_SetConfig.
-    uint8_t padding[166];
+    uint8_t padding[164];
 };
-static_assert(offsetof(SMXConfig, padding) == 84, "Expected 84 bytes"); // includes one padding byte
+static_assert(offsetof(SMXConfig, padding) == 86, "Expected 86 bytes"); // includes one padding byte
 static_assert(sizeof(SMXConfig) == 250, "Expected 250 bytes");
 
 // The values (except for Off) correspond with the protocol and must not be changed.
