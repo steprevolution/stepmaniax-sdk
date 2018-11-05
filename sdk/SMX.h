@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 #ifdef SMX_EXPORTS
-#define SMX_API __declspec(dllexport)
+#define SMX_API extern "C" __declspec(dllexport)
 #else
-#define SMX_API __declspec(dllimport)
+#define SMX_API extern "C" __declspec(dllimport)
 #endif
 
 struct SMXInfo;
@@ -27,23 +27,23 @@ struct SMXSensorTestModeData;
 //
 // This is called asynchronously from a helper thread, so the receiver must be thread-safe.
 typedef void SMXUpdateCallback(int pad, SMXUpdateCallbackReason reason, void *pUser);
-extern "C" SMX_API void SMX_Start(SMXUpdateCallback UpdateCallback, void *pUser);
+SMX_API void SMX_Start(SMXUpdateCallback UpdateCallback, void *pUser);
 
 // Shut down and disconnect from all devices.  This will wait for any user callbacks to complete,
 // and no user callbacks will be called after this returns.  This must not be called from within
 // the update callback.
-extern "C" SMX_API void SMX_Stop();
+SMX_API void SMX_Stop();
 
 // Set a function to receive diagnostic logs.  By default, logs are written to stdout.
 // This can be called before SMX_Start, so it affects any logs sent during initialization.
 typedef void SMXLogCallback(const char *log);
-extern "C" SMX_API void SMX_SetLogCallback(SMXLogCallback callback);
+SMX_API void SMX_SetLogCallback(SMXLogCallback callback);
 
 // Get info about a pad.  Use this to detect which pads are currently connected.
-extern "C" SMX_API void SMX_GetInfo(int pad, SMXInfo *info);
+SMX_API void SMX_GetInfo(int pad, SMXInfo *info);
 
 // Get a mask of the currently pressed panels.
-extern "C" SMX_API uint16_t SMX_GetInputState(int pad);
+SMX_API uint16_t SMX_GetInputState(int pad);
 
 // Update the lights.  Both pads are always updated together.  lightsData is a list of 8-bit RGB
 // colors, one for each LED.  Each panel has lights in the following order:
@@ -66,7 +66,7 @@ extern "C" SMX_API uint16_t SMX_GetInputState(int pad);
 //
 // The panels will return to automatic lighting if no lights are received for a while, so applications
 // controlling lights should send light updates continually, even if the lights aren't changing.
-extern "C" SMX_API void SMX_SetLights(const char lightsData[864]);
+SMX_API void SMX_SetLights(const char lightsData[864]);
 
 // By default, the panels light automatically when stepped on.  If a lights command is sent by
 // the application, this stops happening to allow the application to fully control lighting.
@@ -76,33 +76,33 @@ extern "C" SMX_API void SMX_SetLights(const char lightsData[864]);
 // SMX_ReenableAutoLights can be called to immediately reenable auto-lighting, without waiting
 // for the timeout period to elapse.  Games don't need to call this, since the panels will return
 // to auto-lighting mode automatically after a brief period of no updates.
-extern "C" SMX_API void SMX_ReenableAutoLights();
+SMX_API void SMX_ReenableAutoLights();
 
 // Get the current controller's configuration.
 //
 // Return true if a configuration is available.  If false is returned, no panel is connected
 // and no data will be set.
-extern "C" SMX_API bool SMX_GetConfig(int pad, SMXConfig *config);
+SMX_API bool SMX_GetConfig(int pad, SMXConfig *config);
 
 // Update the current controller's configuration.  This doesn't block, and the new configuration will
 // be sent in the background.  SMX_GetConfig will return the new configuration as soon as this call
 // returns, without waiting for it to actually be sent to the controller.
-extern "C" SMX_API void SMX_SetConfig(int pad, const SMXConfig *config);
+SMX_API void SMX_SetConfig(int pad, const SMXConfig *config);
 
 // Reset a pad to its original configuration.
-extern "C" SMX_API void SMX_FactoryReset(int pad);
+SMX_API void SMX_FactoryReset(int pad);
 
 // Request an immediate panel recalibration.  This is normally not necessary, but can be helpful
 // for diagnostics.
-extern "C" SMX_API void SMX_ForceRecalibration(int pad);
+SMX_API void SMX_ForceRecalibration(int pad);
 
 // Set a panel test mode and request test data.  This is used by the configuration tool.
-extern "C" SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode);
-extern "C" SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data);
+SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode);
+SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data);
 
 // Return the build version of the DLL, which is based on the git tag at build time.  This
 // is only intended for diagnostic logging, and it's also the version we show in SMXConfig.
-extern "C" SMX_API const char *SMX_Version();
+SMX_API const char *SMX_Version();
 
 // General info about a connected controller.  This can be retrieved with SMX_GetInfo.
 struct SMXInfo
