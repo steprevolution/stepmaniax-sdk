@@ -26,9 +26,8 @@ public:
     // Call func asynchronously from the helper thread.
     void RunInThread(function<void()> func);
 
-    // Return the Win32 thread ID, or INVALID_HANDLE_VALUE if the thread has been
-    // shut down.
-    DWORD GetThreadId() const { return m_iThreadId; }
+    // Return true if this is the calling thread.
+    bool IsCurrentThread() const;
 
 private:
     static DWORD WINAPI ThreadMainStart(void *self_);

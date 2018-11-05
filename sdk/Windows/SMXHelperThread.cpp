@@ -74,3 +74,8 @@ void SMX::SMXHelperThread::RunInThread(function<void()> func)
     SetEvent(m_hEvent->value());
     m_Lock.Unlock();
 }
+
+bool SMX::SMXHelperThread::IsCurrentThread() const
+{
+    return GetCurrentThreadId() == m_iThreadId;
+}
