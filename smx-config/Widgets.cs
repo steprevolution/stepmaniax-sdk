@@ -455,6 +455,20 @@ namespace smx_config
             bool[] enabledPanels = config.GetEnabledPanels();
             Visibility = enabledPanels[PanelIndex]? Visibility.Visible:Visibility.Hidden;
 
+            // If this panel is selected but its panel isn't enabled, try to select a
+            // different panel.
+            if(!enabledPanels[PanelIndex] && IsSelected)
+            {
+                for(int panel = 0; panel < 9; ++panel)
+                {
+                    if(enabledPanels[panel])
+                    {
+                        SelectedPanel = panel;
+                        break;
+                    }
+                }
+            }
+
             Color rgb = Helpers.UnscaleColor(Color.FromRgb(
                 config.stepColor[PanelIndex*3+0],
                 config.stepColor[PanelIndex*3+1],
