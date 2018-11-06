@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <functional>
 #include <memory>
+#include <vector>
 using namespace std;
 
 namespace SMX
@@ -99,6 +100,42 @@ public:
 private:
     Mutex &m_Mutex;
 };
+
+
+class Event
+{
+public:
+    Event(Mutex &lock):
+        m_Lock(lock)
+    {
+        m_hEvent = make_shared<AutoCloseHandle>(CreateEvent(NULL, false, false, NULL));
+    }
+
+    void Set()
+    {
+        SetEvent(m_hEvent->value());
+    }
+
+    // Unlock m_Lock, wait up to iDelayMilliseconds for the event to be set,
+    // then lock m_Lock.  If iDelayMilliseconds is -1, wait forever.
+    void Wait(int iDelayMilliseconds)
+    {
+        if(iDelayMilliseconds == -1)
+            iDelayMilliseconds = INFINITE;
+
+        m_Lock.AssertLockedByCurrentThread();
+
+        m_Lock.Unlock();
+        vector<HANDLE> aHandles = { m_hEvent->value() };
+        WaitForSingleObjectEx(m_hEvent->value(), iDelayMilliseconds, true);
+        m_Lock.Lock();
+    }
+
+private:
+    shared_ptr<SMX::AutoCloseHandle> m_hEvent;
+    Mutex &m_Lock;
+};
+
 }
 
 #endif
