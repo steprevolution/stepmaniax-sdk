@@ -162,6 +162,24 @@ Use if the platform is too sensitive.</clr:String>
             </Setter>
         </Style>
 
+
+        <!-- SelectableButton changes color when selected. -->
+        <Style TargetType="{x:Type controls:SelectableButton}">
+            <Style.Triggers>
+                <Trigger Property="Selected" Value="True">
+                    <Setter Property="BorderThickness" Value="2" />
+                    <!--<Setter Property="Foreground" Value="#FFF" />
+                    <Setter Property="Background" Value="#04F" />-->
+                </Trigger>
+                <!--
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter Property="Foreground" Value="#FFF" />
+                    <Setter Property="Background" Value="#04F" />
+                </Trigger>
+                -->
+            </Style.Triggers>
+        </Style>
+
         <Style TargetType="{x:Type controls:PresetButton}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -643,7 +661,6 @@ Use if the platform is too sensitive.</clr:String>
         <TabControl x:Name="Main" Margin="0,0,0,0" Visibility='Visible' HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
-
                     <StackPanel Margin="0,0,0,0" VerticalAlignment="Top">
                         <TextBlock HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
                                    TextAlignment="Center"
@@ -664,6 +681,26 @@ Use if the platform is too sensitive.</clr:String>
 
                         <Separator Margin="0,10,0,4" />
 
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                    Margin="0,0,0,10">
+                            <controls:SelectableButton x:Name="PanelColorsButton" Content="Panel colors" Padding="15,2" Margin="5,10" Click="PressedColorModeButton" />
+                            <controls:SelectableButton x:Name="GIFAnimationsButton" Content="GIF animations" Padding="15,2" Margin="5,10" Click="PressedColorModeButton" />
+                        </StackPanel>
+
+                        <StackPanel Name="GIFGroup" HorizontalAlignment="Center" Orientation="Vertical">
+                            <TextBlock TextAlignment="Center">
+                                Load panel animations
+                            </TextBlock>
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <Button Content="Load idle GIF" Padding="5,2" Margin="5,10" Name="LoadIdle" Click="LoadGIF" />
+                                <Button Content="Load pressed GIF" Padding="5,2" Margin="5,10" Name="LoadPressed" Click="LoadGIF" />
+                            </StackPanel>
+
+                            <TextBlock Name="LeaveRunning" TextAlignment="Center">
+                                Leave this application running to play animations.
+                            </TextBlock>
+                        </StackPanel>
+                        
                         <StackPanel 
                             Visibility="Visible"
                             Name="ColorPickerGroup" HorizontalAlignment="Center" Orientation="Vertical">

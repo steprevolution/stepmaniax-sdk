@@ -71,6 +71,27 @@ namespace smx_config
             };
         }
 
+        private void PressedColorModeButton(object sender, RoutedEventArgs e)
+        {
+            // The user pressed either the "panel colors" or "GIF animations" button.
+            bool pressedPanelColors = sender == PanelColorsButton;
+
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                SMX.SMXConfig config = activePad.Item2;
+
+                // If we're in panel colors mode, clear the AutoLightingUsePressedAnimations flag.
+                // Otherwise, set it.
+                if(pressedPanelColors)
+                    config.configFlags &= ~SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations;
+                else
+                    config.configFlags |= SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations;
+                SMX.SMX.SetConfig(activePad.Item1, config);
+            }
+
+            CurrentSMXDevice.singleton.FireConfigurationChanged(null);
+        }
+
         private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
         {
             bool EitherControllerConnected = args.controller[0].info.connected || args.controller[1].info.connected;
@@ -79,6 +100,26 @@ namespace smx_config
             ConnectedPads.Visibility = EitherControllerConnected? Visibility.Visible:Visibility.Hidden;
             PanelColorP1.Visibility = args.controller[0].info.connected? Visibility.Visible:Visibility.Collapsed;
             PanelColorP2.Visibility = args.controller[1].info.connected? Visibility.Visible:Visibility.Collapsed;
+
+            // Show the color slider or GIF UI depending on which one is set in flags.
+            // If both pads are turned on, just use the first one.
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                SMX.SMXConfig config = activePad.Item2;
+
+                // If SMXConfigFlags_AutoLightingUsePressedAnimations is set, show the GIF UI.
+                // If it's not set, show the color slider UI.
+                SMX.SMXConfigFlags flags = config.configFlags;
+                bool usePressedAnimations = (flags & SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations) != 0;
+                ColorPickerGroup.Visibility = usePressedAnimations? Visibility.Collapsed:Visibility.Visible;
+                GIFGroup.Visibility = usePressedAnimations? Visibility.Visible:Visibility.Collapsed;
+
+                // Tell the color mode buttons which one is selected, to set the button highlight.
+                PanelColorsButton.Selected = !usePressedAnimations;
+                GIFAnimationsButton.Selected = usePressedAnimations;
+
+                break;
+            }
 
             RefreshConnectedPadList(args);
 
@@ -258,6 +299,49 @@ namespace smx_config
             }
 
             CurrentSMXDevice.singleton.FireConfigurationChanged(null);
+        }
+
+        private void LoadGIF(object sender, RoutedEventArgs e)
+        {
+            // If the "load idle GIF" button was pressed, load the released animation.
+            // Otherwise, load the pressed animation.
+            bool pressed = sender == this.LoadPressed;
+
+            // Prompt for a file to read.
+            Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
+            dialog.FileName = "Select an animated GIF";
+            dialog.DefaultExt = ".gif";
+            dialog.Filter = "Animated GIF (.gif)|*.gif";
+            bool? result = dialog.ShowDialog();
+            if(result == null || !(bool) result)
+                return;
+
+            byte[] buf = Helpers.ReadBinaryFile(dialog.FileName);
+            SMX.SMX.LightsType type = pressed? SMX.SMX.LightsType.LightsType_Pressed:SMX.SMX.LightsType.LightsType_Released;
+
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                int pad = activePad.Item1;
+
+                // Load the animation.
+                string error;
+                if(!SMX.SMX.LightsAnimation_Load(buf, pad, type, out error))
+                {
+                    // Any errors here are problems with the GIF, so there's no point trying
+                    // to load it for the second pad if the first returns an error.  Just show the
+                    // error and stop.
+                    MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    // Return without saving to settings on error.
+                    return;
+                }
+
+                // Save the GIF to disk so we can load it quickly later.
+                Helpers.SaveAnimationToDisk(pad, type, buf);
+
+                // Refresh after loading a GIF to update the "Leave this application running" text.
+                CurrentSMXDevice.singleton.FireConfigurationChanged(null);
+            }
         }
     }
 } 

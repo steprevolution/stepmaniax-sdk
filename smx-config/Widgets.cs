@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Data;
 using System.Windows.Shapes;
 using System.Windows.Media.Imaging;
+using System.ComponentModel;
 
 namespace smx_config
 {
@@ -257,6 +258,17 @@ namespace smx_config
             case "corner":     return !AdvancedModeEnabled && (enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8]);
             default:           return true;
             }
+        }
+    }
+    
+    // A button with a selectable highlight.
+    public class SelectableButton: Button
+    {
+        public static readonly DependencyProperty SelectedProperty = DependencyProperty.Register("Selected",
+            typeof(bool), typeof(SelectableButton), new FrameworkPropertyMetadata(false));
+        public bool Selected {
+            get { return (bool) GetValue(SelectedProperty); }
+            set { SetValue(SelectedProperty, value); }
         }
     }
 

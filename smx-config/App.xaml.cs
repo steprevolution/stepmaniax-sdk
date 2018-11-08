@@ -33,6 +33,11 @@ namespace smx_config
                 SMX_Internal_OpenConsole();
 
             CurrentSMXDevice.singleton = new CurrentSMXDevice();
+
+            // Load animations, and tell the SDK to handle auto-lighting as long as
+            // we're running.
+            Helpers.LoadSavedPanelAnimations();
+            SMX.SMX.LightsAnimation_SetAuto(true);
         }
 
         private void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs e)

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Media;
+using System.Windows.Resources;
 using System.Windows.Threading;
 using SMXJSON;
 
@@ -227,6 +229,34 @@ namespace smx_config
             v = M;
         }
 
+        // Return our settings directory, creating it if it doesn't exist.
+        public static string GetSettingsDirectory()
+        {
+            string result = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/StepManiaX/";
+            System.IO.Directory.CreateDirectory(result);
+            return result;
+        }
+
+        public static byte[] ReadFileFromSettings(string filename)
+        {
+            string outputFilename = GetSettingsDirectory() + filename;
+            try {
+                return System.IO.File.ReadAllBytes(outputFilename);
+            } catch {
+                // If the file doesn't exist or can't be read for some other reason, just
+                // return null.
+                return null;
+            }
+        }
+
+        public static void SaveFileToSettings(string filename, byte[] data)
+        {
+            string outputFilename = GetSettingsDirectory() + filename;
+            string directory = System.IO.Path.GetDirectoryName(outputFilename);
+            System.IO.Directory.CreateDirectory(directory);
+            System.IO.File.WriteAllBytes(outputFilename, data);
+        }
+
         // Read path.  If an error is encountered, return "".
         public static string ReadFile(string path)
         {
@@ -237,6 +267,70 @@ namespace smx_config
             {
                 return "";
             }
+        }
+
+        // Read path.  If an error is encountered, return null.
+        public static byte[] ReadBinaryFile(string path)
+        {
+            try {
+                return System.IO.File.ReadAllBytes(path);
+            }
+            catch(System.IO.IOException)
+            {
+                return null;
+            }
+        }
+
+        public static Dictionary<SMX.SMX.LightsType, string> LightsTypeNames = new Dictionary<SMX.SMX.LightsType, string>()
+        {
+            { SMX.SMX.LightsType.LightsType_Pressed, "pressed" },
+            { SMX.SMX.LightsType.LightsType_Released, "released" },
+        };
+
+        // Load any saved animations from disk.  If useDefault is true, load the default
+        // animation even if there's a user animation saved.
+        public static void LoadSavedPanelAnimations(bool useDefault=false)
+        {
+            for(int pad = 0; pad < 2; ++pad)
+            {
+                foreach(var it in LightsTypeNames)
+                    LoadSavedAnimationType(pad, it.Key, useDefault);
+            }
+        }
+
+        public static void SaveAnimationToDisk(int pad, SMX.SMX.LightsType type, byte[] data)
+        {
+            string filename = LightsTypeNames[type] + ".gif";
+            string path = "Animations/Pad" + (pad+1) + "/" + filename;
+            Helpers.SaveFileToSettings(path, data);
+        }
+
+        // Read a saved PanelAnimation.
+        //
+        // Data will always be returned.  If the user hasn't saved anything, we'll return
+        // our default animation.
+        public static byte[] ReadSavedAnimationType(int pad, SMX.SMX.LightsType type, bool useDefault=false)
+        {
+            string filename = LightsTypeNames[type] + ".gif";
+            string path = "Animations/Pad" + (pad+1) + "/" + filename;
+            byte[] gif = Helpers.ReadFileFromSettings(path);
+            if(gif == null || useDefault)
+            {
+                // If the user has never loaded a file, load our default.
+                Uri url = new Uri("pack://application:,,,/Resources/" + filename);
+                StreamResourceInfo info = Application.GetResourceStream(url);
+                gif = new byte[info.Stream.Length];
+                info.Stream.Read(gif, 0, gif.Length);
+            }
+            return gif;
+        }
+
+        // Load a PanelAnimation from disk.
+        public static void LoadSavedAnimationType(int pad, SMX.SMX.LightsType type, bool useDefault=false)
+        {
+            byte[] gif = ReadSavedAnimationType(pad, type, useDefault);
+            string error;
+            SMX.SMX.LightsAnimation_Load(gif, pad, type, out error);
         }
     }
 
@@ -304,6 +398,11 @@ namespace smx_config
             if(LightsTimer.IsEnabled)
                 return;
 
+            // We normally leave lights animation control enabled while this application is
+            // running.  Turn it off temporarily while we're showing the lights sample, or the
+            // two will fight.
+            SMX.SMX.LightsAnimation_SetAuto(false);
+
             // Don't wait for an interval to send the first update.
             //AutoLightsColorRefreshColor();
 
@@ -314,8 +413,8 @@ namespace smx_config
         {
             LightsTimer.Stop();
 
-            // Reenable auto-lights immediately, without waiting for lights to time out.
-            SMX.SMX.ReenableAutoLights();
+            // Turn lighting control back on.
+            SMX.SMX.LightsAnimation_SetAuto(true);
         }
 
         private void AutoLightsColorRefreshColor()

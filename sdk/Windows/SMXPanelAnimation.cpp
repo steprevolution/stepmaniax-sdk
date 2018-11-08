@@ -1,3 +1,45 @@
+// Handle playing GIF animations from inside SMXConfig.
+//
+// This can load two GIF animations, one for when panels are released
+// and one for when they're pressed, and play them automatically on the
+// pad in the background.  Applications that control lights can do more
+// sophisticated things with the lights, but this gives an easy way for
+// people to create simple animations.
+//
+// If you're implementing the SDK in a game, you don't need this and should
+// use SMX.h instead.
+//
+// An animation is a single GIF with animations for all panels, in the
+// following layout:
+//
+// 0000|1111|2222
+// 0000|1111|2222
+// 0000|1111|2222
+// 0000|1111|2222
+// --------------
+// 3333|4444|5555
+// 3333|4444|5555
+// 3333|4444|5555
+// 3333|4444|5555
+// --------------
+// 6666|7777|8888
+// 6666|7777|8888
+// 6666|7777|8888
+// 6666|7777|8888
+// x-------------
+//
+// The - | regions are ignored and are only there to space out the animation
+// to make it easier to view.
+//
+// The extra bottom row is a flag row and should normally be black.  The first
+// pixel (bottom-left) optionally marks a loop frame.  By default, the animation
+// plays all the way through and then loops back to the beginning.  If the loop
+// frame pixel is white, it marks a frame to loop to instead of the beginning.
+// This allows pressed animations to have a separate lead-in and loop.
+//
+// Each animation is for a single pad.  You can load the same animation for both
+// pads or use different ones.
+
 #include "SMXPanelAnimation.h"
 #include "SMXManager.h"
 #include "SMXDevice.h"
@@ -185,37 +227,33 @@ namespace
 }
 
 namespace {
-    // Given a 23x24 graphic frame and a panel number, return an array of 25 colors, containing
+    // The X,Y positions of each possible panel.
+    vector<pair<int,int>> graphic_positions = {
+        { 0,0 },
+        { 1,0 },
+        { 2,0 },
+        { 0,1 },
+        { 1,1 },
+        { 2,1 },
+        { 0,2 },
+        { 1,2 },
+        { 2,2 },
+    };
+
+    // Given a 14x15 graphic frame and a panel number, return an array of 16 colors, containing
     // each light in the order it's sent to the master controller.
     void ConvertToPanelGraphic(const SMXGif::GIFImage &src, vector<SMXGif::Color> &dst, int panel)
     {
-        vector<pair<int,int>> graphic_positions = {
-            { 0,0 },
-            { 1,0 },
-            { 2,0 },
-            { 0,1 },
-            { 1,1 },
-            { 2,1 },
-            { 0,2 },
-            { 1,2 },
-            { 2,2 },
-        };
-
         dst.clear();
 
         // The top-left corner for this panel:
-        int x = graphic_positions[panel].first * 8;
-        int y = graphic_positions[panel].second * 8;
+        int x = graphic_positions[panel].first * 5;
+        int y = graphic_positions[panel].second * 5;
 
-        // Add the 4x4 grid first.
+        // Add the 4x4 grid.
         for(int dy = 0; dy < 4; ++dy)
             for(int dx = 0; dx < 4; ++dx)
-                dst.push_back(src.get(x+dx*2, y+dy*2));
-
-        // Add the 3x3 grid.
-        for(int dy = 0; dy < 3; ++dy)
-            for(int dx = 0; dx < 3; ++dx)
-                dst.push_back(src.get(x+dx*2+1, y+dy*2+1));
+                dst.push_back(src.get(x+dx, y+dy));
     }
 }
 
