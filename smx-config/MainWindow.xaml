@@ -664,53 +664,51 @@ Use if the platform is too sensitive.</clr:String>
 
                         <Separator Margin="0,10,0,4" />
 
-                        <TextBlock HorizontalAlignment="Center" Margin="0,15,0,0" VerticalAlignment="Top"
-                                   TextAlignment="Center"
-                                   xml:space="preserve" FontSize="16">Panel colors</TextBlock>
+                        <StackPanel 
+                            Visibility="Visible"
+                            Name="ColorPickerGroup" HorizontalAlignment="Center" Orientation="Vertical">
+                            <TextBlock TextAlignment="Center">
+                                Set the color each arrow lights when pressed.
+                            </TextBlock>
 
-                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
-                                   TextAlignment="Center"
-                                   xml:space="preserve"
->Set the color each arrow lights when pressed.</TextBlock>
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <!-- The duplication here could be factored out, but with WPF it's not really worth it: -->
+                                <Grid x:Name="PanelColorP1" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    <controls:PanelColorButton Panel="0" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="1" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="2" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
 
-                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                            
-                        <!-- The duplication here could be factored out, but with WPF it's not really worth it: -->
-                        <Grid x:Name="PanelColorP1" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
-                            <controls:PanelColorButton Panel="0" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="1" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="2" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="3" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="4" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="5" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
 
-                            <controls:PanelColorButton Panel="3" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="4" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="5" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="6" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="7" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="8" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                </Grid>
 
-                            <controls:PanelColorButton Panel="6" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="7" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="8" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                        </Grid>
+                                <Grid x:Name="PanelColorP2" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                    <controls:PanelColorButton Panel="9" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="10" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="11" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
 
-                        <Grid x:Name="PanelColorP2" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
-                            <controls:PanelColorButton Panel="9" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="10" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="11" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="12" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="13" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="14" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
 
-                            <controls:PanelColorButton Panel="12" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="13" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="14" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="15" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="16" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                    <controls:PanelColorButton Panel="17" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                </Grid>
+                            </StackPanel>
 
-                            <controls:PanelColorButton Panel="15" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="16" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                            <controls:PanelColorButton Panel="17" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                        </Grid>
+                            <controls:ColorPicker
+                                x:Name="AutoLightsColor" Focusable="false"
+                                controls:ColorPicker.SelectedPanel="0"
+                            />
+
+                            <Button x:Name="SetAllPanelsToCurrentColor" Content="Set all panels to this color" HorizontalAlignment="Center" Padding="6,2" Margin="0,6,0,0" />
                         </StackPanel>
-
-                        <controls:ColorPicker
-                            x:Name="AutoLightsColor" Focusable="false"
-                            controls:ColorPicker.SelectedPanel="0"
-                        />
-
-                        <Button x:Name="SetAllPanelsToCurrentColor" Content="Set all panels to this color" HorizontalAlignment="Center" Padding="6,2" Margin="0,6,0,0" />
                     </StackPanel>
 
                     <!-- This version label is tweaked so it's in the same place as the one on the
