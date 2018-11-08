@@ -56,6 +56,19 @@ void SMX::SMXDeviceConnection::Close()
     if(m_hDevice)
         CancelIo(m_hDevice->value());
 
+    // If we're being closed while a command was in progress, call its completion
+    // callback, so it's guaranteed to always be called.
+    if(m_pCurrentCommand && m_pCurrentCommand->m_pComplete)
+        m_pCurrentCommand->m_pComplete();
+
+    // If any commands were queued with completion callbacks, call their completion
+    // callbacks.
+    for(auto &pendingCommand: m_aPendingCommands)
+    {
+        if(pendingCommand->m_pComplete)
+            pendingCommand->m_pComplete();
+    }
+
     m_hDevice.reset();
     m_sReadBuffers.clear();
     m_aPendingCommands.clear();
