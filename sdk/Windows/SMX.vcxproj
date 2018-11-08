@@ -18,6 +18,7 @@
     <ClInclude Include="SMXDeviceConnection.h" />
     <ClInclude Include="SMXDeviceSearch.h" />
     <ClInclude Include="SMXDeviceSearchThreaded.h" />
+    <ClInclude Include="SMXGif.h" />
     <ClInclude Include="SMXHelperThread.h" />
     <ClInclude Include="SMXManager.h" />
     <ClInclude Include="SMXThread.h" />
@@ -29,6 +30,7 @@
     <ClCompile Include="SMXDeviceConnection.cpp" />
     <ClCompile Include="SMXDeviceSearch.cpp" />
     <ClCompile Include="SMXDeviceSearchThreaded.cpp" />
+    <ClCompile Include="SMXGif.cpp" />
     <ClCompile Include="SMXHelperThread.cpp" />
     <ClCompile Include="SMXManager.cpp" />
     <ClCompile Include="SMXThread.cpp" />

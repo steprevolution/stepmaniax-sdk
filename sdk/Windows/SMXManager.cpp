@@ -241,23 +241,10 @@ void SMX::SMXManager::ThreadMain()
 // that we don't send the second lights commands, since that may re-disable auto lights.
 // - If we have two pads, the lights update is for both pads and we'll send both commands
 // for both pads at the same time, so both pads update lights simultaneously.
-void SMX::SMXManager::SetLights(const string &sLightData)
+void SMX::SMXManager::SetLights(const string sPanelLights[2])
 {
     g_Lock.AssertNotLockedByCurrentThread();
     LockMutex L(g_Lock);
-
-    // Sanity check the lights data.  It should have 18*16*3 bytes of data: RGB for each of 4x4
-    // LEDs on 18 panels.
-    if(sLightData.size() != 2*3*3*16*3)
-    {
-        Log(ssprintf("SetLights: Lights data should be %i bytes, received %i", 2*3*3*16*3, sLightData.size()));
-        return;
-    }
-
-    // Split the lights data into P1 and P2.
-    string sPanelLights[2];
-    sPanelLights[0] = sLightData.substr(0, 9*16*3);
-    sPanelLights[1] = sLightData.substr(9*16*3);
 
     // Separate top and bottom lights commands.
     //
@@ -281,42 +268,44 @@ void SMX::SMXManager::SetLights(const string &sLightData)
     // Set sLightsCommand[iPad][0] to include 0123 4567, and [1] to 89AB CDEF.
     string sLightCommands[2][2]; // sLightCommands[command][pad]
 
-    auto addByte = [&sLightCommands](int iPanel, int iByte, uint8_t iColor) {
-        // If iPanel is 0-8, this is for pad 0.  For 9-17, it's for pad 1.
-        // If the color byte within the panel is in the top half, it's the first
-        // command, otherwise it's the second command.
-        int iPad = iPanel < 9? 0:1;
-        int iCommandIndex = iByte < 4*2*3? 0:1;
-        sLightCommands[iCommandIndex][iPad].append(1, iColor);
-    };
-
     // Read the linearly arranged color data we've been given and split it into top and
     // bottom commands for each pad.
-    int iNextInputByte = 0;
-    for(int iPanel = 0; iPanel < 18; ++iPanel)
-    {
-        for(int iByte = 0; iByte < 4*4*3; ++iByte)
-        {
-            uint8_t iColor = sLightData[iNextInputByte++];
-            addByte(iPanel, iByte, iColor);
-        }
-    }
-
     for(int iPad = 0; iPad < 2; ++iPad)
     {
-        for(int iCommand = 0; iCommand < 2; ++iCommand)
+        // If there's no data for this pad, leave the command empty.
+        const string &sLightsDataForPad = sPanelLights[iPad];
+        if(sLightsDataForPad.empty())
+            continue;
+
+        // Sanity check the lights data.  It should have 9*4*4*3 bytes of data: RGB for each of 4x4
+        // LEDs on 9 panels.
+        if(sPanelLights[iPad].size() != 9*16*3)
         {
-            string &sCommand = sLightCommands[iCommand][iPad];
-
-            // Apply color scaling.  Values over about 170 don't make the LEDs any brighter, so this
-            // gives better contrast and draws less power.
-            for(char &c: sCommand)
-                c = char(uint8_t(c) * 0.6666f);
-
-            // Add the command byte.
-            sCommand.insert(sCommand.begin(), 1, iCommand == 0? '2':'3');
-            sCommand.push_back('\n');
+            Log(ssprintf("SetLights: Lights data should be %i bytes, received %i", 3*3*16*3, sPanelLights[iPad].size()));
+            continue;
         }
+
+        // The 2 command sends the top 4x2 lights, and 3 sends the bottom 4x2.
+        sLightCommands[0][iPad] = "2";
+        sLightCommands[1][iPad] = "3";
+        int iNextInputByte = 0;
+        for(int iPanel = 0; iPanel < 9; ++iPanel)
+        {
+            for(int iByte = 0; iByte < 4*4*3; ++iByte)
+            {
+                uint8_t iColor = sLightsDataForPad[iNextInputByte++];
+
+                // Apply color scaling.  Values over about 170 don't make the LEDs any brighter, so this
+                // gives better contrast and draws less power.
+                iColor = uint8_t(iColor * 0.6666f);
+                
+                int iCommandIndex = iByte < 4*2*3? 0:1;
+                sLightCommands[iCommandIndex][iPad].append(1, iColor);
+            }
+        }
+
+        sLightCommands[0][iPad].push_back('\n');
+        sLightCommands[1][iPad].push_back('\n');
     }
 
     // Each update adds two entries to m_aPendingCommands, one for the top half and one
@@ -356,13 +345,18 @@ void SMX::SMXManager::SetLights(const string &sLightData)
 
     // Set the pad commands.
     PendingCommand *pPendingCommands[2];
-    pPendingCommands[0] = &m_aPendingCommands[m_aPendingCommands.size()-2];
-    pPendingCommands[1] = &m_aPendingCommands[m_aPendingCommands.size()-1];
+    pPendingCommands[0] = &m_aPendingCommands[m_aPendingCommands.size()-2]; // 2
+    pPendingCommands[1] = &m_aPendingCommands[m_aPendingCommands.size()-1]; // 3
 
-    pPendingCommands[0]->sPadCommand[0] = sLightCommands[0][0];
-    pPendingCommands[0]->sPadCommand[1] = sLightCommands[0][1];
-    pPendingCommands[1]->sPadCommand[0] = sLightCommands[1][0];
-    pPendingCommands[1]->sPadCommand[1] = sLightCommands[1][1];
+    for(int iPad = 0; iPad < 2; ++iPad)
+    {
+        // If the command for this pad is empty, leave any existing pad command alone.
+        if(sLightCommands[0][iPad].empty())
+            continue;
+
+        pPendingCommands[0]->sPadCommand[iPad] = sLightCommands[0][iPad];
+        pPendingCommands[1]->sPadCommand[iPad] = sLightCommands[1][iPad];
+    }
 }
 
 void SMX::SMXManager::ReenableAutoLights()
@@ -395,7 +389,10 @@ void SMX::SMXManager::SendLightUpdates()
     // Send the lights command for each pad.  If either pad isn't connected, this won't do
     // anything.
     for(int iPad = 0; iPad < 2; ++iPad)
-        m_pDevices[iPad]->SendCommandLocked(command.sPadCommand[iPad]);
+    {
+        if(!command.sPadCommand[iPad].empty())
+            m_pDevices[iPad]->SendCommandLocked(command.sPadCommand[iPad]);
+    }
 
     // Remove the command we've sent.
     m_aPendingCommands.erase(m_aPendingCommands.begin(), m_aPendingCommands.begin()+1);

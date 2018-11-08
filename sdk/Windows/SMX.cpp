@@ -60,6 +60,21 @@ SMX_API void SMX_FactoryReset(int pad) { SMXManager::g_pSMX->GetDevice(pad)->Fac
 SMX_API void SMX_ForceRecalibration(int pad) { SMXManager::g_pSMX->GetDevice(pad)->ForceRecalibration(); }
 SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode) { SMXManager::g_pSMX->GetDevice(pad)->SetSensorTestMode((SensorTestMode) mode); }
 SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data) { return SMXManager::g_pSMX->GetDevice(pad)->GetTestData(*data); }
-SMX_API void SMX_SetLights(const char lightsData[864]) { SMXManager::g_pSMX->SetLights(string(lightsData, 864)); }
+SMX_API void SMX_SetLights(const char lightsData[864])
+{
+    string lights[] = {
+        string(lightsData, 432),
+        string(lightsData+432, 432),
+    };
+    SMXManager::g_pSMX->SetLights(lights);
+}
+SMX_API void SMX_SetLights2(const char *lightsData[2], int lightsDataSize[2])
+{
+    string lights[] = {
+        string(lightsData[0], lightsDataSize[0]),
+        string(lightsData[1], lightsDataSize[1]),
+    };
+    SMXManager::g_pSMX->SetLights(lights);
+}
 SMX_API void SMX_ReenableAutoLights() { SMXManager::g_pSMX->ReenableAutoLights(); }
 SMX_API const char *SMX_Version() { return SMX_BUILD_VERSION; }

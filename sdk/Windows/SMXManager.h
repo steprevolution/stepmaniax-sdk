@@ -43,7 +43,7 @@ public:
 
     void Shutdown();
     shared_ptr<SMXDevice> GetDevice(int pad);
-    void SetLights(const string &sLightData);
+    void SetLights(const string sLights[2]);
     void ReenableAutoLights();
 
 private:

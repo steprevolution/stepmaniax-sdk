@@ -68,6 +68,11 @@ SMX_API uint16_t SMX_GetInputState(int pad);
 // controlling lights should send light updates continually, even if the lights aren't changing.
 SMX_API void SMX_SetLights(const char lightsData[864]);
 
+// This is the same as SMX_SetLights, but receives lights for each pad in separate
+// buffers of 432 colors each.  lightsDataSize[pad] is the size of lightsData.  If
+// it's not 432, that pad's lights will be left unchanged.
+SMX_API void SMX_SetLights2(const char *lightsData[2], int lightsDataSize[2]);
+
 // By default, the panels light automatically when stepped on.  If a lights command is sent by
 // the application, this stops happening to allow the application to fully control lighting.
 // If no lights update is received for a few seconds, automatic lighting is reenabled by the
