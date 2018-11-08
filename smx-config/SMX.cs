@@ -21,6 +21,11 @@ namespace SMX
         private Byte dummy;
     };
 
+    // Bits for SMXConfig::flags.
+    public enum SMXConfigFlags {
+        SMXConfigFlags_AutoLightingUsePressedAnimations = 1 << 0,
+    };
+
     [StructLayout(LayoutKind.Sequential, Pack=1)]  
     public struct SMXConfig {  
         public Byte unused1, unused2;
@@ -60,8 +65,29 @@ namespace SMX
         public Byte panelThreshold6Low, panelThreshold6High;
         public Byte panelThreshold8Low, panelThreshold8High;
 
+        // Master delay debouncing (version >= 3).  If enabled, this will add a
+        // corresponding delay to inputs, which the game needs to compensate for.
+        // This is disabled by default.
+        public UInt16 debounceDelayMs;
+
+        // Packed flags (SMXConfigFlags).
+        public Byte flags;
+
+        // It would be simpler to set flags to [MarshalAs(UnmanagedType.U8)], but
+        // that doesn't work.
+        public SMXConfigFlags configFlags {
+            get {
+                return (SMXConfigFlags) flags;
+            }
+
+            set {
+                flags = (Byte) value;
+            }
+        }
+
         // Pad this struct to exactly 250 bytes.
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 166)]
+
         public Byte[] padding;
 
         // enabledSensors is a mask of which panels are enabled.  Return this as an array
@@ -248,10 +274,14 @@ namespace SMX
         private static extern bool SMX_GetTestData(int pad, out SMXSensorTestModeData data);
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_SetLights(byte[] buf);
-        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool SMX_ReenableAutoLights();
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private static extern IntPtr SMX_Version();
+
+        public enum LightsType
+        {
+            LightsType_Released, // animation while panels are released
+            LightsType_Pressed, // animation while panel is pressed
+        };
 
         public static string Version()
         {
@@ -420,10 +450,38 @@ namespace SMX
             SMX_SetLights(buf);
         }
 
-        public static void ReenableAutoLights()
+        // SMXPanelAnimation
+        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [return:MarshalAs(UnmanagedType.I1)]
+        private static extern bool SMX_LightsAnimation_Load(byte[] buf, int size, int pad, int type, out IntPtr error);
+        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern void SMX_LightsAnimation_SetAuto(bool enable);
+
+        public static bool LightsAnimation_Load(byte[] buf, int pad, LightsType type, out string error)
+        {
+            if(!DLLAvailable())
+            {
+                error = "SMX.DLL not available";
+                return false;
+            }
+
+            error = "";
+            IntPtr error_pointer;
+            bool result = SMX_LightsAnimation_Load(buf, buf.Length, pad, (int) type, out error_pointer);
+            if(!result)
+            {
+                // SMX_LightsAnimation_Load takes a char **error, which is set to the error
+                // string.
+                error = Marshal.PtrToStringAnsi(error_pointer);
+            }
+
+            return result;
+        }
+
+        public static void LightsAnimation_SetAuto(bool enable)
         {
             if(!DLLAvailable()) return;
-            SMX_ReenableAutoLights();
+            SMX_LightsAnimation_SetAuto(enable);
         }
     }
 }

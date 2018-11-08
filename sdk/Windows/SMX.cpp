@@ -7,6 +7,7 @@
 #include "SMXManager.h"
 #include "SMXDevice.h"
 #include "SMXBuildVersion.h"
+#include "SMXPanelAnimation.h" // for SMX_LightsAnimation_SetAuto
 using namespace std;
 using namespace SMX;
 
@@ -41,6 +42,9 @@ SMX_API void SMX_Start(SMXUpdateCallback callback, void *pUser)
 
 SMX_API void SMX_Stop()
 {
+    // If lights animation is running, shut it down first.
+    SMX_LightsAnimation_SetAuto(false);
+
     SMXManager::g_pSMX.reset();
 }
 

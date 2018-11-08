@@ -135,6 +135,13 @@ enum SMXUpdateCallbackReason {
     SMXUpdateCallback_FactoryResetCommandComplete
 };
 
+// Bits for SMXConfig::flags.
+enum SMXConfigFlags {
+    // This is used to store whether SMXConfig is in GIF animation mode or
+    // not.  If set, SMXConfig will use animations.
+    PlatformFlags_AutoLightingUsePressedAnimations = 1 << 0,
+};
+
 // The configuration for a connected controller.  This can be retrieved with SMX_GetConfig
 // and modified with SMX_SetConfig.
 //
@@ -227,12 +234,15 @@ struct SMXConfig
     // This is disabled by default.
     uint16_t debounceDelayMs = 0;
 
+    // Packed flags (currently only used by SMXConfig).
+    uint8_t flags = 0;
+
     // Pad the struct to 250 bytes.  This keeps this struct size from changing
     // as we add fields, so the ABI doesn't change.  Applications should leave
     // any data in here unchanged when calling SMX_SetConfig.
-    uint8_t padding[164];
+    uint8_t padding[163];
 };
-static_assert(offsetof(SMXConfig, padding) == 86, "Expected 86 bytes"); // includes one padding byte
+static_assert(offsetof(SMXConfig, padding) == 87, "Expected 87 bytes"); // includes one padding byte
 static_assert(sizeof(SMXConfig) == 250, "Expected 250 bytes");
 
 // The values (except for Off) correspond with the protocol and must not be changed.
