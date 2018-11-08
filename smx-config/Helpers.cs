@@ -75,15 +75,27 @@ namespace smx_config
 
     static class Helpers
     {
-        // Return true if we're in debug mode.
-        public static bool GetDebug()
+        // Return true if arg is in the commandline.
+        public static bool HasCommandlineArgument(string arg)
         {
-            foreach(string arg in Environment.GetCommandLineArgs())
+            foreach(string s in Environment.GetCommandLineArgs())
             {
-                if(arg == "-d")
+                if(s == arg)
                     return true;
             }
             return false;
+        }
+
+        // Return true if we're in debug mode.
+        public static bool GetDebug()
+        {
+            return HasCommandlineArgument("-d");
+        }
+
+        // Return true if we were launched on startup.
+        public static bool LaunchedOnStartup()
+        {
+            return HasCommandlineArgument("-s");
         }
 
         // Return the last Win32 error as a string.
@@ -332,6 +344,19 @@ namespace smx_config
             string error;
             SMX.SMX.LightsAnimation_Load(gif, pad, type, out error);
         }
+
+        // Create a .lnk.
+        public static void CreateShortcut(string outputFile, string targetPath, string arguments)
+        {
+            Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+            dynamic shell = Activator.CreateInstance(shellType);
+            dynamic shortcut = shell.CreateShortcut(outputFile);
+
+            shortcut.TargetPath = targetPath;
+            shortcut.Arguments = arguments;
+            shortcut.WindowStyle = 0;
+            shortcut.Save();
+        }
     }
 
     // This class just makes it easier to assemble binary command packets.
@@ -366,6 +391,46 @@ namespace smx_config
         }
 
         private LinkedList<byte[]> parts = new LinkedList<byte[]>();
+    };
+
+    // Manage launching on startup.
+    static class LaunchOnStartup
+    {
+        public static string GetLaunchShortcutFilename()
+        {
+            string startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            return startupFolder + "/StepManiaX.lnk";
+        }
+
+        // Enable or disable launching on startup.
+        public static bool Enable
+        {
+            get {
+                return Properties.Settings.Default.LaunchOnStartup;
+            }
+
+            set {
+                // Remember whether we want to be launched on startup.  This is used as a sanity
+                // check in case we're not able to remove our launch shortcut.
+                Properties.Settings.Default.LaunchOnStartup = value;
+                Properties.Settings.Default.Save();
+
+                string shortcutFilename = GetLaunchShortcutFilename();
+                if(value)
+                {
+                    string filename = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                    Helpers.CreateShortcut(shortcutFilename, filename, "-s");
+                } else {
+
+                    try {
+                        System.IO.File.Delete(shortcutFilename);
+                    } catch {
+                        // If there's an error deleting the shortcut (most likely it doesn't exist),
+                        // don't do anything.
+                    }
+                }
+            }
+        }
     };
 
     // When enabled, periodically set all lights to the current auto-lighting color.  This

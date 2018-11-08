@@ -22,5 +22,17 @@ namespace smx_config.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LaunchOnStartup {
+            get {
+                return ((bool)(this["LaunchOnStartup"]));
+            }
+            set {
+                this["LaunchOnStartup"] = value;
+            }
+        }
     }
 }

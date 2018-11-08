@@ -24,6 +24,18 @@ namespace smx_config
         {
             base.OnStartup(e);
 
+            // If we're being launched on startup, but the LaunchOnStartup setting is false,
+            // then the user turned off auto-launching but we're still being launched for some
+            // reason (eg. a renamed launch shortcut that we couldn't find to remove).  As
+            // a safety so we don't launch when the user doesn't want us to, just exit in this
+            // case.
+            if(Helpers.LaunchedOnStartup() && !LaunchOnStartup.Enable)
+            {
+                Shutdown();
+                return;
+            }
+
+            LaunchOnStartup.Enable = true;
             if(!SMX.SMX.DLLExists())
             {
                 MessageBox.Show("SMXConfig encountered an unexpected error.\n\nSMX.dll couldn't be found:\n\n" + Helpers.GetLastWin32ErrorString(), "SMXConfig");
