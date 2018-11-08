@@ -81,6 +81,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -194,6 +195,12 @@
   <ItemGroup>
     <Resource Include="Resources\pressed.gif" />
     <Resource Include="Resources\released.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\window icon grey.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\window icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

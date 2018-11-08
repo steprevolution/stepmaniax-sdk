@@ -18,6 +18,51 @@ namespace smx_config
             onConfigChange = new OnConfigChange(this, delegate(LoadFromConfigDelegateArgs args) {
                 LoadUIFromConfig(args);
             });
+
+            // If we're controlling GIF animations, confirm exiting, since you can minimize
+            // to tray to keep playing animations.  If we're not controlling animations,
+            // don't bug the user with a prompt.
+            Closing += delegate(object sender, System.ComponentModel.CancelEventArgs e)
+            {
+                LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
+
+                // Don't use ActivePads here.  Even if P1 is selected for configuration,
+                // we can still be controlling animations for P2, so check both connected
+                // pads.
+                bool shouldConfirmExit = false;
+                for(int pad = 0; pad < 2; ++pad)
+                {
+                    SMX.SMXConfig config;
+                    if(!SMX.SMX.GetConfig(pad, out config))
+                        continue;
+
+                    // If AutoLightingUsePressedAnimations isn't set, the panel is using step
+                    // coloring instead of pressed animations.  All firmwares support this.
+                    // Don't confirm exiting for this mode.
+                    if((config.configFlags & SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations) == 0)
+                        continue;
+
+                    shouldConfirmExit = true;
+                }
+
+                if(!shouldConfirmExit)
+                    return;
+
+                MessageBoxResult result = MessageBox.Show(
+                    "Close StepManiaX configuration?\n\n" +
+                    "GIF animations will keep playing if the application is minimized.",
+                    "StepManiaX", System.Windows.MessageBoxButton.YesNo);
+                if(result == MessageBoxResult.No)
+                    e.Cancel = true;
+            };
+
+            StateChanged += delegate(object sender, EventArgs e)
+            {
+                // Closing the main window entirely when minimized to the tray would be
+                // nice, but with WPF we don't really save memory by doing that, so
+                // just hide the window.
+                ShowInTaskbar = WindowState != WindowState.Minimized;
+            };
         }
 
         public override void OnApplyTemplate()
