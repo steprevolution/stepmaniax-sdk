@@ -242,7 +242,7 @@ namespace {
 
     // Given a 14x15 graphic frame and a panel number, return an array of 16 colors, containing
     // each light in the order it's sent to the master controller.
-    void ConvertToPanelGraphic(const SMXGif::GIFImage &src, vector<SMXGif::Color> &dst, int panel)
+    void ConvertToPanelGraphic16(const SMXGif::GIFImage &src, vector<SMXGif::Color> &dst, int panel)
     {
         dst.clear();
 
@@ -254,6 +254,32 @@ namespace {
         for(int dy = 0; dy < 4; ++dy)
             for(int dx = 0; dx < 4; ++dx)
                 dst.push_back(src.get(x+dx, y+dy));
+
+        // These animations have no data for the 3x3 grid, so just set them to transparent.
+        for(int dy = 0; dy < 3; ++dy)
+            for(int dx = 0; dx < 3; ++dx)
+                dst.push_back(SMXGif::Color(0,0,0,0));
+    }
+
+    // Given a 23x24 graphic frame and a panel number, return an array of 25 colors, containing
+    // each light in the order it's sent to the master controller.
+    void ConvertToPanelGraphic25(const SMXGif::GIFImage &src, vector<SMXGif::Color> &dst, int panel)
+    {
+        dst.clear();
+
+        // The top-left corner for this panel:
+        int x = graphic_positions[panel].first * 8;
+        int y = graphic_positions[panel].second * 8;
+
+        // Add the 4x4 grid first.
+        for(int dy = 0; dy < 4; ++dy)
+            for(int dx = 0; dx < 4; ++dx)
+                dst.push_back(src.get(x+dx*2, y+dy*2));
+
+        // Add the 3x3 grid.
+        for(int dy = 0; dy < 3; ++dy)
+            for(int dx = 0; dx < 3; ++dx)
+                dst.push_back(src.get(x+dx*2+1, y+dy*2+1));
     }
 }
 
@@ -266,7 +292,7 @@ SMXPanelAnimation SMXPanelAnimation::GetLoadedAnimation(int pad, int panel, SMX_
 }
 
 // Load an array of animation frames as a panel animation.  Each frame must
-// be 14x15.
+// be 14x15 or 23x24.
 void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int panel)
 {
     m_aPanelGraphics.clear();
@@ -287,9 +313,13 @@ void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int pane
                 m_iLoopFrame = frame_no;
         }
 
-        // Extract this frame.
+        // Extract this frame.  If the graphic is 14x15 it's a 4x4 animation,
+        // and if it's 23x24 it's 25-light.
         vector<SMXGif::Color> panel_graphic;
-        ConvertToPanelGraphic(gif_frame.frame, panel_graphic, panel);
+        if(frames[0].width == 14)
+            ConvertToPanelGraphic16(gif_frame.frame, panel_graphic, panel);
+        else
+            ConvertToPanelGraphic25(gif_frame.frame, panel_graphic, panel);
         m_aPanelGraphics.push_back(panel_graphic);
 
         // GIFs have a very low-resolution duration field, with 10ms units.
@@ -325,9 +355,9 @@ bool SMX_LightsAnimation_Load(const char *gif, int size, int pad, SMX_LightsType
 
     // Check the dimensions of the image.  We only need to check the first, the
     // others will always have the same size.
-    if(frames[0].width != 14 || frames[0].height != 15)
+    if((frames[0].width != 14 || frames[0].height != 15) && (frames[0].width != 23 || frames[0].height != 24))
     {
-        *error = "The GIF must be 14x15.";
+        *error = "The GIF must be 14x15 or 23x24.";
         return false;
     }
 
