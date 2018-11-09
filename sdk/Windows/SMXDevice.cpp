@@ -111,15 +111,20 @@ void SMX::SMXDevice::SendCommandLocked(string cmd, function<void()> pComplete)
 {
     m_Lock.AssertLockedByCurrentThread();
 
-    // This call is nonblocking, so it's safe to do this in the UI thread.
-    if(m_pConnection->IsConnected())
+    if(!m_pConnection->IsConnected())
     {
-        m_pConnection->SendCommand(cmd, pComplete);
-
-        // Wake up the communications thread to send the message.
-        if(m_hEvent)
-            SetEvent(m_hEvent->value());
+        // If we're not connected, just call pComplete.
+        if(pComplete)
+            pComplete();
+        return;
     }
+
+    // This call is nonblocking, so it's safe to do this in the UI thread.
+    m_pConnection->SendCommand(cmd, pComplete);
+
+    // Wake up the communications thread to send the message.
+    if(m_hEvent)
+        SetEvent(m_hEvent->value());
 }
 
 void SMX::SMXDevice::GetInfo(SMXInfo &info)
