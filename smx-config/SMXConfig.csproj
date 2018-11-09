@@ -105,6 +105,9 @@
     <Compile Include="DiagnosticsWidgets.cs" />
     <Compile Include="DoubleSlider.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="ProgressWindow.xaml.cs">
+      <DependentUpon>ProgressWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SMXJSON.cs" />
     <Compile Include="SMX.cs" />
     <Compile Include="Widgets.cs" />
@@ -120,6 +123,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ProgressWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
