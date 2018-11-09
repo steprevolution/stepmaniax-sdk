@@ -25,6 +25,10 @@ namespace smx_config
         // A shortcut for when a LoadFromConfigDelegateArgs isn't available:
         public static IEnumerable<Tuple<int, SMX.SMXConfig>> ActivePads()
         {
+            // In case we're called in design mode, just return an empty list.
+            if(CurrentSMXDevice.singleton == null)
+                return new List<Tuple<int, SMX.SMXConfig>>();
+
             return ActivePads(CurrentSMXDevice.singleton.GetState());
         }
 
