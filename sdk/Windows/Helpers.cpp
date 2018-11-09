@@ -202,6 +202,14 @@ double SMX::GetMonotonicTime()
     return iTime / 10000000.0;
 }
 
+const char *SMX::CreateError(string error)
+{
+    // Store the string in a static so it doesn't get deallocated.
+    static string buf;
+    buf = error;
+    return buf.c_str();
+}
+
 SMX::AutoCloseHandle::AutoCloseHandle(HANDLE h)
 {
     handle = h;

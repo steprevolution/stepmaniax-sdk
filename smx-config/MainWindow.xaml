@@ -7,7 +7,7 @@
         xmlns:controls="clr-namespace:smx_config"
         mc:Ignorable="d"
         x:Name="root"
-        Title="StepManiaX Platform Settings"
+        Title="StepManiaX Platform"
         Icon="Resources/window icon.png"
         Height="700" Width="525" ResizeMode="CanMinimize">
     <Window.Resources>
@@ -696,8 +696,26 @@ Use if the platform is too sensitive.</clr:String>
                                 <Button Content="Load pressed GIF" Padding="5,2" Margin="5,10" Name="LoadPressed" Click="LoadGIF" />
                             </StackPanel>
 
+                            <!-- We'll only show one of these. -->
                             <TextBlock Name="LeaveRunning" TextAlignment="Center">
                                 Leave this application running to play animations.
+                            </TextBlock>
+                            <StackPanel Name="LeaveRunningOrUpload"
+                                HorizontalAlignment="Center" Orientation="Vertical">
+                                <TextBlock TextAlignment="Center">
+                                    Leave this application running to play animations, or upload
+                                    it to the pad.
+                                </TextBlock>
+                                
+                                <Button Content="Upload animation to pad" Padding="5,2" Margin="5,10"
+                                    Click="UploadGIFs" HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Name="LeaveRunningCantUpload" TextAlignment="Center" Width="400" TextWrapping="Wrap">
+                                <TextBlock>This animation is too big to upload it to the pad:</TextBlock>
+                                <LineBreak/>
+                                <TextBlock Name="UploadErrorReason"></TextBlock>.
+                                <LineBreak/>
+                                <TextBlock Margin="0,5,0,0">However, you can leaving this application running to use it.</TextBlock>
                             </TextBlock>
                         </StackPanel>
                         

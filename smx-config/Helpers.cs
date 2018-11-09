@@ -345,6 +345,28 @@ namespace smx_config
             SMX.SMX.LightsAnimation_Load(gif, pad, type, out error);
         }
 
+        // Prepare all loaded animations for upload.
+        //
+        // We do this early, as soon as animations are loaded, so we know whether there are
+        // any errors preventing upload to display in the UI.
+        public static void PrepareLoadedAnimations()
+        {
+            PanelLoadErrors = null;
+            // Prepare animations for both pads.
+            for(int pad = 0; pad < 2; ++pad)
+            {
+                // Store the first error we get.  Keep loading pad 1 even if pad 0 has
+                // an error.
+                string error;
+                if(!SMX.SMX.LightsUpload_PrepareUpload(pad, out error) && PanelLoadErrors == null)
+                    PanelLoadErrors = error;
+            }
+        }
+
+        // If there was an error preparing animations, we store it here for display.  Otherwise,
+        // this is null.
+        public static string PanelLoadErrors = null;
+
         // Create a .lnk.
         public static void CreateShortcut(string outputFile, string targetPath, string arguments)
         {

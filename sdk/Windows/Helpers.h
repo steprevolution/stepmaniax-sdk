@@ -27,6 +27,12 @@ string BinaryToHex(const string &sString);
 bool GetRandomBytes(void *pData, int iBytes);
 double GetMonotonicTime();
 
+// Create a char* string that will be valid until the next call to CreateError.
+// This is used to return error messages to the caller.
+const char *CreateError(string error);
+
+#define arraylen(a) (sizeof(a) / sizeof((a)[0]))
+
 // In order to be able to use smart pointers to fully manage an object, we need to get
 // a shared_ptr to pass around, but also store a weak_ptr in the object itself.  This
 // lets the object create shared_ptrs for itself as needed, without keeping itself from

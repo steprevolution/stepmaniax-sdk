@@ -483,5 +483,63 @@ namespace SMX
             if(!DLLAvailable()) return;
             SMX_LightsAnimation_SetAuto(enable);
         }
+        
+        // SMXPanelAnimationUpload
+        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [return:MarshalAs(UnmanagedType.I1)]
+        private static extern bool SMX_LightsUpload_PrepareUpload(int pad, out IntPtr error);
+        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern void SMX_LightsUpload_BeginUpload(int pad,
+            [MarshalAs(UnmanagedType.FunctionPtr)] InternalLightsUploadCallback callback,
+            IntPtr user);
+
+        public static bool LightsUpload_PrepareUpload(int pad, out string error)
+        {
+            if(!DLLAvailable())
+            {
+                error = "SMX.DLL not available";
+                return false;
+            }
+
+            error = "";
+            IntPtr error_pointer;
+            bool result = SMX_LightsUpload_PrepareUpload(pad, out error_pointer);
+            if(!result)
+            {
+                // SMX_LightsAnimation_Load takes a char **error, which is set to the error
+                // string.
+                error = Marshal.PtrToStringAnsi(error_pointer);
+            }
+
+            return result;
+        }
+
+        public delegate void LightsUploadCallback(int progress);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void InternalLightsUploadCallback(int reason, IntPtr user);
+        public static void LightsUpload_BeginUpload(int pad, LightsUploadCallback callback)
+        {
+            if(!DLLAvailable())
+                return;
+
+            GCHandle handle = new GCHandle();
+            InternalLightsUploadCallback wrapper = delegate(int progress, IntPtr user)
+            {
+                try {
+                    callback(progress);
+                } finally {
+                    // When progress = 100, this is the final call and we can release this
+                    // object to GC.
+                    if(progress == 100)
+                        handle.Free();
+                }
+            };
+
+            // Pin the callback until we get the last call.
+            handle = GCHandle.Alloc(wrapper);
+
+            SMX_LightsUpload_BeginUpload(pad, wrapper, IntPtr.Zero);
+        }
     }
 }

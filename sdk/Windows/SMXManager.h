@@ -46,6 +46,9 @@ public:
     void SetLights(const string sLights[2]);
     void ReenableAutoLights();
 
+    // Run a function in the user callback thread.
+    void RunInHelperThread(function<void()> func);
+
 private:
     static DWORD WINAPI ThreadMainStart(void *self_);
     void ThreadMain();

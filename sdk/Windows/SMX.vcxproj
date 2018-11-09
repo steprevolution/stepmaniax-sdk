@@ -23,6 +23,7 @@
     <ClInclude Include="SMXManager.h" />
     <ClInclude Include="SMXThread.h" />
     <ClInclude Include="SMXPanelAnimation.h" />
+    <ClInclude Include="SMXPanelAnimationUpload.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Helpers.cpp" />
@@ -36,6 +37,7 @@
     <ClCompile Include="SMXManager.cpp" />
     <ClCompile Include="SMXThread.cpp" />
     <ClCompile Include="SMXPanelAnimation.cpp" />
+    <ClCompile Include="SMXPanelAnimationUpload.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C5FC0823-9896-4B7C-BFE1-B60DB671A462}</ProjectGuid>

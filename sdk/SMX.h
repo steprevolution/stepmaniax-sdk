@@ -137,8 +137,9 @@ enum SMXUpdateCallbackReason {
 
 // Bits for SMXConfig::flags.
 enum SMXConfigFlags {
-    // This is used to store whether SMXConfig is in GIF animation mode or
-    // not.  If set, SMXConfig will use animations.
+    // If set, panels will use the pressed animation when pressed, and stepColor
+    // is ignored.  If unset, panels will be lit solid using stepColor.
+    // masterVersion >= 4.  Previous versions always use stepColor.
     PlatformFlags_AutoLightingUsePressedAnimations = 1 << 0,
 };
 
@@ -234,7 +235,7 @@ struct SMXConfig
     // This is disabled by default.
     uint16_t debounceDelayMs = 0;
 
-    // Packed flags (currently only used by SMXConfig).
+    // Packed flags (masterVersion >= 4).
     uint8_t flags = 0;
 
     // Pad the struct to 250 bytes.  This keeps this struct size from changing

@@ -398,6 +398,11 @@ void SMX::SMXManager::SendLightUpdates()
     m_aPendingCommands.erase(m_aPendingCommands.begin(), m_aPendingCommands.begin()+1);
 }
 
+void SMX::SMXManager::RunInHelperThread(function<void()> func)
+{
+    m_UserCallbackThread.RunInThread(func);
+}
+
 // See if there are any new devices to connect to.
 void SMX::SMXManager::AttemptConnections()
 {

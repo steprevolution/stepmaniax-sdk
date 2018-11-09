@@ -19,9 +19,11 @@ namespace smx_config
                 LoadUIFromConfig(args);
             });
 
-            // If we're controlling GIF animations, confirm exiting, since you can minimize
+            // If we're controlling GIF animations and the firmware doesn't support
+            // doing animations internally, confirm exiting, since you can minimize
             // to tray to keep playing animations.  If we're not controlling animations,
-            // don't bug the user with a prompt.
+            // or the firmware supports doing them automatically, don't bug the user
+            // with a prompt.
             Closing += delegate(object sender, System.ComponentModel.CancelEventArgs e)
             {
                 LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
@@ -34,6 +36,13 @@ namespace smx_config
                 {
                     SMX.SMXConfig config;
                     if(!SMX.SMX.GetConfig(pad, out config))
+                        continue;
+
+                    // If the firmware is version 4 or higher, it supports animations directly.
+                    // The user can upload GIF animations and doesn't need to leave us running
+                    // for them to work.  You can still use this tool to drive animations, but
+                    // don't confirm exiting.
+                    if(config.masterVersion >= 4)
                         continue;
 
                     // If AutoLightingUsePressedAnimations isn't set, the panel is using step
@@ -167,11 +176,34 @@ namespace smx_config
             }
 
             RefreshConnectedPadList(args);
+            RefreshUploadPadText(args);
 
             // If a second controller has connected and we're on Both, see if we need to prompt
             // to sync configs.  We only actually need to do this if a controller just connected.
             if(args.ConfigurationChanged)
                 CheckConfiguringBothPads(args);
+        }
+
+        // Update which of the "Leave this application running", etc. blocks to display.
+        private void RefreshUploadPadText(LoadFromConfigDelegateArgs args)
+        {
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                SMX.SMXConfig config = activePad.Item2;
+                
+                bool uploadsSupported = config.masterVersion >= 4;
+                bool uploadPossible = Helpers.PanelLoadErrors == null;
+                
+                LeaveRunning.Visibility = uploadsSupported? Visibility.Collapsed:Visibility.Visible;
+                LeaveRunningOrUpload.Visibility = uploadsSupported && uploadPossible? Visibility.Visible:Visibility.Collapsed;
+                LeaveRunningCantUpload.Visibility = uploadsSupported && !uploadPossible? Visibility.Visible:Visibility.Collapsed;
+
+                // If we have an error reason, set it.  This is only visible when
+                // we're showing LeaveRunningCantUpload.
+                if(Helpers.PanelLoadErrors != null)
+                    UploadErrorReason.Text = Helpers.PanelLoadErrors;
+                break;
+            }
         }
 
         private void ConnectedPadList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -384,9 +416,52 @@ namespace smx_config
                 // Save the GIF to disk so we can load it quickly later.
                 Helpers.SaveAnimationToDisk(pad, type, buf);
 
+                // Try to prepare animations for upload.  This updates Helpers.PanelLoadErrors.
+                Helpers.PrepareLoadedAnimations();
+
                 // Refresh after loading a GIF to update the "Leave this application running" text.
                 CurrentSMXDevice.singleton.FireConfigurationChanged(null);
             }
+        }
+
+        // The "Upload animation to pad" button was clicked.
+        private void UploadGIFs(object sender, RoutedEventArgs e)
+        {
+            // Create a progress window.  Center it on top of the main window.
+            ProgressWindow dialog = new ProgressWindow();
+            dialog.Left = (Left + Width/2) - (dialog.Width/2);
+            dialog.Top = (Top + Height/2) - (dialog.Height/2);
+            dialog.Title = "Storing animations on pad...";
+
+            int[] CurrentProgress = new int[] { 0, 0 };
+
+            // Upload graphics for all connected pads.  If two pads are connected
+            // we can start both of these simultaneously, and they'll be sent in
+            // parallel.
+            int total = 0;
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                int pad = activePad.Item1;
+                SMX.SMX.LightsUpload_BeginUpload(pad, delegate(int progress) {
+                    // This is called from a thread, so dispatch back to the main thread.
+                    Dispatcher.Invoke(delegate() {
+                        // Store progress, so we can sum both pads.
+                        CurrentProgress[pad] = progress;
+
+                        dialog.SetProgress(CurrentProgress[0] + CurrentProgress[1]);
+                        if(progress == 100)
+                            dialog.Close();
+                    });
+                });
+
+                // Each pad that we start uploading to is 100 units of progress.
+                total += 100;
+                dialog.SetTotal(total);
+            }
+
+            // Show the progress window as a modal dialog.  This function won't return
+            // until we call dialog.Close above.
+            dialog.ShowDialog();
         }
     }
 } 
