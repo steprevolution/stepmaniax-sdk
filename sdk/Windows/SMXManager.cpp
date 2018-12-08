@@ -289,15 +289,18 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
         sLightCommands[0][iPad] = "2";
         sLightCommands[1][iPad] = "3";
         int iNextInputByte = 0;
+        auto scaleLight = [](uint8_t iColor) {
+            // Apply color scaling.  Values over about 170 don't make the LEDs any brighter, so this
+            // gives better contrast and draws less power.
+            return uint8_t(iColor * 0.6666f);
+        };
         for(int iPanel = 0; iPanel < 9; ++iPanel)
         {
+            // Create the 2 and 3 commands.
             for(int iByte = 0; iByte < 4*4*3; ++iByte)
             {
                 uint8_t iColor = sLightsDataForPad[iNextInputByte++];
-
-                // Apply color scaling.  Values over about 170 don't make the LEDs any brighter, so this
-                // gives better contrast and draws less power.
-                iColor = uint8_t(iColor * 0.6666f);
+                iColor = scaleLight(iColor);
                 
                 int iCommandIndex = iByte < 4*2*3? 0:1;
                 sLightCommands[iCommandIndex][iPad].append(1, iColor);
