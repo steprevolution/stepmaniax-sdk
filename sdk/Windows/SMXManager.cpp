@@ -170,9 +170,9 @@ void SMX::SMXManager::ThreadMain()
         // See how long we should block waiting for I/O.  If we have any scheduled lights commands,
         // wait until the next command should be sent, otherwise wait for a second.
         int iDelayMS = 1000;
-        if(!m_aPendingCommands.empty())
+        if(!m_aPendingLightsCommands.empty())
         {
-            double fSendIn = m_aPendingCommands[0].fTimeToSend - GetMonotonicTime();
+            double fSendIn = m_aPendingLightsCommands[0].fTimeToSend - GetMonotonicTime();
 
             // Add 1ms to the delay time.  We're using a high resolution timer, but
             // WaitForMultipleObjectsEx only has 1ms resolution, so this keeps us from
@@ -308,7 +308,7 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
         sLightCommands[1][iPad].push_back('\n');
     }
 
-    // Each update adds two entries to m_aPendingCommands, one for the top half and one
+    // Each update adds two entries to m_aPendingLightsCommands, one for the top half and one
     // for the lower half.
     //
     // If there's one entry in the list, we've already sent the first half of a previous update,
@@ -335,8 +335,8 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
         m_fDelayLightCommandsUntil = fSecondCommandTime + fDelayBetweenLightsCommands;
 
         // Add two commands to the list, scheduled at fFirstCommandTime and fSecondCommandTime.
-        m_aPendingCommands.push_back(PendingCommand(fFirstCommandTime));
-        m_aPendingCommands.push_back(PendingCommand(fSecondCommandTime));
+        m_aPendingLightsCommands.push_back(PendingCommand(fFirstCommandTime));
+        m_aPendingLightsCommands.push_back(PendingCommand(fSecondCommandTime));
         // Log(ssprintf("Scheduled commands at %f and %f", fFirstCommandTime, fSecondCommandTime));
 
         // Wake up the I/O thread if it's blocking on WaitForMultipleObjectsEx.
@@ -345,8 +345,8 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
 
     // Set the pad commands.
     PendingCommand *pPendingCommands[2];
-    pPendingCommands[0] = &m_aPendingCommands[m_aPendingCommands.size()-2]; // 2
-    pPendingCommands[1] = &m_aPendingCommands[m_aPendingCommands.size()-1]; // 3
+    pPendingCommands[0] = &m_aPendingLightsCommands[m_aPendingLightsCommands.size()-2]; // 2
+    pPendingCommands[1] = &m_aPendingLightsCommands[m_aPendingLightsCommands.size()-1]; // 3
 
     for(int iPad = 0; iPad < 2; ++iPad)
     {
@@ -354,8 +354,8 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
         if(sLightCommands[0][iPad].empty())
             continue;
 
-        pPendingCommands[0]->sPadCommand[iPad] = sLightCommands[0][iPad];
-        pPendingCommands[1]->sPadCommand[iPad] = sLightCommands[1][iPad];
+        m_aPendingLightsCommands[0]->sPadCommand[iPad] = sLightCommands[0][iPad];
+        m_aPendingLightsCommands[1]->sPadCommand[iPad] = sLightCommands[1][iPad];
     }
 }
 
@@ -367,19 +367,19 @@ void SMX::SMXManager::ReenableAutoLights()
     // Clear any pending lights commands, so we don't re-disable auto-lighting by sending a
     // lights command after we enable it.  If we've sent the first half of a lights update
     // and this causes us to not send the second half, the controller will just discard it.
-    m_aPendingCommands.clear();
+    m_aPendingLightsCommands.clear();
     for(int iPad = 0; iPad < 2; ++iPad)
         m_pDevices[iPad]->SendCommandLocked(string("S 1\n", 4));
 }
 
-// Check to see if we should send any commands in m_aPendingCommands.
+// Check to see if we should send any commands in m_aPendingLightsCommands.
 void SMX::SMXManager::SendLightUpdates()
 {
     g_Lock.AssertLockedByCurrentThread();
-    if(m_aPendingCommands.empty())
+    if(m_aPendingLightsCommands.empty())
         return;
 
-    const PendingCommand &command = m_aPendingCommands[0];
+    const PendingCommand &command = m_aPendingLightsCommands[0];
 
     // See if it's time to send the next command.  We only need to look at the first
     // command, since these are always sorted.
@@ -395,7 +395,7 @@ void SMX::SMXManager::SendLightUpdates()
     }
 
     // Remove the command we've sent.
-    m_aPendingCommands.erase(m_aPendingCommands.begin(), m_aPendingCommands.begin()+1);
+    m_aPendingLightsCommands.erase(m_aPendingLightsCommands.begin(), m_aPendingLightsCommands.begin()+1);
 }
 
 void SMX::SMXManager::RunInHelperThread(function<void()> func)

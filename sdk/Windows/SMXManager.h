@@ -74,7 +74,7 @@ private:
         double fTimeToSend = 0;
         string sPadCommand[2];
     };
-    vector<PendingCommand> m_aPendingCommands;
+    vector<PendingCommand> m_aPendingLightsCommands;
     double m_fDelayLightCommandsUntil = 0;
 };
 }
