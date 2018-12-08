@@ -311,21 +311,20 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
         sLightCommands[1][iPad].push_back('\n');
     }
 
-    // Each update adds two entries to m_aPendingLightsCommands, one for the top half and one
-    // for the lower half.
+    // Each update adds one entry to m_aPendingLightsCommands for each lights command.
     //
-    // If there's one entry in the list, we've already sent the first half of a previous update,
-    // and the remaining entry is the second half.  We'll leave it in place so we always finish
-    // an update once we start it, and add this update after it.
+    // If there are at least as many entries in m_aPendingLightsCommands as there are
+    // commands to send, then lights updates are happening faster than they can be sent
+    // to the pad.  If that happens, replace the existing commands rather than adding
+    // new ones.
     //
-    // If there are two entries in the list, then it's an existing update that we haven't sent yet.
-    // If there are three entries, we added an update after a partial update.  In either case, the
-    // last two commands in the list are a complete lights update, and we'll just update it in-place.
+    // Make sure we always finish a lights update once we start it, so if we receive lights
+    // updates very quickly we won't just keep sending the first half and never finish one.
+    // Otherwise, we'll update with the newest data we have available.
     //
-    // This way, we'll always finish a lights update once we start it, so if we receive lights updates
-    // very quickly we won't just keep sending the first half and never finish one.  Otherwise, we'll
-    // update with the newest data we have available.
-    if(m_aPendingCommands.size() <= 1)
+    // Note that m_aPendingLightsCommands contains the update for both pads, to guarantee
+    // we always send light updates for both pads together and they never end up out of
+    // phase.
     {
         static const double fDelayBetweenLightsCommands = 1/60.0;
 
