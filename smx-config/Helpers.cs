@@ -518,7 +518,7 @@ namespace smx_config
                     color = config.stepColor;
                 for( int iPanel = 0; iPanel < 9; ++iPanel )
                 {
-                    for( int i = 0; i < 16; ++i )
+                    for( int i = 0; i < 25; ++i )
                     {
                         // Auto-lights colors in the config packet are scaled so the firmware
                         // doesn't have to do it, but here we're setting the panel color to
@@ -531,7 +531,7 @@ namespace smx_config
                 }
             }
 
-            SMX.SMX.SetLights(cmd.Get());
+            SMX.SMX.SetLights2(cmd.Get());
         }
     };
 

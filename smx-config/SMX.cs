@@ -273,7 +273,7 @@ namespace SMX
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_GetTestData(int pad, out SMXSensorTestModeData data);
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool SMX_SetLights(byte[] buf);
+        private static extern bool SMX_SetLights2(byte[] buf, int lightDataSize);
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private static extern IntPtr SMX_Version();
 
@@ -441,13 +441,11 @@ namespace SMX
             SMX_ForceRecalibration(pad);
         }
 
-        public static void SetLights(byte[] buf)
+        public static void SetLights2(byte[] buf)
         {
             if(!DLLAvailable()) return;
 
-            if(buf.Length != 9*16*3*2)
-                throw new Exception("SetLights buffer has an invalid length: " + buf.Length);
-            SMX_SetLights(buf);
+            SMX_SetLights2(buf, buf.Length);
         }
 
         // SMXPanelAnimation
