@@ -148,6 +148,7 @@ enum SMXConfigFlags {
 //
 // The order and packing of this struct corresponds to the configuration packet sent to
 // the master controller, so it must not be changed.
+#pragma pack(push, 1)
 struct SMXConfig
 {
     // These fields are unused and must be left at their existing values.
@@ -238,12 +239,21 @@ struct SMXConfig
     // Packed flags (masterVersion >= 4).
     uint8_t flags = 0;
 
+    // Thresholds when in FSR mode.  Note that these are 16-bit thresholds, compared
+    // to the 8-bit load cell thresholds.
+    uint16_t individualPanelFSRLow[9];
+    uint16_t individualPanelFSRHigh[9];
+
+    // The default color to set the platform LED strip to.
+    uint8_t platformStripColor[3];
+
     // Pad the struct to 250 bytes.  This keeps this struct size from changing
     // as we add fields, so the ABI doesn't change.  Applications should leave
     // any data in here unchanged when calling SMX_SetConfig.
-    uint8_t padding[163];
+    uint8_t padding[124];
 };
-static_assert(offsetof(SMXConfig, padding) == 87, "Expected 87 bytes"); // includes one padding byte
+#pragma pack(pop)
+static_assert(offsetof(SMXConfig, padding) == 126, "Incorrect padding alignment");
 static_assert(sizeof(SMXConfig) == 250, "Expected 250 bytes");
 
 // The values (except for Off) correspond with the protocol and must not be changed.
