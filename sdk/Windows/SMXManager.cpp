@@ -265,29 +265,59 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
     // 89AB 89AB 89AB
     // CDEF CDEF CDEF
     //
-    // Set sLightsCommand[iPad][0] to include 0123 4567, and [1] to 89AB CDEF.
-    string sLightCommands[2][2]; // sLightCommands[command][pad]
+    // If we're on a 25-light device, we have an additional grid of 3x3 LEDs:
+    //
+    //
+    // x x x x
+    //  0 1 2
+    // x x x x
+    //  3 4 5
+    // x x x x
+    //  6 7 8
+    // x x x x
+    //
+    // Set sLightsCommand[iPad][0] to include 0123 4567, [1] to 89AB CDEF,
+    // and [2] to the 3x3 grid.
+    string sLightCommands[3][2]; // sLightCommands[command][pad]
 
     // Read the linearly arranged color data we've been given and split it into top and
     // bottom commands for each pad.
     for(int iPad = 0; iPad < 2; ++iPad)
     {
         // If there's no data for this pad, leave the command empty.
-        const string &sLightsDataForPad = sPanelLights[iPad];
+        string sLightsDataForPad = sPanelLights[iPad];
         if(sLightsDataForPad.empty())
             continue;
 
-        // Sanity check the lights data.  It should have 9*4*4*3 bytes of data: RGB for each of 4x4
-        // LEDs on 9 panels.
-        if(sPanelLights[iPad].size() != 9*16*3)
+        // Sanity check the lights data.  For 4x4 lights, it should have 9*4*4*3 bytes of
+        // data: RGB for each of 4x4 LEDs on 9 panels.  For 25-light panels there should
+        // be 4x4+3x3 (25) lights of data.
+        int LightSize4x4 = 9*4*4*3;
+        int LightSize25 = 9*5*5*3;
+        if(sLightsDataForPad.size() != LightSize4x4 && sLightsDataForPad.size() != LightSize25)
         {
-            Log(ssprintf("SetLights: Lights data should be %i bytes, received %i", 3*3*16*3, sPanelLights[iPad].size()));
+            Log(ssprintf("SetLights: Lights data should be %i or %i bytes, received %i",
+                LightSize4x4, LightSize25, sLightsDataForPad.size()));
             continue;
         }
 
-        // The 2 command sends the top 4x2 lights, and 3 sends the bottom 4x2.
-        sLightCommands[0][iPad] = "2";
-        sLightCommands[1][iPad] = "3";
+        // If we've been given 16 lights, pad to 25.
+        if(sLightsDataForPad.size() == LightSize4x4)
+            sLightsDataForPad.append(LightSize25 - LightSize4x4, '\0');
+
+        // Lights are sent in three commands:
+        // 
+        // 4: the 3x3 inner grid
+        // 2: the top 4x2 lights
+        // 3: the bottom 4x2 lights
+        //
+        // Command 4 is only used by firmware version 4+.
+        //
+        // Always send all three commands if the firmware expects it, even if we've
+        // been given 4x4 data.
+        sLightCommands[0][iPad] = "4";
+        sLightCommands[1][iPad] = "2";
+        sLightCommands[2][iPad] = "3";
         int iNextInputByte = 0;
         auto scaleLight = [](uint8_t iColor) {
             // Apply color scaling.  Values over about 170 don't make the LEDs any brighter, so this
@@ -302,13 +332,22 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
                 uint8_t iColor = sLightsDataForPad[iNextInputByte++];
                 iColor = scaleLight(iColor);
                 
-                int iCommandIndex = iByte < 4*2*3? 0:1;
+                int iCommandIndex = iByte < 4*2*3? 1:2;
                 sLightCommands[iCommandIndex][iPad].append(1, iColor);
+            }
+
+            // Create the 4 command.
+            for(int iByte = 0; iByte < 3*3*3; ++iByte)
+            {
+                uint8_t iColor = sLightsDataForPad[iNextInputByte++];
+                iColor = scaleLight(iColor);
+                sLightCommands[0][iPad].append(1, iColor);
             }
         }
 
         sLightCommands[0][iPad].push_back('\n');
         sLightCommands[1][iPad].push_back('\n');
+        sLightCommands[2][iPad].push_back('\n');
     }
 
     // Each update adds one entry to m_aPendingLightsCommands for each lights command.
@@ -325,40 +364,92 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
     // Note that m_aPendingLightsCommands contains the update for both pads, to guarantee
     // we always send light updates for both pads together and they never end up out of
     // phase.
+    if(m_aPendingLightsCommands.size() < 3)
     {
-        static const double fDelayBetweenLightsCommands = 1/60.0;
-
+        // There's a subtle but important difference between command timing in
+        // firmware version 4 compared to earlier versions:
+        //
+        // Earlier firmwares would process host commands as soon as they're received.
+        // Because of this, we have to wait before sending the '3' command to give
+        // the master controller time to finish sending the '2' command to panels.
+        // If we don't do this everything will still work, but the master will block
+        // while processing the second command waiting for panel data to finish sending
+        // since the TX queue will be full.  If this happens it isn't processing HID
+        // data, which reduces input timing accuracy.
+        //
+        // Firmware version 4 won't process a host command if there's data still being
+        // sent to the panels.  It'll wait until the data is flushed.  This means that
+        // we can queue all three lights commands at once, and just send them as fast
+        // as the host acknowledges them.  The second command will sit around on the
+        // master controller's buffer until it finishes sending the first command to
+        // the panels, then the third command will do the same.
+        //
+        // This change is only needed due to the larger amount of data sent in 25-light
+        // mode.  Since we're spending more time sending data from the master to the
+        // panels, the timing requirements are tighter.  Doing it in the same manual-delay
+        // fashion causes too much latency and makes it harder to maintain 30 FPS.
+        //
+        // If two controllers are connected, they should either both be 4+ or not.  We
+        // don't handle the case where they're different and both timings are needed.
         double fNow = GetMonotonicTime();
         double fSendCommandAt = max(fNow, m_fDelayLightCommandsUntil);
-        float fFirstCommandTime = fSendCommandAt;
-        float fSecondCommandTime = fFirstCommandTime + fDelayBetweenLightsCommands;
+        double fCommandTimes[3] = { fNow, fNow, fNow };
 
-        // Update m_fDelayLightCommandsUntil, so we know when the next 
-        m_fDelayLightCommandsUntil = fSecondCommandTime + fDelayBetweenLightsCommands;
+        bool masterIsV4 = false;
+        for(int iPad = 0; iPad < 2; ++iPad)
+        {
+            SMXConfig config;
+            if(m_pDevices[iPad]->GetConfigLocked(config) && config.masterVersion >= 4)
+                masterIsV4 = true;
+        }
 
-        // Add two commands to the list, scheduled at fFirstCommandTime and fSecondCommandTime.
-        m_aPendingLightsCommands.push_back(PendingCommand(fFirstCommandTime));
-        m_aPendingLightsCommands.push_back(PendingCommand(fSecondCommandTime));
-        // Log(ssprintf("Scheduled commands at %f and %f", fFirstCommandTime, fSecondCommandTime));
+        // If we're on master firmware < 4, set delay times.  For 4+, just queue commands.
+        // We don't need to set fCommandTimes[0] since the '4' packet won't be sent.
+        if(!masterIsV4)
+        {
+            const double fDelayBetweenLightsCommands = 1/60.0;
+            fCommandTimes[1] = fSendCommandAt;
+            fCommandTimes[2] = fCommandTimes[0] + fDelayBetweenLightsCommands;
+        }
 
-        // Wake up the I/O thread if it's blocking on WaitForMultipleObjectsEx.
-        SetEvent(m_hEvent->value());
+        // Update m_fDelayLightCommandsUntil, so we know when the next
+        // lights command can be sent.
+        m_fDelayLightCommandsUntil = fSendCommandAt + 1/30.0f;
+
+        // Add three commands to the list, scheduled at fFirstCommandTime and fSecondCommandTime.
+        m_aPendingLightsCommands.push_back(PendingCommand(fCommandTimes[0]));
+        m_aPendingLightsCommands.push_back(PendingCommand(fCommandTimes[1]));
+        m_aPendingLightsCommands.push_back(PendingCommand(fCommandTimes[2]));
     }
 
     // Set the pad commands.
-    PendingCommand *pPendingCommands[2];
-    pPendingCommands[0] = &m_aPendingLightsCommands[m_aPendingLightsCommands.size()-2]; // 2
-    pPendingCommands[1] = &m_aPendingLightsCommands[m_aPendingLightsCommands.size()-1]; // 3
-
     for(int iPad = 0; iPad < 2; ++iPad)
     {
         // If the command for this pad is empty, leave any existing pad command alone.
         if(sLightCommands[0][iPad].empty())
             continue;
 
-        m_aPendingLightsCommands[0]->sPadCommand[iPad] = sLightCommands[0][iPad];
-        m_aPendingLightsCommands[1]->sPadCommand[iPad] = sLightCommands[1][iPad];
+        SMXConfig config;
+        if(!m_pDevices[iPad]->GetConfigLocked(config))
+            continue;
+
+        // If this pad is firmware version 4, send the 4 command.  Otherwise, leave the 4 command
+        // empty and no command will be sent.
+        PendingCommand *pPending4Commands = &m_aPendingLightsCommands[m_aPendingLightsCommands.size()-3]; // 3
+        if(config.masterVersion >= 4)
+            pPending4Commands->sPadCommand[iPad] = sLightCommands[0][iPad];
+        else
+            pPending4Commands->sPadCommand[iPad] = "";
+
+        PendingCommand *pPending2Commands = &m_aPendingLightsCommands[m_aPendingLightsCommands.size()-2]; // 2
+        pPending2Commands->sPadCommand[iPad] = sLightCommands[1][iPad];
+
+        PendingCommand *pPending3Commands = &m_aPendingLightsCommands[m_aPendingLightsCommands.size()-1]; // 3
+        pPending3Commands->sPadCommand[iPad] = sLightCommands[2][iPad];
     }
+
+    // Wake up the I/O thread if it's blocking on WaitForMultipleObjectsEx.
+    SetEvent(m_hEvent->value());
 }
 
 void SMX::SMXManager::ReenableAutoLights()

@@ -69,7 +69,8 @@ SMX_API uint16_t SMX_GetInputState(int pad);
 SMX_API void SMX_SetLights(const char lightData[864]);
 
 // This is the same as SMX_SetLights, but specifies the size of the buffer.  The
-// buffer size must be 864 bytes (2 pads * 9 panels * 16 lights * 3).
+// buffer size must be either 864 bytes (2 pads * 9 panels * 16 lights * 3) or
+// 1350 bytes (2 pads * 9 panels * 25 lights * 3).
 SMX_API void SMX_SetLights2(const char *lightData, int lightDataSize);
 
 // By default, the panels light automatically when stepped on.  If a lights command is sent by

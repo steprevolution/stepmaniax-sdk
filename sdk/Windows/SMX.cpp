@@ -70,17 +70,25 @@ SMX_API void SMX_SetLights(const char lightData[864])
 }
 SMX_API void SMX_SetLights2(const char *lightData, int lightDataSize)
 {
-    // The lightData into data per pad.
+    // The lightData into data per pad depending on whether we've been
+    // given 16 or 25 lights of data.
     string lights[2];
     const int BytesPerPad16 = 9*16*3;
+    const int BytesPerPad25 = 9*25*3;
     if(lightDataSize == 2*BytesPerPad16)
     {
         lights[0] = string(lightData, BytesPerPad16);
         lights[1] = string(lightData + BytesPerPad16, BytesPerPad16);
     }
+    else if(lightDataSize == 2*BytesPerPad25)
+    {
+        lights[0] = string(lightData, BytesPerPad25);
+        lights[1] = string(lightData + BytesPerPad25, BytesPerPad25);
+    }
     else
     {
-        Log(ssprintf("SMX_SetLights2: lightDataSize is invalid (must be %ii)\n", 2*BytesPerPad16));
+        Log(ssprintf("SMX_SetLights2: lightDataSize is invalid (must be %i or %i)\n",
+            2*BytesPerPad16, 2*BytesPerPad25));
         return;
     }
 

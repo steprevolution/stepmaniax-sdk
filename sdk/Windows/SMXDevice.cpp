@@ -162,6 +162,12 @@ bool SMX::SMXDevice::IsPlayer2Locked() const
 bool SMX::SMXDevice::GetConfig(SMXConfig &configOut)
 {
     LockMutex Lock(m_Lock);
+    return GetConfigLocked(configOut);
+}
+
+bool SMX::SMXDevice::GetConfigLocked(SMXConfig &configOut)
+{
+    m_Lock.AssertLockedByCurrentThread();
 
     // If SetConfig was called to write a new configuration but we haven't sent it
     // yet, return it instead of the configuration we read alst, so GetConfig

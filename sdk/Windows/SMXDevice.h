@@ -54,6 +54,7 @@ public:
     // Get the configuration of the connected device (or the most recently read configuration if
     // we're not connected).
     bool GetConfig(SMXConfig &configOut);
+    bool GetConfigLocked(SMXConfig &configOut);
 
     // Set the configuration of the connected device.
     //
