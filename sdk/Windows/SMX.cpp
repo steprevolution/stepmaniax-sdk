@@ -64,20 +64,26 @@ SMX_API void SMX_FactoryReset(int pad) { SMXManager::g_pSMX->GetDevice(pad)->Fac
 SMX_API void SMX_ForceRecalibration(int pad) { SMXManager::g_pSMX->GetDevice(pad)->ForceRecalibration(); }
 SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode) { SMXManager::g_pSMX->GetDevice(pad)->SetSensorTestMode((SensorTestMode) mode); }
 SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data) { return SMXManager::g_pSMX->GetDevice(pad)->GetTestData(*data); }
-SMX_API void SMX_SetLights(const char lightsData[864])
+SMX_API void SMX_SetLights(const char lightData[864])
 {
-    string lights[] = {
-        string(lightsData, 432),
-        string(lightsData+432, 432),
-    };
-    SMXManager::g_pSMX->SetLights(lights);
+    SMX_SetLights2(lightData, 864);
 }
-SMX_API void SMX_SetLights2(const char *lightsData[2], int lightsDataSize[2])
+SMX_API void SMX_SetLights2(const char *lightData, int lightDataSize)
 {
-    string lights[] = {
-        string(lightsData[0], lightsDataSize[0]),
-        string(lightsData[1], lightsDataSize[1]),
-    };
+    // The lightData into data per pad.
+    string lights[2];
+    const int BytesPerPad16 = 9*16*3;
+    if(lightDataSize == 2*BytesPerPad16)
+    {
+        lights[0] = string(lightData, BytesPerPad16);
+        lights[1] = string(lightData + BytesPerPad16, BytesPerPad16);
+    }
+    else
+    {
+        Log(ssprintf("SMX_SetLights2: lightDataSize is invalid (must be %ii)\n", 2*BytesPerPad16));
+        return;
+    }
+
     SMXManager::g_pSMX->SetLights(lights);
 }
 SMX_API void SMX_ReenableAutoLights() { SMXManager::g_pSMX->ReenableAutoLights(); }

@@ -45,7 +45,7 @@ SMX_API void SMX_GetInfo(int pad, SMXInfo *info);
 // Get a mask of the currently pressed panels.
 SMX_API uint16_t SMX_GetInputState(int pad);
 
-// Update the lights.  Both pads are always updated together.  lightsData is a list of 8-bit RGB
+// Update the lights.  Both pads are always updated together.  lightData is a list of 8-bit RGB
 // colors, one for each LED.  Each panel has lights in the following order:
 //
 // 0123
@@ -66,12 +66,11 @@ SMX_API uint16_t SMX_GetInputState(int pad);
 //
 // The panels will return to automatic lighting if no lights are received for a while, so applications
 // controlling lights should send light updates continually, even if the lights aren't changing.
-SMX_API void SMX_SetLights(const char lightsData[864]);
+SMX_API void SMX_SetLights(const char lightData[864]);
 
-// This is the same as SMX_SetLights, but receives lights for each pad in separate
-// buffers of 432 colors each.  lightsDataSize[pad] is the size of lightsData.  If
-// it's not 432, that pad's lights will be left unchanged.
-SMX_API void SMX_SetLights2(const char *lightsData[2], int lightsDataSize[2]);
+// This is the same as SMX_SetLights, but specifies the size of the buffer.  The
+// buffer size must be 864 bytes (2 pads * 9 panels * 16 lights * 3).
+SMX_API void SMX_SetLights2(const char *lightData, int lightDataSize);
 
 // By default, the panels light automatically when stepped on.  If a lights command is sent by
 // the application, this stops happening to allow the application to fully control lighting.
