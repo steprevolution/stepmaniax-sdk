@@ -110,6 +110,7 @@ private:
     SMXConfig wanted_config;
     bool m_bSendConfig = false;
     bool m_bSendingConfig = false;
+    bool m_bWaitingForConfigResponse = false;
 
     void CallUpdateCallback(SMXUpdateCallbackReason reason);
     void HandlePackets();

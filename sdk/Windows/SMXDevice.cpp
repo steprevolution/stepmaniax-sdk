@@ -297,6 +297,11 @@ void SMX::SMXDevice::SendConfig()
     if(!m_bHaveConfig)
         return;
 
+    // If we're still waiting for a previous configuration to read back, don't send
+    // another yet.
+    if(m_bWaitingForConfigResponse)
+        return;
+
     // Write configuration command:
     string sData = ssprintf("w");
     int8_t iSize = sizeof(SMXConfig);
@@ -316,9 +321,16 @@ void SMX::SMXDevice::SendConfig()
     // command below completes.
     config = wanted_config;
 
+    // Don't send another configuration packet until we receive the response to the above
+    // command.  If we're sending updates quickly (eg. dragging the color slider), we can
+    // send multiple updates before we get a response.
+    m_bWaitingForConfigResponse = true;
+
     // After we write the configuration, read back the updated configuration to
     // verify it.
-    SendCommandLocked("g\n");
+    SendCommandLocked("g\n", [this]() {
+        m_bWaitingForConfigResponse = false;
+    });
 }
 
 void SMX::SMXDevice::Update(wstring &sError)
