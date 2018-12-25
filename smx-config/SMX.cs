@@ -88,13 +88,13 @@ namespace SMX
         // Thresholds when in FSR mode.  Note that these are 16-bit thresholds, compared
         // to the 8-bit load cell thresholds.
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
-        UInt16[] individualPanelFSRLow;
+        public UInt16[] individualPanelFSRLow;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
-        UInt16[] individualPanelFSRHigh;
+        public UInt16[] individualPanelFSRHigh;
 
         // The default color to set the platform LED strip to.
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-        Byte[] platformStripColor;
+        public Byte[] platformStripColor;
 
         // Pad this struct to exactly 250 bytes.
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 124)]

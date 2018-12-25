@@ -146,14 +146,14 @@ Use if the platform is too sensitive.</clr:String>
                             />
                             <controls:DoubleSlider x:Name="Slider"
                                 Margin="32,5,0,0"
-                                Minimum="20" Maximum="200" MinimumDistance="10"
+                                MinimumDistance="10"
                                 LowerValue="20" UpperValue="35"
                                 VerticalAlignment="Top"
                                 Width="240"
                                 Focusable="False"
                                 Style="{DynamicResource DoubleSlider}"
                             />
-                            <Label Margin="11,0,0,0" x:Name="UpperValue" Content="0" Width="30" HorizontalContentAlignment="Center"
+                            <Label Margin="11,0,0,0" x:Name="UpperValue" Content="0" Width="40" HorizontalContentAlignment="Center"
                                    HorizontalAlignment="Left" VerticalAlignment="Top"
                             />
                         </StackPanel>

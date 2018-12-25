@@ -141,22 +141,43 @@ namespace smx_config
 
         private void SetValueToConfig(ref SMX.SMXConfig config)
         {
-            byte lower = (byte) slider.LowerValue;
-            byte upper = (byte) slider.UpperValue;
-
-            switch(Type)
+            if(config.masterVersion < 4)
             {
-            case "up-left":    config.panelThreshold0Low = lower;     config.panelThreshold0High = upper; break;
-            case "up":         config.panelThreshold1Low = lower;     config.panelThreshold1High = upper; break;
-            case "up-right":   config.panelThreshold2Low = lower;     config.panelThreshold2High = upper; break;
-            case "left":       config.panelThreshold3Low = lower;     config.panelThreshold3High = upper; break;
-            case "center":     config.panelThreshold4Low = lower;     config.panelThreshold4High = upper; break;
-            case "right":      config.panelThreshold5Low = lower;     config.panelThreshold5High = upper; break;
-            case "down-left":  config.panelThreshold6Low = lower;     config.panelThreshold6High = upper; break;
-            case "down":       config.panelThreshold7Low = lower;     config.panelThreshold7High = upper; break;
-            case "down-right": config.panelThreshold8Low = lower;     config.panelThreshold8High = upper; break;
-            case "cardinal":   config.panelThreshold7Low = lower;     config.panelThreshold7High = upper; break;
-            case "corner":     config.panelThreshold2Low = lower;     config.panelThreshold2High = upper; break;
+                byte lower = (byte) slider.LowerValue;
+                byte upper = (byte) slider.UpperValue;
+
+                switch(Type)
+                {
+                case "up-left":    config.panelThreshold0Low = lower;     config.panelThreshold0High = upper; break;
+                case "up":         config.panelThreshold1Low = lower;     config.panelThreshold1High = upper; break;
+                case "up-right":   config.panelThreshold2Low = lower;     config.panelThreshold2High = upper; break;
+                case "left":       config.panelThreshold3Low = lower;     config.panelThreshold3High = upper; break;
+                case "center":     config.panelThreshold4Low = lower;     config.panelThreshold4High = upper; break;
+                case "right":      config.panelThreshold5Low = lower;     config.panelThreshold5High = upper; break;
+                case "down-left":  config.panelThreshold6Low = lower;     config.panelThreshold6High = upper; break;
+                case "down":       config.panelThreshold7Low = lower;     config.panelThreshold7High = upper; break;
+                case "down-right": config.panelThreshold8Low = lower;     config.panelThreshold8High = upper; break;
+                case "cardinal":   config.panelThreshold7Low = lower;     config.panelThreshold7High = upper; break;
+                case "corner":     config.panelThreshold2Low = lower;     config.panelThreshold2High = upper; break;
+                }
+            } else {
+                UInt16 lower = (UInt16) slider.LowerValue;
+                UInt16 upper = (UInt16) slider.UpperValue;
+
+                switch(Type)
+                {
+                case "up-left":    config.individualPanelFSRLow[0] = lower; config.individualPanelFSRHigh[0] = upper; break;
+                case "up":         config.individualPanelFSRLow[1] = lower; config.individualPanelFSRHigh[1] = upper; break;
+                case "up-right":   config.individualPanelFSRLow[2] = lower; config.individualPanelFSRHigh[2] = upper; break;
+                case "left":       config.individualPanelFSRLow[3] = lower; config.individualPanelFSRHigh[3] = upper; break;
+                case "center":     config.individualPanelFSRLow[4] = lower; config.individualPanelFSRHigh[4] = upper; break;
+                case "right":      config.individualPanelFSRLow[5] = lower; config.individualPanelFSRHigh[5] = upper; break;
+                case "down-left":  config.individualPanelFSRLow[6] = lower; config.individualPanelFSRHigh[6] = upper; break;
+                case "down":       config.individualPanelFSRLow[7] = lower; config.individualPanelFSRHigh[7] = upper; break;
+                case "down-right": config.individualPanelFSRLow[8] = lower; config.individualPanelFSRHigh[8] = upper; break;
+                case "cardinal":   config.individualPanelFSRLow[7] = lower; config.individualPanelFSRHigh[7] = upper; break;
+                case "corner":     config.individualPanelFSRLow[2] = lower; config.individualPanelFSRHigh[2] = upper; break;
+                }
             }
 
             // If we're not in advanced mode, sync the cardinal value to each of the panel values.
@@ -164,24 +185,45 @@ namespace smx_config
                 ConfigPresets.SyncUnifiedThresholds(ref config);
         }
 
-        private void GetValueFromConfig(SMX.SMXConfig config, out byte lower, out byte upper)
+        private void GetValueFromConfig(SMX.SMXConfig config, out int lower, out int upper)
         {
-            switch(Type)
+            if(config.masterVersion < 4)
             {
-            case "up-left":    lower = config.panelThreshold0Low;     upper = config.panelThreshold0High; return;
-            case "up":         lower = config.panelThreshold1Low;     upper = config.panelThreshold1High; return;
-            case "up-right":   lower = config.panelThreshold2Low;     upper = config.panelThreshold2High; return;
-            case "left":       lower = config.panelThreshold3Low;     upper = config.panelThreshold3High; return;
-            case "center":     lower = config.panelThreshold4Low;     upper = config.panelThreshold4High; return;
-            case "right":      lower = config.panelThreshold5Low;     upper = config.panelThreshold5High; return;
-            case "down-left":  lower = config.panelThreshold6Low;     upper = config.panelThreshold6High; return;
-            case "down":       lower = config.panelThreshold7Low;     upper = config.panelThreshold7High; return;
-            case "down-right": lower = config.panelThreshold8Low;     upper = config.panelThreshold8High; return;
-            case "cardinal":   lower = config.panelThreshold7Low;     upper = config.panelThreshold7High; return;
-            case "corner":     lower = config.panelThreshold2Low;     upper = config.panelThreshold2High; return;
-            default:
-                lower = upper = 0;
-                return;
+                switch(Type)
+                {
+                case "up-left":    lower = config.panelThreshold0Low;     upper = config.panelThreshold0High; return;
+                case "up":         lower = config.panelThreshold1Low;     upper = config.panelThreshold1High; return;
+                case "up-right":   lower = config.panelThreshold2Low;     upper = config.panelThreshold2High; return;
+                case "left":       lower = config.panelThreshold3Low;     upper = config.panelThreshold3High; return;
+                case "center":     lower = config.panelThreshold4Low;     upper = config.panelThreshold4High; return;
+                case "right":      lower = config.panelThreshold5Low;     upper = config.panelThreshold5High; return;
+                case "down-left":  lower = config.panelThreshold6Low;     upper = config.panelThreshold6High; return;
+                case "down":       lower = config.panelThreshold7Low;     upper = config.panelThreshold7High; return;
+                case "down-right": lower = config.panelThreshold8Low;     upper = config.panelThreshold8High; return;
+                case "cardinal":   lower = config.panelThreshold7Low;     upper = config.panelThreshold7High; return;
+                case "corner":     lower = config.panelThreshold2Low;     upper = config.panelThreshold2High; return;
+                default:
+                    lower = upper = 0;
+                    return;
+                }
+            } else {
+                switch(Type)
+                {
+                case "up-left":    lower = config.individualPanelFSRLow[0];     upper = config.individualPanelFSRHigh[0]; return;
+                case "up":         lower = config.individualPanelFSRLow[1];     upper = config.individualPanelFSRHigh[1]; return;
+                case "up-right":   lower = config.individualPanelFSRLow[2];     upper = config.individualPanelFSRHigh[2]; return;
+                case "left":       lower = config.individualPanelFSRLow[3];     upper = config.individualPanelFSRHigh[3]; return;
+                case "center":     lower = config.individualPanelFSRLow[4];     upper = config.individualPanelFSRHigh[4]; return;
+                case "right":      lower = config.individualPanelFSRLow[5];     upper = config.individualPanelFSRHigh[5]; return;
+                case "down-left":  lower = config.individualPanelFSRLow[6];     upper = config.individualPanelFSRHigh[6]; return;
+                case "down":       lower = config.individualPanelFSRLow[7];     upper = config.individualPanelFSRHigh[7]; return;
+                case "down-right": lower = config.individualPanelFSRLow[8];     upper = config.individualPanelFSRHigh[8]; return;
+                case "cardinal": lower = config.individualPanelFSRLow[7];       upper = config.individualPanelFSRHigh[7]; return;
+                case "corner": lower = config.individualPanelFSRLow[2];         upper = config.individualPanelFSRHigh[2]; return;
+                default:
+                    lower = upper = 0;
+                    return;
+                }
             }
         }
 
@@ -208,10 +250,24 @@ namespace smx_config
             // Make sure SaveToConfig doesn't treat these as the user changing values.
             UpdatingUI = true;
 
-            byte lower, upper;
+            // Set the range for the slider.
+            if(config.masterVersion < 4)
+            {
+                // 8-bit load cell thresholds
+                slider.Minimum = 20;
+                slider.Maximum = 200;
+            } else {
+                // 16-bit FSR thresholds
+                slider.Minimum = 5;
+                slider.Maximum = 1023;
+            }
+
+            int lower, upper;
             GetValueFromConfig(config, out lower, out upper);
 
-            if(lower == 0xFF)
+            // Firmware versions before 4 allowed 0xFF to be used to disable a threshold.
+            // This isn't used in newer firmwares.
+            if(config.masterVersion < 4 && lower == 0xFF)
             {
                 LowerLabel.Content = "Off";
                 UpperLabel.Content = "";

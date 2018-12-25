@@ -123,6 +123,12 @@ namespace smx_config
             // UL = DL = DR = UR (corners)
             config.panelThreshold0Low = config.panelThreshold6Low = config.panelThreshold8Low = config.panelThreshold2Low;
             config.panelThreshold0High = config.panelThreshold6High = config.panelThreshold8High = config.panelThreshold2High;
+
+            // Do the same for FSR thresholds.
+            config.individualPanelFSRLow[3] = config.individualPanelFSRLow[5] = config.individualPanelFSRLow[7];
+            config.individualPanelFSRHigh[3] = config.individualPanelFSRHigh[5] = config.individualPanelFSRHigh[7];
+            config.individualPanelFSRLow[0] = config.individualPanelFSRLow[6] = config.individualPanelFSRLow[8] = config.individualPanelFSRLow[2];
+            config.individualPanelFSRHigh[0] = config.individualPanelFSRHigh[6] = config.individualPanelFSRHigh[8] = config.individualPanelFSRHigh[2];
         }
 
         // Return true if the panel thresholds are already synced, so SyncUnifiedThresholds would
