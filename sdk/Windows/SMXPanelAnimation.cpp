@@ -51,7 +51,7 @@ namespace {
     Mutex g_Lock;
 }
 
-#define LIGHTS_PER_PANEL 16
+#define LIGHTS_PER_PANEL 25
 
 // XXX: go to sleep if there are no pads connected
 
