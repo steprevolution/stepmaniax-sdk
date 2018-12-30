@@ -71,6 +71,8 @@ void SMX::SMXDevice::CloseDevice()
     m_pConnection->Close();
     m_bHaveConfig = false;
     m_bSendConfig = false;
+    m_bSendingConfig = false;
+    m_bWaitingForConfigResponse = false;
 
     CallUpdateCallback(SMXUpdateCallback_Updated);
 }
