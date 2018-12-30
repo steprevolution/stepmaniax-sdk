@@ -409,7 +409,7 @@ void SMX_LightsUpload_BeginUpload(int pad, SMX_LightsUploadCallback pCallback, v
     for(int i = 0; i < asCommands.size(); ++i)
     {
         const string &sCommand = asCommands[i];
-        pDevice->SendCommand(sCommand, [i, iTotalCommands, pCallback, pUser]() {
+        pDevice->SendCommand(sCommand, [i, iTotalCommands, pCallback, pUser](string response) {
             // Command #i has finished being sent.
             //
             // If this isn't the last command, make sure progress isn't 100.

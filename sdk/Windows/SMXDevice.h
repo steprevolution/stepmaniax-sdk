@@ -41,8 +41,8 @@ public:
     bool IsConnected() const;
 
     // Send a raw command.
-    void SendCommand(string sCmd, function<void()> pComplete=nullptr);
-    void SendCommandLocked(string sCmd, function<void()> pComplete=nullptr);
+    void SendCommand(string sCmd, function<void(string response)> pComplete=nullptr);
+    void SendCommandLocked(string sCmd, function<void(string response)> pComplete=nullptr);
 
     // Get basic info about the device.
     void GetInfo(SMXInfo &info);

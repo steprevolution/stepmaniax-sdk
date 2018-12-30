@@ -103,13 +103,13 @@ bool SMX::SMXDevice::IsConnectedLocked() const
     return m_pConnection->IsConnectedWithDeviceInfo() && m_bHaveConfig;
 }
 
-void SMX::SMXDevice::SendCommand(string cmd, function<void()> pComplete)
+void SMX::SMXDevice::SendCommand(string cmd, function<void(string response)> pComplete)
 {
     LockMutex Lock(m_Lock);
     SendCommandLocked(cmd, pComplete);
 }
 
-void SMX::SMXDevice::SendCommandLocked(string cmd, function<void()> pComplete)
+void SMX::SMXDevice::SendCommandLocked(string cmd, function<void(string response)> pComplete)
 {
     m_Lock.AssertLockedByCurrentThread();
 
@@ -117,7 +117,7 @@ void SMX::SMXDevice::SendCommandLocked(string cmd, function<void()> pComplete)
     {
         // If we're not connected, just call pComplete.
         if(pComplete)
-            pComplete();
+            pComplete("");
         return;
     }
 
@@ -200,7 +200,7 @@ void SMX::SMXDevice::FactoryReset()
     // Send a factory reset command, and then read the new configuration.
     LockMutex Lock(m_Lock);
     SendCommandLocked("f\n");
-    SendCommandLocked("g\n", [&] {
+    SendCommandLocked("g\n", [&](string response) {
         // We now have the new configuration.
         m_Lock.AssertLockedByCurrentThread();
         CallUpdateCallback(SMXUpdateCallback_FactoryResetCommandComplete);
@@ -319,7 +319,7 @@ void SMX::SMXDevice::SendConfig()
     // Don't send another config packet until this one finishes, so if we get a bunch of
     // SetConfig calls quickly we won't spam the device, which can get slow.
     m_bSendingConfig = true;
-    SendCommandLocked(sData, [&] {
+    SendCommandLocked(sData, [&](string response) {
         m_bSendingConfig = false;
     });
     m_bSendConfig = false;
@@ -336,7 +336,7 @@ void SMX::SMXDevice::SendConfig()
 
     // After we write the configuration, read back the updated configuration to
     // verify it.
-    SendCommandLocked("g\n", [this]() {
+    SendCommandLocked("g\n", [this](string response) {
         m_bWaitingForConfigResponse = false;
     });
 }

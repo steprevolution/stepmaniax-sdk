@@ -41,7 +41,7 @@ bool SMX::SMXDeviceConnection::Open(shared_ptr<AutoCloseHandle> DeviceHandle, ws
     BeginAsyncRead(sError);
 
     // Request device info.
-    RequestDeviceInfo([&] {
+    RequestDeviceInfo([&](string response) {
         Log(ssprintf("Received device info.  Master version: %i, P%i", m_DeviceInfo.m_iFirmwareVersion, m_DeviceInfo.m_bP2+1));
         m_bGotInfo = true;
     });
@@ -59,14 +59,14 @@ void SMX::SMXDeviceConnection::Close()
     // If we're being closed while a command was in progress, call its completion
     // callback, so it's guaranteed to always be called.
     if(m_pCurrentCommand && m_pCurrentCommand->m_pComplete)
-        m_pCurrentCommand->m_pComplete();
+        m_pCurrentCommand->m_pComplete("");
 
     // If any commands were queued with completion callbacks, call their completion
     // callbacks.
     for(auto &pendingCommand: m_aPendingCommands)
     {
         if(pendingCommand->m_pComplete)
-            pendingCommand->m_pComplete();
+            pendingCommand->m_pComplete("");
     }
 
     m_hDevice.reset();
@@ -205,7 +205,7 @@ void SMX::SMXDeviceConnection::HandleUsbPacket(const string &buf)
             memcpy(m_DeviceInfo.m_Serial, sHexSerial.c_str(), 33);
 
             if(m_pCurrentCommand->m_pComplete)
-                m_pCurrentCommand->m_pComplete();
+                m_pCurrentCommand->m_pComplete(sPacket);
             m_pCurrentCommand = nullptr;
 
             break;
@@ -230,20 +230,22 @@ void SMX::SMXDeviceConnection::HandleUsbPacket(const string &buf)
 
         m_sCurrentReadBuffer.append(sPacket);
 
-        if(cmd & PACKET_FLAG_END_OF_COMMAND)
-        {
-            if(!m_sCurrentReadBuffer.empty())
-                m_sReadBuffers.push_back(m_sCurrentReadBuffer);
-            m_sCurrentReadBuffer.clear();
-        }
-
+        // Note that if PACKET_FLAG_HOST_CMD_FINISHED is set, PACKET_FLAG_END_OF_COMMAND
+        // will always also be set.
         if(cmd & PACKET_FLAG_HOST_CMD_FINISHED)
         {
             // This tells us that a command we wrote to the device has finished executing, and
             // it's safe to start writing another.
             if(m_pCurrentCommand && m_pCurrentCommand->m_pComplete)
-                m_pCurrentCommand->m_pComplete();
+                m_pCurrentCommand->m_pComplete(m_sCurrentReadBuffer);
             m_pCurrentCommand = nullptr;
+        }
+
+        if(cmd & PACKET_FLAG_END_OF_COMMAND)
+        {
+            if(!m_sCurrentReadBuffer.empty())
+                m_sReadBuffers.push_back(m_sCurrentReadBuffer);
+            m_sCurrentReadBuffer.clear();
         }
 
         break;
@@ -341,7 +343,7 @@ void SMX::SMXDeviceConnection::CheckWrites(wstring &error)
 // Request device info.  This is the same as sending an 'i' command, but we can send it safely
 // at any time, even if another application is talking to the device, so we can do this during
 // enumeration.
-void SMX::SMXDeviceConnection::RequestDeviceInfo(function<void()> pComplete)
+void SMX::SMXDeviceConnection::RequestDeviceInfo(function<void(string response)> pComplete)
 {
     shared_ptr<PendingCommand> pPendingCommand = make_shared<PendingCommand>();
     pPendingCommand->m_pComplete = pComplete;
@@ -362,7 +364,7 @@ void SMX::SMXDeviceConnection::RequestDeviceInfo(function<void()> pComplete)
     m_aPendingCommands.push_back(pPendingCommand);
 }
 
-void SMX::SMXDeviceConnection::SendCommand(const string &cmd, function<void()> pComplete)
+void SMX::SMXDeviceConnection::SendCommand(const string &cmd, function<void(string response)> pComplete)
 {
     shared_ptr<PendingCommand> pPendingCommand = make_shared<PendingCommand>();
     pPendingCommand->m_pComplete = pComplete;

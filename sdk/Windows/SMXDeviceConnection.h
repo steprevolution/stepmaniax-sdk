@@ -60,12 +60,12 @@ public:
 
     // Send a command.  This must be a single complete command: partial writes and multiple
     // commands in a call aren't allowed.
-    void SendCommand(const string &cmd, function<void()> pComplete=nullptr);
+    void SendCommand(const string &cmd, function<void(string response)> pComplete=nullptr);
 
     uint16_t GetInputState() const { return m_iInputState; }
 
 private:
-    void RequestDeviceInfo(function<void()> pComplete = nullptr);
+    void RequestDeviceInfo(function<void(string response)> pComplete = nullptr);
 
     void CheckReads(wstring &error);
     void BeginAsyncRead(wstring &error);
@@ -95,8 +95,8 @@ private:
         list<shared_ptr<PendingCommandPacket>> m_Packets;
 
         // This is only called if m_bWaitForResponse if true.  Otherwise, we send the command
-        // and forget about it.
-        function<void()> m_pComplete;
+        // and forget about it.  If the command has a response, it'll be in buf.
+        function<void(string response)> m_pComplete;
 
         // If true, once we send this command we won't send any other commands until we get
         // a response.
