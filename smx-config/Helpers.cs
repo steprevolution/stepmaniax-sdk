@@ -64,7 +64,7 @@ namespace smx_config
 
             // There aren't any pads connected.  Just return a dummy config, since the UI
             // isn't visible.
-            return new SMX.SMXConfig();
+            return SMX.SMXConfig.Create();
         }
 
         public static SMX.SMXConfig GetFirstActivePadConfig()

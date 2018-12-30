@@ -192,6 +192,19 @@ namespace SMX
             panelThreshold7High = values[7];
             panelThreshold8High = values[8];
         }
+
+        // Create an empty SMXConfig.
+        static public SMXConfig Create()
+        {
+            SMXConfig result = new SMXConfig();
+            result.enabledSensors = new Byte[5];
+            result.stepColor = new Byte[3*9];
+            result.individualPanelFSRLow = new UInt16[9];
+            result.individualPanelFSRHigh = new UInt16[9];
+            result.platformStripColor = new Byte[3];
+
+            return result;
+        }
     };  
 
     public struct SMXSensorTestModeData
