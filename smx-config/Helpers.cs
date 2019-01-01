@@ -194,7 +194,7 @@ namespace smx_config
                     return ColorFromFloatRGB(V, V, V);
  
             double C = V * S;
-             double X = C * (1 - Math.Abs((H % 2) - 1));
+            double X = C * (1 - Math.Abs((H % 2) - 1));
 
             Color ret;
             switch( (int) Math.Round(Math.Floor(H)) )
