@@ -9,6 +9,22 @@ namespace smx_config
 {
     public class DiagnosticsPanelButton: PanelSelectButton
     {
+        public static readonly DependencyProperty PanelProperty = DependencyProperty.RegisterAttached("Panel",
+            typeof(int), typeof(PanelSelectButton), new FrameworkPropertyMetadata(0));
+
+        public int Panel {
+            get { return (int) this.GetValue(PanelProperty); }
+            set { this.SetValue(PanelProperty, value); }
+        }
+        // Which panel is currently selected.
+        public static readonly DependencyProperty SelectedPanelProperty = DependencyProperty.RegisterAttached("SelectedPanel",
+            typeof(int), typeof(PanelSelectButton), new FrameworkPropertyMetadata(0));
+
+        public int SelectedPanel {
+            get { return (int) this.GetValue(SelectedPanelProperty); }
+            set { this.SetValue(SelectedPanelProperty, value); }
+        }
+
         // True if this panel is being pressed.
         public static readonly DependencyProperty PressedProperty = DependencyProperty.Register("Pressed",
             typeof(bool), typeof(DiagnosticsPanelButton), new FrameworkPropertyMetadata(false));

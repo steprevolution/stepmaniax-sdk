@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace smx_config
 {
@@ -96,33 +97,34 @@ namespace smx_config
 
             SetAllPanelsToCurrentColor.Click += delegate(object sender, RoutedEventArgs e)
             {
-                int SelectedPanel = AutoLightsColor.SelectedPanel % 9;
-                int SelectedPad = AutoLightsColor.SelectedPanel < 9? 0:1;
+                // Get the color of the selected color button, and apply it to all other buttons.
+                Color color = selectedButton.getColor();
 
-                // Get the color of the selected pad.
-                SMX.SMXConfig copyFromConfig;
-                if(!SMX.SMX.GetConfig(SelectedPad, out copyFromConfig))
-                    return;
-
-                // Don't use ActivePad.ActivePads here, since the lights UI handles multiple pads on its own.
-                for(int pad = 0; pad < 2; ++pad)
+                ColorButton[] colorButtons = getColorPickerButtons();
+                foreach(ColorButton button in colorButtons)
                 {
-                    SMX.SMXConfig config;
-                    if(!SMX.SMX.GetConfig(pad, out config))
+                    // Only apply this to panel colors, not the floor color.
+                    if((button as PanelColorButton) == null)
                         continue;
 
-                    // Set all stepColors to the color of the selected panel.
-                    for(int i = 0; i < 9; ++i)
-                    {
-                        config.stepColor[i*3+0] = copyFromConfig.stepColor[SelectedPanel*3+0];
-                        config.stepColor[i*3+1] = copyFromConfig.stepColor[SelectedPanel*3+1];
-                        config.stepColor[i*3+2] = copyFromConfig.stepColor[SelectedPanel*3+2];
-                    }
-
-                    SMX.SMX.SetConfig(pad, config);
+                    button.setColor(color);
                 }
+
                 CurrentSMXDevice.singleton.FireConfigurationChanged(null);
             };
+
+            // Listen to clicks on the panel color buttons.
+            ColorButton[] buttons = getColorPickerButtons();
+            foreach(ColorButton button in buttons)
+            {
+                button.Click += delegate(object sender, RoutedEventArgs e)
+                {
+                    ColorButton clickedButton = sender as ColorButton;
+                    selectedButton = clickedButton;
+
+                    RefreshSelectedColorPicker();
+                };
+            }
         }
 
         private void PressedColorModeButton(object sender, RoutedEventArgs e)
@@ -177,11 +179,59 @@ namespace smx_config
 
             RefreshConnectedPadList(args);
             RefreshUploadPadText(args);
+            RefreshSelectedColorPicker();
 
             // If a second controller has connected and we're on Both, see if we need to prompt
             // to sync configs.  We only actually need to do this if a controller just connected.
             if(args.ConfigurationChanged)
                 CheckConfiguringBothPads(args);
+        }
+
+        ColorButton selectedButton;
+
+        // Return all color picker buttons.
+        ColorButton[] getColorPickerButtons()
+        {
+            return new ColorButton[] {
+                P1_0, P1_1, P1_2,
+                P1_3, P1_4, P1_5,
+                P1_6, P1_7, P1_8,
+                P1_Floor,
+
+                P2_0, P2_1, P2_2,
+                P2_3, P2_4, P2_5,
+                P2_6, P2_7, P2_8,
+                P2_Floor,
+            };
+        }
+
+        // Update the selected color picker based on the value of selectedButton.
+        private void RefreshSelectedColorPicker()
+        {
+            LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
+
+            ColorButton[] buttons = getColorPickerButtons();
+
+            // If our selected button isn't enabled (or no button is selected), try to select a
+            // different one.
+            if(selectedButton == null || !selectedButton.isEnabled(args))
+            {
+                foreach(ColorButton button in buttons)
+                {
+                    if(button.isEnabled(args))
+                    {
+                        selectedButton = button;
+                        break;
+                    }
+                }
+            }
+
+            // Tell the buttons which one is selected.
+            foreach(ColorButton button in buttons)
+                button.IsSelected = button == selectedButton;
+
+            // Tell the color slider which button is selected.
+            AutoLightsColor.colorButton = selectedButton;
         }
 
         // Update which of the "Leave this application running", etc. blocks to display.

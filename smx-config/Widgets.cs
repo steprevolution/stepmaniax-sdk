@@ -431,26 +431,7 @@ namespace smx_config
     // A base class for buttons used to select a panel to work with.
     public class PanelSelectButton: Button
     {
-        // Which panel this is (P1 0-8, P2 9-17):
-        public static readonly DependencyProperty PanelProperty = DependencyProperty.RegisterAttached("Panel",
-            typeof(int), typeof(PanelSelectButton), new FrameworkPropertyMetadata(0, RefreshIsSelectedCallback));
-
-        public int Panel {
-            get { return (int) this.GetValue(PanelProperty); }
-            set { this.SetValue(PanelProperty, value); }
-        }
-
-        // Which panel is currently selected.  If this == Panel, this panel is selected.  This is
-        // bound to ColorPicker.SelectedPanel, so changing this changes which panel the picker edits.
-        public static readonly DependencyProperty SelectedPanelProperty = DependencyProperty.RegisterAttached("SelectedPanel",
-            typeof(int), typeof(PanelSelectButton), new FrameworkPropertyMetadata(0, RefreshIsSelectedCallback));
-
-        public int SelectedPanel {
-            get { return (int) this.GetValue(SelectedPanelProperty); }
-            set { this.SetValue(SelectedPanelProperty, value); }
-        }
-
-        // Whether this panel is selected.  This is true if Panel == SelectedPanel.
+        // Whether this button is selected.
         public static readonly DependencyProperty IsSelectedProperty = DependencyProperty.RegisterAttached("IsSelected",
             typeof(bool), typeof(PanelSelectButton), new FrameworkPropertyMetadata(false));
 
@@ -458,39 +439,29 @@ namespace smx_config
             get { return (bool) this.GetValue(IsSelectedProperty); }
             set { this.SetValue(IsSelectedProperty, value); }
         }
-
-        // When Panel or SelectedPanel change, update IsSelected.
-        private static void RefreshIsSelectedCallback(DependencyObject target, DependencyPropertyChangedEventArgs args)
-        {
-            PanelSelectButton self = target as PanelSelectButton;
-            self.RefreshIsSelected();
-        }
-
-        private void RefreshIsSelected()
-        {
-            IsSelected = Panel == SelectedPanel;
-        }
-
-        public override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
-
-            RefreshIsSelected();
-        }
     }
 
-    // This button shows the color configured for that panel, and chooses which color is being
-    // edited by the ColorPicker.
-    public class PanelColorButton: PanelSelectButton
+    // A button that selects which color is being set.
+    public abstract class ColorButton: PanelSelectButton
     {
         // The color configured for this panel:
         public static readonly DependencyProperty PanelColorProperty = DependencyProperty.RegisterAttached("PanelColor",
-            typeof(SolidColorBrush), typeof(PanelColorButton), new FrameworkPropertyMetadata(new SolidColorBrush()));
+            typeof(SolidColorBrush), typeof(ColorButton), new FrameworkPropertyMetadata(new SolidColorBrush()));
 
         public SolidColorBrush PanelColor {
             get { return (SolidColorBrush) this.GetValue(PanelColorProperty); }
             set { this.SetValue(PanelColorProperty, value); }
         }
+
+        // Return 0 if this is for the P1 pad, or 1 if it's for P2.
+        protected abstract int getPadNo();
+
+        // Return true if this panel is enabled and should be selectable.
+        public abstract bool isEnabled(LoadFromConfigDelegateArgs args);
+
+        // Get and set our color to the pad configuration.
+        abstract public Color getColor();
+        abstract public void setColor(Color color);
 
         public override void OnApplyTemplate()
         {
@@ -498,49 +469,19 @@ namespace smx_config
 
             OnConfigChange onConfigChange;
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
-                int pad = Panel < 9? 0:1;
-                LoadUIFromConfig(args.controller[pad].config);
+                LoadUIFromConfig(args);
             });
         }
 
-        protected override void OnClick()
-        {
-            base.OnClick();
-
-            // Select this panel.
-            SelectedPanel = Panel;
-
-            // Fire configuration changed, so the color slider updates to show this panel.
-            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
-        }
-
         // Set PanelColor.  This widget doesn't change the color, it only reflects the current configuration.
-        private void LoadUIFromConfig(SMX.SMXConfig config)
+        private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
         {
-            int PanelIndex = Panel % 9;
+            SMX.SMXConfig config = args.controller[getPadNo()].config;
 
-            // Hide color buttons for disabled panels.
-            bool[] enabledPanels = config.GetEnabledPanels();
-            Visibility = enabledPanels[PanelIndex]? Visibility.Visible:Visibility.Hidden;
+            // Hide disabled color buttons.
+            Visibility = isEnabled(args)? Visibility.Visible:Visibility.Hidden;
 
-            // If this panel is selected but its panel isn't enabled, try to select a
-            // different panel.
-            if(!enabledPanels[PanelIndex] && IsSelected)
-            {
-                for(int panel = 0; panel < 9; ++panel)
-                {
-                    if(enabledPanels[panel])
-                    {
-                        SelectedPanel = panel;
-                        break;
-                    }
-                }
-            }
-
-            Color rgb = Helpers.UnscaleColor(Color.FromRgb(
-                config.stepColor[PanelIndex*3+0],
-                config.stepColor[PanelIndex*3+1],
-                config.stepColor[PanelIndex*3+2]));
+            Color rgb = getColor();
             PanelColor = new SolidColorBrush(rgb);
         }
 
@@ -583,25 +524,10 @@ namespace smx_config
             if(data == null)
                 return false;
 
-            // Parse the color being dragged onto us.
+            // Parse the color being dragged onto us, and set it.
             Color color = Helpers.ParseColorString(data.GetData(typeof(string)) as string);
-            
-            // Update the panel color.
-            int PanelIndex = Panel % 9;
-            int Pad = Panel < 9? 0:1;
-            SMX.SMXConfig config;
-            if(!SMX.SMX.GetConfig(Pad, out config))
-                return false;
+            setColor(color);
 
-            // Light colors are 8-bit values, but we only use values between 0-170.  Higher values
-            // don't make the panel noticeably brighter, and just draw more power.
-            color = Helpers.ScaleColor(color);
-            config.stepColor[PanelIndex*3+0] = color.R;
-            config.stepColor[PanelIndex*3+1] = color.G;
-            config.stepColor[PanelIndex*3+2] = color.B;
-
-            SMX.SMX.SetConfig(Pad, config);
-            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
             return true;
         }
 
@@ -609,6 +535,121 @@ namespace smx_config
         {
             if(!HandleDrop(e))
                 base.OnDrop(e);
+        }
+    }
+
+    // A ColorButton for setting a panel color.
+    public class PanelColorButton: ColorButton
+    {
+        // Which panel this is (P1 0-8, P2 9-17):
+        public static readonly DependencyProperty PanelProperty = DependencyProperty.RegisterAttached("Panel",
+            typeof(int), typeof(PanelColorButton), new FrameworkPropertyMetadata(0));
+
+        public int Panel {
+            get { return (int) this.GetValue(PanelProperty); }
+            set { this.SetValue(PanelProperty, value); }
+        }
+        
+        protected override int getPadNo()
+        {
+            return Panel < 9? 0:1;
+        }
+
+        // A panel is enabled if it's enabled in the panel mask, which can be
+        // changed on the advanced tab.
+        public override bool isEnabled(LoadFromConfigDelegateArgs args)
+        {
+            int pad = getPadNo();
+            SMX.SMXConfig config = args.controller[pad].config;
+
+            if(!args.controller[pad].info.connected)
+                return false;
+
+            int PanelIndex = Panel % 9;
+            bool[] enabledPanels = config.GetEnabledPanels();
+            return enabledPanels[PanelIndex];
+        }
+
+        public override void setColor(Color color)
+        {
+            // Apply the change and save it to the device.
+            int pad = getPadNo();
+            SMX.SMXConfig config;
+            if(!SMX.SMX.GetConfig(pad, out config))
+                return;
+
+            // Light colors are 8-bit values, but we only use values between 0-170.  Higher values
+            // don't make the panel noticeably brighter, and just draw more power.
+            int PanelIndex = Panel % 9;
+            config.stepColor[PanelIndex*3+0] = Helpers.ScaleColor(color.R);
+            config.stepColor[PanelIndex*3+1] = Helpers.ScaleColor(color.G);
+            config.stepColor[PanelIndex*3+2] = Helpers.ScaleColor(color.B);
+
+            SMX.SMX.SetConfig(pad, config);
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+        }
+
+        // Return the color set for this panel in config.
+        public override Color getColor()
+        {
+            int pad = getPadNo();
+            SMX.SMXConfig config;
+            if(!SMX.SMX.GetConfig(pad, out config))
+                return Color.FromRgb(0,0,0);
+
+            int PanelIndex = Panel % 9;
+            return Helpers.UnscaleColor(Color.FromRgb(
+                config.stepColor[PanelIndex*3+0],
+                config.stepColor[PanelIndex*3+1],
+                config.stepColor[PanelIndex*3+2]));
+        }
+    }
+
+    public class FloorColorButton: ColorButton
+    {
+        // 0 if this is for P1, 1 for P2.
+        public static readonly DependencyProperty PadProperty = DependencyProperty.RegisterAttached("Pad",
+            typeof(int), typeof(FloorColorButton), new FrameworkPropertyMetadata(0));
+
+        public int Pad {
+            get { return (int) this.GetValue(PadProperty); }
+            set { this.SetValue(PadProperty, value); }
+        }
+        protected override int getPadNo() { return Pad; }
+
+        // The floor color button is available if the firmware is v4 or greater.
+        public override bool isEnabled(LoadFromConfigDelegateArgs args)
+        {
+            int pad = getPadNo();
+            SMX.SMXConfig config = args.controller[pad].config;
+            return config.masterVersion >= 4;
+        }
+        
+        public override void setColor(Color color)
+        {
+            // Apply the change and save it to the device.
+            int pad = getPadNo();
+            SMX.SMXConfig config;
+            if(!SMX.SMX.GetConfig(pad, out config))
+                    return;
+
+            config.platformStripColor[0] = color.R;
+            config.platformStripColor[1] = color.G;
+            config.platformStripColor[2] = color.B;
+
+            SMX.SMX.SetConfig(pad, config);
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+        }
+
+        // Return the color set for this panel in config.
+        public override Color getColor()
+        {
+            int pad = getPadNo();
+            SMX.SMXConfig config;
+            if(!SMX.SMX.GetConfig(pad, out config))
+                return Color.FromRgb(0,0,0);
+
+            return Color.FromRgb(config.platformStripColor[0], config.platformStripColor[1], config.platformStripColor[2]);
         }
     }
 
@@ -680,17 +721,23 @@ namespace smx_config
 
     public class ColorPicker: Control
     {
-        // Which panel is currently selected:
-        public static readonly DependencyProperty SelectedPanelProperty = DependencyProperty.Register("SelectedPanel",
-            typeof(int), typeof(ColorPicker), new FrameworkPropertyMetadata(0));
-
-        public int SelectedPanel {
-            get { return (int) this.GetValue(SelectedPanelProperty); }
-            set { this.SetValue(SelectedPanelProperty, value); }
-        }
-
         ColorPickerSlider HueSlider;
         public delegate void Event();
+
+        // The selected ColorButton.  This handles getting and setting the color to the
+        // config.
+        ColorButton _colorButton;
+        public ColorButton colorButton {
+            get { return _colorButton; }
+            set {
+                _colorButton = value;
+
+                // Refresh on change.
+                LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
+                LoadUIFromConfig(args);
+            }
+        }
+        
 
         public event Event StartedDragging, StoppedDragging;
         public override void OnApplyTemplate()
@@ -716,22 +763,15 @@ namespace smx_config
             HueSlider.Ticks = ticks;
 
             OnConfigChange onConfigChange;
-            onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
-                int pad = SelectedPanel < 9? 0:1;
-                LoadUIFromConfig(args.controller[pad].config);
+            onConfigChange = new OnConfigChange(this, delegate(LoadFromConfigDelegateArgs args) {
+                LoadUIFromConfig(args);
             });
         }
 
         private void SaveToConfig()
         {
-            if(UpdatingUI)
+            if(UpdatingUI || _colorButton == null)
                 return;
-
-            // Apply the change and save it to the device.
-            int pad = SelectedPanel < 9? 0:1;
-            SMX.SMXConfig config;
-            if(!SMX.SMX.GetConfig(pad, out config))
-                    return;
 
             Color color = Helpers.FromHSV(HueSlider.Value, 1, 1);
 
@@ -739,29 +779,20 @@ namespace smx_config
             if(HueSlider.Value == HueSlider.Minimum)
                 color = Color.FromRgb(255,255,255);
 
-            // Light colors are 8-bit values, but we only use values between 0-170.  Higher values
-            // don't make the panel noticeably brighter, and just draw more power.
-            int PanelIndex = SelectedPanel % 9;
-            config.stepColor[PanelIndex*3+0] = Helpers.ScaleColor(color.R);
-            config.stepColor[PanelIndex*3+1] = Helpers.ScaleColor(color.G);
-            config.stepColor[PanelIndex*3+2] = Helpers.ScaleColor(color.B);
-
-            SMX.SMX.SetConfig(pad, config);
-            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+            _colorButton.setColor(color);
         }
 
         bool UpdatingUI = false;
-        private void LoadUIFromConfig(SMX.SMXConfig config)
+        private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
         {
+            if(UpdatingUI || _colorButton == null)
+                return;
+
             // Make sure SaveToConfig doesn't treat these as the user changing values.
             UpdatingUI = true;
 
             // Reverse the scaling we applied in SaveToConfig.
-            int PanelIndex = SelectedPanel % 9;
-            Color rgb = Helpers.UnscaleColor(Color.FromRgb(
-                config.stepColor[PanelIndex*3+0],
-                config.stepColor[PanelIndex*3+1],
-                config.stepColor[PanelIndex*3+2]));
+            Color rgb = _colorButton.getColor();
             double h, s, v;
             Helpers.ToHSV(rgb, out h, out s, out v);
 

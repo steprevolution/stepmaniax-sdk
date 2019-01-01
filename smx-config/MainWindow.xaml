@@ -289,8 +289,7 @@ Use if the platform is too sensitive.</clr:String>
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <Style TargetType="{x:Type controls:PanelColorButton}">
+        <Style TargetType="{x:Type controls:ColorButton}">
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Width" Value="25" />
             <Setter Property="AllowDrop" Value="True" />
@@ -304,7 +303,7 @@ Use if the platform is too sensitive.</clr:String>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type controls:PanelColorButton}">
+                    <ControlTemplate TargetType="{x:Type controls:ColorButton}">
                         <Border x:Name="border"
                                 Background="{TemplateBinding PanelColor}"
                                 BorderBrush="#000000" BorderThickness="1" SnapsToDevicePixels="true">
@@ -327,6 +326,16 @@ Use if the platform is too sensitive.</clr:String>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        
+        <Style TargetType="{x:Type controls:PanelColorButton}"
+                BasedOn="{StaticResource {x:Type controls:ColorButton}}">
+
+        </Style>
+        <Style TargetType="{x:Type controls:FloorColorButton}"
+               BasedOn="{StaticResource {x:Type controls:ColorButton}}">
+            <Setter Property="Width" Value="100" />
+
         </Style>
 
         <Style TargetType="{x:Type controls:ColorPicker}">
@@ -728,38 +737,43 @@ Use if the platform is too sensitive.</clr:String>
 
                             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                                 <!-- The duplication here could be factored out, but with WPF it's not really worth it: -->
-                                <Grid x:Name="PanelColorP1" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                    <controls:PanelColorButton Panel="0" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="1" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="2" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                <StackPanel x:Name="PanelColorP1" Orientation="Vertical">
+                                    <Grid Width="100" Height="100">
+                                        <controls:PanelColorButton x:Name="P1_0" Panel="0" Content="↖" Margin="-60,-50,0,0" />
+                                        <controls:PanelColorButton x:Name="P1_1" Panel="1" Content="↑" Margin="0,-50,0,0" />
+                                        <controls:PanelColorButton x:Name="P1_2" Panel="2" Content="↗" Margin="60,-50,0,0" />
 
-                                    <controls:PanelColorButton Panel="3" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="4" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="5" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                        <controls:PanelColorButton x:Name="P1_3" Panel="3" Content="←" Margin="-60,0,0,0" />
+                                        <controls:PanelColorButton x:Name="P1_4" Panel="4" Content="☐" Margin="0,0,0,0" />
+                                        <controls:PanelColorButton x:Name="P1_5" Panel="5" Content="→" Margin="60,0,0,0" />
 
-                                    <controls:PanelColorButton Panel="6" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="7" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="8" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                </Grid>
+                                        <controls:PanelColorButton x:Name="P1_6" Panel="6" Content="↙" Margin="-60,50,0,0" />
+                                        <controls:PanelColorButton x:Name="P1_7" Panel="7" Content="↓" Margin="0,50,0,0" />
+                                        <controls:PanelColorButton x:Name="P1_8" Panel="8" Content="↘" Margin="60,50,0,0" />
+                                    </Grid>
+                                    <controls:FloorColorButton x:Name="P1_Floor" Pad="0" Content="=" Margin="0,0,0,0" />
+                                </StackPanel>
+                                
+                                <StackPanel x:Name="PanelColorP2" Orientation="Vertical">
+                                    <Grid Width="100" Height="100">
+                                        <controls:PanelColorButton x:Name="P2_0" Panel="9" Content="↖" Margin="-60,-50,0,0" />
+                                        <controls:PanelColorButton x:Name="P2_1" Panel="10" Content="↑" Margin="0,-50,0,0" />
+                                        <controls:PanelColorButton x:Name="P2_2" Panel="11" Content="↗" Margin="60,-50,0,0" />
 
-                                <Grid x:Name="PanelColorP2" Background="#FFE5E5E5" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                    <controls:PanelColorButton Panel="9" Content="↖" Margin="-60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="10" Content="↑" Margin="0,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="11" Content="↗" Margin="60,-50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
+                                        <controls:PanelColorButton x:Name="P2_3" Panel="12" Content="←" Margin="-60,0,0,0" />
+                                        <controls:PanelColorButton x:Name="P2_4" Panel="13" Content="☐" Margin="0,0,0,0" />
+                                        <controls:PanelColorButton x:Name="P2_5" Panel="14" Content="→" Margin="60,0,0,0" />
 
-                                    <controls:PanelColorButton Panel="12" Content="←" Margin="-60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="13" Content="☐" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="14" Content="→" Margin="60,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-
-                                    <controls:PanelColorButton Panel="15" Content="↙" Margin="-60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="16" Content="↓" Margin="0,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                    <controls:PanelColorButton Panel="17" Content="↘" Margin="60,50,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, ElementName=AutoLightsColor}" />
-                                </Grid>
+                                        <controls:PanelColorButton x:Name="P2_6" Panel="15" Content="↙" Margin="-60,50,0,0" />
+                                        <controls:PanelColorButton x:Name="P2_7" Panel="16" Content="↓" Margin="0,50,0,0" />
+                                        <controls:PanelColorButton x:Name="P2_8" Panel="17" Content="↘" Margin="60,50,0,0" />
+                                    </Grid>
+                                    <controls:FloorColorButton x:Name="P2_Floor" Pad="1" Content="=" Margin="0,0,0,10" />
+                                </StackPanel>
                             </StackPanel>
 
                             <controls:ColorPicker
                                 x:Name="AutoLightsColor" Focusable="false"
-                                controls:ColorPicker.SelectedPanel="0"
                             />
 
                             <Button x:Name="SetAllPanelsToCurrentColor" Content="Set all panels to this color" HorizontalAlignment="Center" Padding="6,2" Margin="0,6,0,0" />
