@@ -11,7 +11,11 @@ using namespace SMX;
 
 SMX::SMXDeviceConnection::PendingCommandPacket::PendingCommandPacket()
 {
-    memset(&m_OverlappedWrite, 0, sizeof(m_OverlappedWrite));
+}
+
+SMXDeviceConnection::PendingCommand::PendingCommand()
+{
+    memset(&m_Overlapped, 0, sizeof(m_Overlapped));
 }
 
 shared_ptr<SMX::SMXDeviceConnection> SMXDeviceConnection::Create()
@@ -114,6 +118,32 @@ bool SMX::SMXDeviceConnection::ReadPacket(string &out)
 
 void SMX::SMXDeviceConnection::CheckReads(wstring &error)
 {
+    if(m_pCurrentCommand)
+    {
+        // See if this command timed out.  This doesn't happen often, so this is
+        // mostly just a failsafe.  The controller takes a moment to initialize on
+        // startup, so we use a large enough timeout that this doesn't trigger on
+        // every connection.
+        double fSecondsAgo = SMX::GetMonotonicTime() - m_pCurrentCommand->m_fSentAt;
+        if(fSecondsAgo > 2.0f)
+        {
+            // If we didn't get a response in this long, we're not going to.  Retry the
+            // command by cancelling its I/O and moving it back to the command queue.
+            //
+            // if we were delayed and the response is in the queue, we'll get out of sync
+            Log("Command timed out.  Retrying...");
+            CancelIoEx(m_hDevice->value(), &m_pCurrentCommand->m_Overlapped);
+
+            // Block until the cancellation completes.  This should happen quickly.
+            DWORD unused;
+            GetOverlappedResultEx(m_hDevice->value(), &m_pCurrentCommand->m_Overlapped, &unused, INFINITE, false);
+
+            m_aPendingCommands.push_front(m_pCurrentCommand);
+            m_pCurrentCommand = nullptr;
+            Log("Command requeued");
+        }
+    }
+
     DWORD bytes;
     int result = GetOverlappedResult(m_hDevice->value(), &overlapped_read, &bytes, FALSE);
     if(result == 0)
@@ -280,15 +310,13 @@ void SMX::SMXDeviceConnection::BeginAsyncRead(wstring &error)
 
 void SMX::SMXDeviceConnection::CheckWrites(wstring &error)
 {
-    if(m_pCurrentCommand && !m_pCurrentCommand->m_Packets.empty())
+    if(m_pCurrentCommand)
     {
-        // A command is in progress.  See if any writes have completed.
-        while(!m_pCurrentCommand->m_Packets.empty())
+        // A command is in progress.  See if its writes have completed.
+        if(m_pCurrentCommand->m_bWriting)
         {
-            shared_ptr<PendingCommandPacket> pFirstPacket = m_pCurrentCommand->m_Packets.front();
-
             DWORD bytes;
-            int iResult = GetOverlappedResult(m_hDevice->value(), &pFirstPacket->m_OverlappedWrite, &bytes, FALSE);
+            int iResult = GetOverlappedResult(m_hDevice->value(), &m_pCurrentCommand->m_Overlapped, &bytes, FALSE);
             if(iResult == 0)
             {
                 int windows_error = GetLastError();
@@ -297,17 +325,15 @@ void SMX::SMXDeviceConnection::CheckWrites(wstring &error)
                 return;
             }
 
-            m_pCurrentCommand->m_Packets.pop_front();
+            m_pCurrentCommand->m_bWriting = false;
         }
-
 
         // Don't clear m_pCurrentCommand here.  It'll stay set until we get a PACKET_FLAG_HOST_CMD_FINISHED
         // packet from the device, which tells us it's ready to receive another command.
-    }
-
-    // Don't send packets if there's a command in progress.
-    if(m_pCurrentCommand)
+        //
+        // Don't send packets if there's a command in progress.
         return;
+    }
 
     // Stop if we have nothing to do.
     if(m_aPendingCommands.empty())
@@ -315,6 +341,9 @@ void SMX::SMXDeviceConnection::CheckWrites(wstring &error)
 
     // Send the next command.
     shared_ptr<PendingCommand> pPendingCommand = m_aPendingCommands.front();
+
+    // Record the time.  We can use this for timeouts.
+    pPendingCommand->m_fSentAt = SMX::GetMonotonicTime();
 
     for(shared_ptr<PendingCommandPacket> &pPacket: pPendingCommand->m_Packets)
     {
@@ -324,7 +353,7 @@ void SMX::SMXDeviceConnection::CheckWrites(wstring &error)
         // so this assumes all writes are async.
         DWORD unused;
         // Log(ssprintf("Write: %s", BinaryToHex(pPacket->sData).c_str()));
-        if(!WriteFile(m_hDevice->value(), pPacket->sData.data(), pPacket->sData.size(), &unused, &pPacket->m_OverlappedWrite))
+        if(!WriteFile(m_hDevice->value(), pPacket->sData.data(), pPacket->sData.size(), &unused, &pPendingCommand->m_Overlapped))
         {
             int windows_error = GetLastError();
             if(windows_error != ERROR_IO_PENDING && windows_error != ERROR_IO_INCOMPLETE)
@@ -334,6 +363,8 @@ void SMX::SMXDeviceConnection::CheckWrites(wstring &error)
             }
         }
     }
+
+    pPendingCommand->m_bWriting = true;
 
     // Remove this command and store it in m_pCurrentCommand, and we'll stop sending data until the command finishes.
     m_pCurrentCommand = pPendingCommand;

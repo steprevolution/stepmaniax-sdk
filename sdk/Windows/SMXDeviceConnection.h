@@ -87,12 +87,18 @@ private:
         PendingCommandPacket();
 
         string sData;
-        OVERLAPPED m_OverlappedWrite;
     };
 
     // Commands that are waiting to be sent:
     struct PendingCommand {
+        PendingCommand();
+
         list<shared_ptr<PendingCommandPacket>> m_Packets;
+
+        // The overlapped struct for writing this command's packets.  m_bWriting is true
+        // if we're waiting for the write to complete.
+        OVERLAPPED m_Overlapped;
+        bool m_bWriting = false;
 
         // This is only called if m_bWaitForResponse if true.  Otherwise, we send the command
         // and forget about it.  If the command has a response, it'll be in buf.
@@ -101,6 +107,9 @@ private:
         // If true, once we send this command we won't send any other commands until we get
         // a response.
         bool m_bIsDeviceInfoCommand = false;
+
+        // The SMX::GetMonotonicTime when we started sending this command.
+        double m_fSentAt = 0;
     };
     list<shared_ptr<PendingCommand>> m_aPendingCommands;
 
