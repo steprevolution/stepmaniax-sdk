@@ -254,7 +254,8 @@ namespace smx_config
             // Update the level bar from the test mode data for the selected panel.
             for(int sensor = 0; sensor < 4; ++sensor)
             {
-                Int16 value = args.controller[SelectedPad].test_data.sensorLevel[PanelIndex*4+sensor];
+                var controllerData = args.controller[SelectedPad];
+                Int16 value = controllerData.test_data.sensorLevel[PanelIndex*4+sensor];
 
                 if(GetTestMode() == SMX.SMX.SensorTestMode.Noise)
                 {
@@ -286,7 +287,10 @@ namespace smx_config
                     if(value < 0 && value >= -10)
                         value = 0;
 
-                    LevelBars[sensor].Value = value / 500.0;
+                    // Scale differently depending on if this is an FSR panel or a load cell panel.
+                    bool isFSR = controllerData.config.masterVersion >= 4 && controllerData.test_data.bFSRPerPanel[PanelIndex*4+sensor];
+                    float maxValue = isFSR? 1023:500;
+                    LevelBars[sensor].Value = value / maxValue;
                     LevelBarText[sensor].Content = value;
                     LevelBars[sensor].Error = false;
                 }
