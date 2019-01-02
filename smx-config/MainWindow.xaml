@@ -541,16 +541,16 @@ Use if the platform is too sensitive.</clr:String>
                                         <Label x:Name="SensorBarLevel1" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <controls:LevelBar x:Name="SensorBar2" Margin="0,0,5,0"/>
-                                        <Label x:Name="SensorBarLevel2" HorizontalAlignment="Center" Content="xxx"/>
-                                    </StackPanel>
-                                    <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
                                         <controls:LevelBar x:Name="SensorBar3" Margin="0,0,5,0"/>
                                         <Label x:Name="SensorBarLevel3" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <controls:LevelBar x:Name="SensorBar4" Margin="0,0,0,0"/>
+                                        <controls:LevelBar x:Name="SensorBar4" Margin="0,0,5,0"/>
                                         <Label x:Name="SensorBarLevel4" HorizontalAlignment="Center" Content="xxx"/>
+                                    </StackPanel>
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
+                                        <controls:LevelBar x:Name="SensorBar2" Margin="0,0,0,0"/>
+                                        <Label x:Name="SensorBarLevel2" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                 </DockPanel>
 
