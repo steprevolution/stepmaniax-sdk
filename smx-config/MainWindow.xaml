@@ -612,32 +612,50 @@ Use if the platform is too sensitive.</clr:String>
 
                             <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Left" VerticalAlignment="Top"
-                                Margin="300,350,0,0"
+                                Margin="320,350,0,0"
                             >
-                                <TextBlock Text="Current DIP"/>
-                                <controls:FrameImage
-                                    Image="Resources/DIP.png"
-                                    x:Name="CurrentDIP"
-                                    FramesX="16"
-                                    Frame="1"
-                                    Width="60"
-                                    Height="100"
-                                />
+                                <TextBlock Text="Current DIP" HorizontalAlignment="Center" />
+                                <Grid>
+                                    <Image
+                                        x:Name="DIPLabelLeft"
+                                        Source="Resources/DIP labels.png"
+                                        Width="16" Height="100"
+                                        Margin="-68 0 0 0"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    />
+                                    <controls:FrameImage
+                                        Image="Resources/DIP.png"
+                                        x:Name="CurrentDIP"
+                                        FramesX="16"
+                                        Frame="1"
+                                        Width="60" Height="100"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    />
+                                </Grid>
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical"
                                 HorizontalAlignment="Left" VerticalAlignment="Top"
                                 Margin="400,350,0,0"
                             >
-                                <TextBlock Text="Expected DIP"/>
-                                <controls:FrameImage
-                                    Image="Resources/DIP.png"
-                                    x:Name="ExpectedDIP"
-                                    FramesX="16"
-                                    Frame="1"
-                                    Width="60"
-                                    Height="100"
-                                />
+                                <TextBlock Text="Expected DIP" HorizontalAlignment="Center" />
+                                <Grid>
+                                    <Image
+                                        x:Name="DIPLabelRight"
+                                        Source="Resources/DIP labels.png"
+                                        Width="16" Height="100"
+                                        Margin="68 0 0 0"
+                                        VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    />
+                                    <controls:FrameImage
+                                        Image="Resources/DIP.png"
+                                        x:Name="ExpectedDIP"
+                                        FramesX="16"
+                                        Frame="1"
+                                        Width="60"
+                                        Height="100"
+                                    />
+                                </Grid>
                             </StackPanel>
                         </Grid>
                     </ControlTemplate>

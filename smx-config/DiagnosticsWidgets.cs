@@ -147,6 +147,7 @@ namespace smx_config
         private FrameworkElement NoResponseFromPanel;
         private FrameworkElement NoResponseFromSensors;
         private FrameworkElement P1Diagnostics, P2Diagnostics;
+        private FrameworkElement DIPLabelLeft, DIPLabelRight;
 
         public delegate void ShowAllLightsEvent(bool on);
         public event ShowAllLightsEvent SetShowAllLights;
@@ -177,6 +178,9 @@ namespace smx_config
 
             // Only show the mode dropdown in debug mode.  In regular use, just show calibrated values.
             DiagnosticMode.Visibility = Helpers.GetDebug()? Visibility.Visible:Visibility.Collapsed;
+
+            DIPLabelRight = Template.FindName("DIPLabelRight", this) as FrameworkElement;
+            DIPLabelLeft = Template.FindName("DIPLabelLeft", this) as FrameworkElement;
 
             Button Recalibrate = Template.FindName("Recalibrate", this) as Button;
             Recalibrate.Click += delegate(object sender, RoutedEventArgs e)
@@ -250,6 +254,12 @@ namespace smx_config
             if(args.controller[SelectedPad].test_data.bHaveDataFromPanel[PanelIndex])
                 AnySensorsNotResponding = args.controller[SelectedPad].test_data.AnySensorsOnPanelNotResponding(PanelIndex);
             NoResponseFromSensors.Visibility = AnySensorsNotResponding? Visibility.Visible:Visibility.Collapsed;
+
+            // Adjust the DIP labels to match the PCB.
+            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig(args);
+            bool DIPLabelsOnLeft = config.masterVersion < 4;
+            DIPLabelRight.Visibility = DIPLabelsOnLeft? Visibility.Collapsed:Visibility.Visible;
+            DIPLabelLeft.Visibility = DIPLabelsOnLeft? Visibility.Visible:Visibility.Collapsed;
 
             // Update the level bar from the test mode data for the selected panel.
             for(int sensor = 0; sensor < 4; ++sensor)
