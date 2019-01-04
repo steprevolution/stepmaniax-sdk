@@ -81,6 +81,7 @@ namespace PanelLightGraphic
     };
 
     // Commands to upload data:
+#pragma pack(push, 1)
     struct upload_packet
     {
         // 'm' to upload master animation data.
@@ -97,9 +98,11 @@ namespace PanelLightGraphic
         // be affected by it, like resetting lights animations.
         bool final_packet = false;
 
-        uint8_t offset = 0, size = 0;
+        uint16_t offset = 0;
+        uint8_t size = 0;
         uint8_t data[240];
     };
+#pragma pack(pop)
 
     // Make sure the packet fits in a command packet.
     static_assert(sizeof(upload_packet) <= 0xFF, "");
@@ -112,7 +115,7 @@ namespace PanelLightGraphic
 // we give to the pad.
 namespace ProtocolHelpers
 {
-    // Return a color's index in palette.  If the color isn't found, return 0.
+    // Return a color's index in palette.  If the color isn't found, return 0xFF.
     // We can use a dumb linear search here since the graphics are so small.
     uint8_t GetColorIndex(const PanelLightGraphic::palette_t &palette, const SMXGif::Color &color)
     {
@@ -128,7 +131,7 @@ namespace ProtocolHelpers
                 pad_color.rgb[2] == color.color[2])
                 return idx;
         }
-        return 0;
+        return 0xFF;
     }
 
     // Create a palette for an animation.
@@ -148,7 +151,7 @@ namespace ProtocolHelpers
 
                 // Check if this color is already in the palette.
                 uint8_t existing_idx = GetColorIndex(palette, color);
-                if(existing_idx < next_color)
+                if(existing_idx != 0xFF)
                     continue;
 
                 // Return false if we're using too many colors.
@@ -173,21 +176,21 @@ namespace ProtocolHelpers
         PanelLightGraphic::graphic_t &out)
     {
         int position = 0;
+        memset(out.data, 0, sizeof(out.data));
         for(auto color: image)
         {
             // Transparency is always palette index 15.
             uint8_t palette_idx = GetColorIndex(palette, color);
+            if(palette_idx == 0xFF)
+                palette_idx = 0;
 
-            // Apply color scaling, in the same way SMXManager::SetLights does.
-            for(int i = 0; i < 3; ++i)
-                color.color[i] = uint8_t(color.color[i] * 0.6666f);
-
-            // If this is an odd index, put the palette index in the high 4
-            // bits.  Otherwise, put it in the low 4 bits.
+            // If this is an odd index, put the palette index in the low 4
+            // bits.  Otherwise, put it in the high 4 bits.
             if(position & 1)
-                out.data[position/2] |= (palette_idx & 0xF0) << 4;
+                out.data[position/2] |= (palette_idx & 0x0F) << 0;
             else
-                out.data[position/2] |= (palette_idx & 0xF0) << 0;
+                out.data[position/2] |= (palette_idx & 0x0F) << 4;
+            position++;
         }
     }
 
@@ -303,7 +306,17 @@ namespace ProtocolHelpers
                 ProtocolHelpers::CreatePackedGraphic(panel_graphic, panel_data.palettes[type], panel_data.graphics[next_graphic_idx]);
                 next_graphic_idx++;
             }
+
+            // Apply color scaling to the palette, in the same way SMXManager::SetLights does.
+            // Do this after we've finished creating the graphic, so this is only applied to
+            // the final result and doesn't affect palettization.
+            for(PanelLightGraphic::color_t &color: panel_data.palettes[type].colors)
+            {
+                for(int i = 0; i < 3; ++i)
+                    color.rgb[i] = uint8_t(color.rgb[i] * 0.6666f);
+            }
         }
+
         return true;
     }
 
@@ -312,7 +325,7 @@ namespace ProtocolHelpers
         const void *data_block, int size,
         uint8_t panel, int animation_idx)
     {
-        const uint8_t *buf = (const uint8_t *) &data_block;
+        const uint8_t *buf = (const uint8_t *) data_block;
         for(int offset = 0; offset < size; )
         {
             PanelLightGraphic::upload_packet packet;
@@ -327,8 +340,6 @@ namespace ProtocolHelpers
 
             offset += packet.size;
         }
-
-        packets.back().final_packet = true;
     }
 }
 
@@ -353,11 +364,13 @@ bool SMX_LightsUpload_PrepareUpload(int pad, const char **error)
 
     // Create master animation data.
     PanelLightGraphic::master_animation_data_t master_data;
+    memset(&master_data, 0xFF, sizeof(master_data));
     if(!ProtocolHelpers::CreateMasterAnimationData(pad, master_data, error))
         return false;
 
     // Create panel animation data.
     PanelLightGraphic::panel_animation_data_t all_panel_data[9];
+    memset(&all_panel_data, 0xFF, sizeof(all_panel_data));
     for(int panel = 0; panel < 9; ++panel)
     {
         if(!ProtocolHelpers::CreatePanelAnimationData(all_panel_data[panel], pad, panel, error))
@@ -380,6 +393,9 @@ bool SMX_LightsUpload_PrepareUpload(int pad, const char **error)
             ProtocolHelpers::CreateUploadPackets(packets, &panel_data_block, sizeof(panel_data_block), panel, type);
         }
     }
+
+    // The last packet has the final_packet flag set, to let the master know we're finished.
+    packets.back().final_packet = true;
 
     // Make a list of strings containing the packets.  We don't need the
     // structs anymore, so this is all we need to keep around.

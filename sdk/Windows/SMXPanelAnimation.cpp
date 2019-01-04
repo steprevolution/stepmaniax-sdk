@@ -421,6 +421,12 @@ private:
         if(!SMXManager::g_pSMX->GetDevice(pad)->GetConfig(config))
             return;
 
+        // If this controller handles animation itself, don't handle it here too.  It can
+        // lead to confusing situations if SMXConfig's animations don't match the ones stored
+        // on the pad.
+        if(config.masterVersion >= 4)
+            return;
+
         AnimationStateForPad &pad_state = pad_states[pad];
 
         // Make sure the correct animations are playing.

@@ -44,6 +44,8 @@ SMX_API bool SMX_LightsAnimation_Load(const char *gif, int size, int pad, SMX_Li
 
 // Enable or disable automatically handling lights animations.  If enabled, any animations
 // loaded with SMX_LightsAnimation_Load will run automatically as long as the SDK is loaded.
+// This only has an effect if the platform doesn't handle animations directly.  On newer firmware,
+// this has no effect (upload the animation to the panel instead).
 // XXX: should we automatically disable SMX_SetLights when this is enabled?
 SMX_API void SMX_LightsAnimation_SetAuto(bool enable);
 
