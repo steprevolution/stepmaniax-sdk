@@ -64,7 +64,8 @@ namespace smx_config
             CreateTrayIcon();
 
             // Create the main window.
-            ToggleMainWindow();
+            if(!Helpers.LaunchedOnStartup())
+                ToggleMainWindow();
         }
 
         // Open or close the main window.
