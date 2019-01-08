@@ -412,20 +412,20 @@ private:
     }
 
     // Return lights for the given pad and pad state, using the loaded panel animations.
-    void GetCurrentLights(string &asLightsDataOut, int pad, int iPadState)
+    bool GetCurrentLights(string &asLightsDataOut, int pad, int iPadState)
     {
         m_Lock.AssertLockedByCurrentThread();
 
         // Get this pad's configuration.
         SMXConfig config;
         if(!SMXManager::g_pSMX->GetDevice(pad)->GetConfig(config))
-            return;
+            return false;
 
         // If this controller handles animation itself, don't handle it here too.  It can
         // lead to confusing situations if SMXConfig's animations don't match the ones stored
         // on the pad.
         if(config.masterVersion >= 4)
-            return;
+            return false;
 
         AnimationStateForPad &pad_state = pad_states[pad];
 
@@ -453,20 +453,24 @@ private:
             for(auto &animation_state: pad_state.animations[panel])
                 animation_state.Update();
         }
+        return true;
     }
 
     // Run a single light animation update.
     void UpdateLights()
     {
         string asLightsData[2];
+        bool bHaveLights = false;
         for(int pad = 0; pad < 2; pad++)
         {
             int iPadState = SMXManager::g_pSMX->GetDevice(pad)->GetInputState();
-            GetCurrentLights(asLightsData[pad], pad, iPadState);
+            if(GetCurrentLights(asLightsData[pad], pad, iPadState))
+                bHaveLights = true;
         }
 
         // Update lights.
-        SMXManager::g_pSMX->SetLights(asLightsData);
+        if(bHaveLights)
+            SMXManager::g_pSMX->SetLights(asLightsData);
     }
 };
 

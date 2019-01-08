@@ -500,7 +500,12 @@ namespace smx_config
         {
             LightsTimer.Stop();
 
-            // Turn lighting control back on.
+            // Reenable pad auto-lighting.  If we're running animations in SMXPanelAnimation,
+            // this will be overridden by it once it sends lights.
+            SMX.SMX.ReenableAutoLights();
+
+            // Turn lighting control back on.  This will only do anything on pads without
+            // support for animations.
             SMX.SMX.LightsAnimation_SetAuto(true);
         }
 
