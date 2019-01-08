@@ -313,6 +313,15 @@ void SMX::SMXDevice::SendConfig()
     // Write configuration command:
     string sData = ssprintf("w");
     int8_t iSize = sizeof(SMXConfig);
+
+    // Firmware through version 3 allowed config packets up to 128 bytes.  Additions
+    // to the packet later on brought it up to 126, so the maximum was raised to 250.
+    // Older firmware won't use the extra fields, but will ignore the packet if it's
+    // larger than it supports, so just truncate the packet for these devices to make
+    // sure this doesn't happen.
+    if(config.masterVersion <= 3)
+        iSize = min(iSize, offsetof(SMXConfig, flags));
+
     sData.append((char *) &iSize, sizeof(iSize));
     sData.append((char *) &wanted_config, sizeof(wanted_config));
 
