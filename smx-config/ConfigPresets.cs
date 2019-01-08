@@ -55,6 +55,14 @@ namespace smx_config
                 config1.panelThreshold7Low != config2.panelThreshold7Low ||
                 config1.panelThreshold8Low != config2.panelThreshold8Low)
                 return false;
+
+            for(int i = 0; i < 9; ++i)
+            {
+                if(config1.individualPanelFSRLow[i] != config2.individualPanelFSRLow[i] ||
+                    config1.individualPanelFSRHigh[i] != config2.individualPanelFSRHigh[i])
+                    return false;
+            }
+
             return true;
         }
 
@@ -79,6 +87,17 @@ namespace smx_config
 
             config.panelThreshold4Low = 20; // center
             config.panelThreshold4High = 30;
+
+            config.individualPanelFSRLow[7] =       // cardinal
+            config.individualPanelFSRLow[1] =       // up
+            config.individualPanelFSRLow[2] = 100;  // corner
+            config.individualPanelFSRHigh[7] =      // cardinal
+            config.individualPanelFSRHigh[1] =      // up
+            config.individualPanelFSRHigh[2] = 200; // corner
+
+            config.individualPanelFSRLow[4] = 100;   // center
+            config.individualPanelFSRHigh[4] = 200;
+
             SyncUnifiedThresholds(ref config);
         }
 
@@ -93,6 +112,17 @@ namespace smx_config
 
             config.panelThreshold4Low = 35;  // center
             config.panelThreshold4High = 60;
+
+            config.individualPanelFSRLow[7] =       // cardinal
+            config.individualPanelFSRLow[1] =       // up
+            config.individualPanelFSRLow[2] = 100;  // corner
+            config.individualPanelFSRHigh[7] =      // cardinal
+            config.individualPanelFSRHigh[1] =      // up
+            config.individualPanelFSRHigh[2] = 200; // corner
+
+            config.individualPanelFSRLow[4] = 100;   // center
+            config.individualPanelFSRHigh[4] = 200;
+
             SyncUnifiedThresholds(ref config);
         }
 
@@ -107,6 +137,17 @@ namespace smx_config
 
             config.panelThreshold4Low = 100; // center
             config.panelThreshold4High = 120;
+
+            config.individualPanelFSRLow[7] =       // cardinal
+            config.individualPanelFSRLow[1] =       // up
+            config.individualPanelFSRLow[2] = 100;  // corner
+            config.individualPanelFSRHigh[7] =      // cardinal
+            config.individualPanelFSRHigh[1] =      // up
+            config.individualPanelFSRHigh[2] = 200; // corner
+
+            config.individualPanelFSRLow[4] = 100;   // center
+            config.individualPanelFSRHigh[4] = 200;
+
             SyncUnifiedThresholds(ref config);
         }
 
