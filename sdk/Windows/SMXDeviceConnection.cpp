@@ -136,7 +136,7 @@ void SMX::SMXDeviceConnection::CheckReads(wstring &error)
 
             // Block until the cancellation completes.  This should happen quickly.
             DWORD unused;
-            GetOverlappedResultEx(m_hDevice->value(), &m_pCurrentCommand->m_Overlapped, &unused, INFINITE, false);
+            GetOverlappedResult(m_hDevice->value(), &m_pCurrentCommand->m_Overlapped, &unused, true);
 
             m_aPendingCommands.push_front(m_pCurrentCommand);
             m_pCurrentCommand = nullptr;
