@@ -23,7 +23,7 @@ namespace smx_config
 
             foreach(string Preset in Presets)
             {
-                SMX.SMXConfig PresetConfig = config;
+                SMX.SMXConfig PresetConfig = SMX.SMXConfig.Create();
                 SetPreset(Preset, ref PresetConfig);
                 if(SamePreset(config, PresetConfig))
                     return Preset;
