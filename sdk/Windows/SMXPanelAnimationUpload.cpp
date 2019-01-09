@@ -199,15 +199,15 @@ namespace ProtocolHelpers
         vector<uint8_t> result;
         int current_frame = 0;
         
-        int time_left_in_frame = animation.m_iFrameDurations[0];
+        float time_left_in_frame = animation.m_iFrameDurations[0];
         result.push_back(0);
         while(1)
         {
             // Advance time by 1/FPS seconds.
-            time_left_in_frame -= 1 / FPS;
+            time_left_in_frame -= 1.0f / FPS;
             result.back()++;
 
-            if(time_left_in_frame <= 0.00001)
+            if(time_left_in_frame <= 0.00001f)
             {
                 // We've displayed this frame long enough, so advance to the next frame.
                 if(current_frame + 1 == animation.m_iFrameDurations.size())
