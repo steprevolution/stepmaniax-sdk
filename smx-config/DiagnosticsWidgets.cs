@@ -298,7 +298,7 @@ namespace smx_config
                         value = 0;
 
                     // Scale differently depending on if this is an FSR panel or a load cell panel.
-                    bool isFSR = controllerData.config.masterVersion >= 4 && controllerData.test_data.bFSRPerPanel[PanelIndex*4+sensor];
+                    bool isFSR = controllerData.config.masterVersion >= 4 && (controllerData.config.configFlags & SMX.SMXConfigFlags.PlatformFlags_FSR) != 0;
                     float maxValue = isFSR? 1023:500;
                     LevelBars[sensor].Value = value / maxValue;
                     LevelBarText[sensor].Content = value;

@@ -49,7 +49,7 @@ namespace smx_config
                     // If AutoLightingUsePressedAnimations isn't set, the panel is using step
                     // coloring instead of pressed animations.  All firmwares support this.
                     // Don't confirm exiting for this mode.
-                    if((config.configFlags & SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations) == 0)
+                    if((config.configFlags & SMX.SMXConfigFlags.AutoLightingUsePressedAnimations) == 0)
                         continue;
 
                     shouldConfirmExit = true;
@@ -139,9 +139,9 @@ namespace smx_config
                 // If we're in panel colors mode, clear the AutoLightingUsePressedAnimations flag.
                 // Otherwise, set it.
                 if(pressedPanelColors)
-                    config.configFlags &= ~SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations;
+                    config.configFlags &= ~SMX.SMXConfigFlags.AutoLightingUsePressedAnimations;
                 else
-                    config.configFlags |= SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations;
+                    config.configFlags |= SMX.SMXConfigFlags.AutoLightingUsePressedAnimations;
                 SMX.SMX.SetConfig(activePad.Item1, config);
             }
 
@@ -166,7 +166,7 @@ namespace smx_config
                 // If SMXConfigFlags_AutoLightingUsePressedAnimations is set, show the GIF UI.
                 // If it's not set, show the color slider UI.
                 SMX.SMXConfigFlags flags = config.configFlags;
-                bool usePressedAnimations = (flags & SMX.SMXConfigFlags.SMXConfigFlags_AutoLightingUsePressedAnimations) != 0;
+                bool usePressedAnimations = (flags & SMX.SMXConfigFlags.AutoLightingUsePressedAnimations) != 0;
                 ColorPickerGroup.Visibility = usePressedAnimations? Visibility.Collapsed:Visibility.Visible;
                 GIFGroup.Visibility = usePressedAnimations? Visibility.Visible:Visibility.Collapsed;
 

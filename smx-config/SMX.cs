@@ -23,7 +23,8 @@ namespace SMX
 
     // Bits for SMXConfig::flags.
     public enum SMXConfigFlags {
-        SMXConfigFlags_AutoLightingUsePressedAnimations = 1 << 0,
+        AutoLightingUsePressedAnimations = 1 << 0,
+        PlatformFlags_FSR = 1 << 1,
     };
 
     [StructLayout(LayoutKind.Sequential, Pack=1)]  
@@ -83,6 +84,12 @@ namespace SMX
             set {
                 flags = (Byte) value;
             }
+        }
+
+        // Return true if the platform is using FSRs, or false for load cells.
+        public bool fsr()
+        {
+            return masterVersion >= 4 && (configFlags & SMXConfigFlags.PlatformFlags_FSR) != 0;
         }
 
         // Thresholds when in FSR mode.  Note that these are 16-bit thresholds, compared

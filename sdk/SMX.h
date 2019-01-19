@@ -141,6 +141,9 @@ enum SMXConfigFlags {
     // is ignored.  If unset, panels will be lit solid using stepColor.
     // masterVersion >= 4.  Previous versions always use stepColor.
     PlatformFlags_AutoLightingUsePressedAnimations = 1 << 0,
+
+    // If set, panels are using FSRs, otherwise load cells.
+    PlatformFlags_FSR = 1 << 1,
 };
 
 // The configuration for a connected controller.  This can be retrieved with SMX_GetConfig
@@ -281,8 +284,7 @@ struct SMXSensorTestModeData
     int16_t sensorLevel[9][4];
     bool bBadSensorInput[9][4];
 
-    // The DIP switch settings on each panel.  This is used for diagnostics
-    // displays.
+    // The DIP switch settings on each panel.  This is used for diagnostics displays.
     int iDIPSwitchPerPanel[9];
 };
 

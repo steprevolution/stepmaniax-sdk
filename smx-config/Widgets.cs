@@ -141,7 +141,7 @@ namespace smx_config
 
         private void SetValueToConfig(ref SMX.SMXConfig config)
         {
-            if(config.masterVersion < 4)
+            if(!config.fsr())
             {
                 byte lower = (byte) slider.LowerValue;
                 byte upper = (byte) slider.UpperValue;
@@ -187,7 +187,7 @@ namespace smx_config
 
         private void GetValueFromConfig(SMX.SMXConfig config, out int lower, out int upper)
         {
-            if(config.masterVersion < 4)
+            if(!config.fsr())
             {
                 switch(Type)
                 {
@@ -251,15 +251,15 @@ namespace smx_config
             UpdatingUI = true;
 
             // Set the range for the slider.
-            if(config.masterVersion < 4)
+            if(config.fsr())
             {
-                // 8-bit load cell thresholds
-                slider.Minimum = 20;
-                slider.Maximum = 200;
-            } else {
                 // 16-bit FSR thresholds
                 slider.Minimum = 5;
                 slider.Maximum = 1023;
+            } else {
+                // 8-bit load cell thresholds
+                slider.Minimum = 20;
+                slider.Maximum = 200;
             }
 
             int lower, upper;
