@@ -229,6 +229,9 @@ namespace SMX
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
         public int[] iDIPSwitchPerPanel;
 
+        [MarshalAs(UnmanagedType.ByValArray, ArraySubType=UnmanagedType.I1, SizeConst = 9*4)]
+        public bool[] iBadSensorDIP;
+
         public override bool Equals(object obj)
         {
             SMXSensorTestModeData other = (SMXSensorTestModeData) obj;
@@ -236,10 +239,11 @@ namespace SMX
                 Helpers.SequenceEqual(bHaveDataFromPanel, other.bHaveDataFromPanel) &&
                 Helpers.SequenceEqual(sensorLevel, other.sensorLevel) &&
                 Helpers.SequenceEqual(bBadSensorInput, other.bBadSensorInput) &&
-                Helpers.SequenceEqual(iDIPSwitchPerPanel, other.iDIPSwitchPerPanel);
+                Helpers.SequenceEqual(iDIPSwitchPerPanel, other.iDIPSwitchPerPanel) &&
+                Helpers.SequenceEqual(iBadSensorDIP, other.iBadSensorDIP);
         }
 
-        // Dummy override to silence a bad warning.  We don't use these in containers to need
+        // Dummy override to silence a bad warning.  We don't use these in containers that need
         // a hash code implementation.
         public override int GetHashCode() { return base.GetHashCode(); }
 
@@ -250,6 +254,17 @@ namespace SMX
                 return false;
             for(int sensor = 0; sensor < 4; ++sensor)
                 if(bBadSensorInput[panel*4+sensor])
+                    return true;
+
+            return false;
+        }
+
+        public bool AnyBadDIPSwitchSettingsOnPanel(int panel)
+        {
+            if(!bHaveDataFromPanel[panel])
+                return false;
+            for(int sensor = 0; sensor < 4; ++sensor)
+                if(iBadSensorDIP[panel*4+sensor])
                     return true;
 
             return false;

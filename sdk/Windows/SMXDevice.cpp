@@ -486,7 +486,10 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
         int16_t sensors[4];
 
         uint8_t dip:4;
-        uint8_t dummy2:4;
+        uint8_t bad_sensor_dip_0:1;
+        uint8_t bad_sensor_dip_1:1;
+        uint8_t bad_sensor_dip_2:1;
+        uint8_t bad_sensor_dip_3:1;
     };
 #pragma pack(pop)
 
@@ -496,7 +499,8 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
     memset(output.sensorLevel, 0, sizeof(output.sensorLevel));
     memset(output.bBadSensorInput, 0, sizeof(output.bBadSensorInput));
     memset(output.iDIPSwitchPerPanel, 0, sizeof(output.iDIPSwitchPerPanel));
-
+    memset(output.iBadSensorDIP, 0, sizeof(output.iBadSensorDIP));
+    
     for(int iPanel = 0; iPanel < 9; ++iPanel)
     {
         // Decode the response from this panel.
@@ -519,6 +523,10 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
         output.bBadSensorInput[iPanel][2] = pad_data.bad_sensor_2;
         output.bBadSensorInput[iPanel][3] = pad_data.bad_sensor_3;
         output.iDIPSwitchPerPanel[iPanel]  = pad_data.dip;
+        output.iBadSensorDIP[iPanel][0] = pad_data.bad_sensor_dip_0;
+        output.iBadSensorDIP[iPanel][1] = pad_data.bad_sensor_dip_1;
+        output.iBadSensorDIP[iPanel][2] = pad_data.bad_sensor_dip_2;
+        output.iBadSensorDIP[iPanel][3] = pad_data.bad_sensor_dip_3;
 
         for(int iSensor = 0; iSensor < 4; ++iSensor)
             output.sensorLevel[iPanel][iSensor] = pad_data.sensors[iSensor];

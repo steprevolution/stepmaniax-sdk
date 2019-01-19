@@ -54,7 +54,8 @@ namespace smx_config
                 Pressed = args.controller[SelectedPad].inputs[PanelIndex];
 
                 Warning = !args.controller[SelectedPad].test_data.bHaveDataFromPanel[PanelIndex] ||
-                           args.controller[SelectedPad].test_data.AnySensorsOnPanelNotResponding(PanelIndex);
+                           args.controller[SelectedPad].test_data.AnySensorsOnPanelNotResponding(PanelIndex) ||
+                           args.controller[SelectedPad].test_data.AnyBadDIPSwitchSettingsOnPanel(PanelIndex);
                         
             });
             onConfigChange.RefreshOnInputChange = true;
@@ -146,6 +147,7 @@ namespace smx_config
         private FrameImage ExpectedDIP;
         private FrameworkElement NoResponseFromPanel;
         private FrameworkElement NoResponseFromSensors;
+        private FrameworkElement BadSensorDIPSwitches;
         private FrameworkElement P1Diagnostics, P2Diagnostics;
         private FrameworkElement DIPLabelLeft, DIPLabelRight;
 
@@ -173,6 +175,7 @@ namespace smx_config
             ExpectedDIP = Template.FindName("ExpectedDIP", this) as FrameImage;
             NoResponseFromPanel = Template.FindName("NoResponseFromPanel", this) as FrameworkElement;
             NoResponseFromSensors = Template.FindName("NoResponseFromSensors", this) as FrameworkElement;
+            BadSensorDIPSwitches = Template.FindName("BadSensorDIPSwitches", this) as FrameworkElement;
             P1Diagnostics = Template.FindName("P1Diagnostics", this) as FrameworkElement;
             P2Diagnostics = Template.FindName("P2Diagnostics", this) as FrameworkElement;
 
@@ -250,11 +253,16 @@ namespace smx_config
             ExpectedDIP.Frame = PanelIndex;
 
             // Show or hide the sensor error text.
-            bool AnySensorsNotResponding = false;
+            bool AnySensorsNotResponding = false, HaveIncorrectSensorDIP = false;
             if(args.controller[SelectedPad].test_data.bHaveDataFromPanel[PanelIndex])
+            {
                 AnySensorsNotResponding = args.controller[SelectedPad].test_data.AnySensorsOnPanelNotResponding(PanelIndex);
-            NoResponseFromSensors.Visibility = AnySensorsNotResponding? Visibility.Visible:Visibility.Collapsed;
 
+                // Don't show both warnings.
+                HaveIncorrectSensorDIP = !AnySensorsNotResponding && args.controller[SelectedPad].test_data.AnyBadDIPSwitchSettingsOnPanel(PanelIndex);
+            }
+            NoResponseFromSensors.Visibility = AnySensorsNotResponding? Visibility.Visible:Visibility.Collapsed;
+            BadSensorDIPSwitches.Visibility = HaveIncorrectSensorDIP? Visibility.Visible:Visibility.Collapsed;
             // Adjust the DIP labels to match the PCB.
             SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig(args);
             bool DIPLabelsOnLeft = config.masterVersion < 4;

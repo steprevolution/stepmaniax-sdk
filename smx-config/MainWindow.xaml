@@ -591,6 +591,25 @@ Use if the platform is too sensitive.</clr:String>
                                         Text="Some sensors on this panel aren't responding correctly."
                                     />
                                 </DockPanel>
+                                
+                                <DockPanel
+                                    x:Name="BadSensorDIPSwitches"
+                                    Width="200"
+                                >
+                                    <TextBlock
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                        Foreground="#FFFF0000" FontSize="20"
+                                        FontFamily="{StaticResource WarningMarkFont}"
+                                        Text="!"
+                                    />
+
+                                    <TextBlock
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        TextWrapping="Wrap" TextAlignment="Center"
+                                        Text="Some sensors on this panel have incorrect DIP switch selections."
+                                    />
+                                </DockPanel>
+                                
                                 <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Left" VerticalAlignment="Top"
                                     Margin="10,10,0,0"
