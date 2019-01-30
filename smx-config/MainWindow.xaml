@@ -629,7 +629,9 @@ Use if the platform is too sensitive.</clr:String>
 
                             </StackPanel>
 
-                            <StackPanel Orientation="Vertical"
+                            <StackPanel
+                                x:Name="CurrentDIPGroup"
+                                Orientation="Vertical"
                                 HorizontalAlignment="Left" VerticalAlignment="Top"
                                 Margin="320,350,0,0"
                             >

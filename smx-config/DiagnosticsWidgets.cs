@@ -143,6 +143,7 @@ namespace smx_config
         private LevelBar[] LevelBars;
         private Label[] LevelBarText;
         private ComboBox DiagnosticMode;
+        private Panel CurrentDIPGroup;
         private FrameImage CurrentDIP;
         private FrameImage ExpectedDIP;
         private FrameworkElement NoResponseFromPanel;
@@ -171,6 +172,7 @@ namespace smx_config
             LevelBarText[3] = Template.FindName("SensorBarLevel4", this) as Label;
 
             DiagnosticMode = Template.FindName("DiagnosticMode", this) as ComboBox;
+            CurrentDIPGroup = Template.FindName("CurrentDIPGroup", this) as Panel;
             CurrentDIP = Template.FindName("CurrentDIP", this) as FrameImage;
             ExpectedDIP = Template.FindName("ExpectedDIP", this) as FrameImage;
             NoResponseFromPanel = Template.FindName("NoResponseFromPanel", this) as FrameworkElement;
@@ -314,14 +316,16 @@ namespace smx_config
                 }
             }
 
+            NoResponseFromPanel.Visibility = Visibility.Collapsed;
+            CurrentDIPGroup.Visibility = Visibility.Visible;
             if(!args.controller[SelectedPad].test_data.bHaveDataFromPanel[PanelIndex])
             {
                 NoResponseFromPanel.Visibility = Visibility.Visible;
                 NoResponseFromSensors.Visibility = Visibility.Collapsed;
+                CurrentDIPGroup.Visibility = Visibility.Hidden;
                 return;
             }
 
-            NoResponseFromPanel.Visibility = Visibility.Collapsed;
         }
     }
 }
