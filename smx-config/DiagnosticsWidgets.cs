@@ -244,6 +244,8 @@ namespace smx_config
 
         private void Refresh(LoadFromConfigDelegateArgs args)
         {
+            RefreshSelectedPanel();
+
             P1Diagnostics.Visibility = args.controller[0].info.connected? Visibility.Visible:Visibility.Collapsed;
             P2Diagnostics.Visibility = args.controller[1].info.connected? Visibility.Visible:Visibility.Collapsed;
 
@@ -326,6 +328,29 @@ namespace smx_config
                 return;
             }
 
+        }
+
+        // Update the selected color picker based on the value of selectedButton.
+        private void RefreshSelectedPanel()
+        {
+            LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
+
+            DiagnosticsPanelButton[] buttons = getPanelSelectionButtons();
+
+            // Tell the buttons which one is selected.
+            foreach(DiagnosticsPanelButton button in buttons)
+                button.IsSelected = button.Panel == SelectedPanel;
+        }
+
+        // Return all panel selection buttons.
+        DiagnosticsPanelButton[] getPanelSelectionButtons()
+        {
+            DiagnosticsPanelButton[] result = new DiagnosticsPanelButton[9];
+            for(int i = 0; i < 9; ++i)
+            {
+                result[i] = Template.FindName("Panel" + i, this) as DiagnosticsPanelButton;
+            }
+            return result;
         }
     }
 }
