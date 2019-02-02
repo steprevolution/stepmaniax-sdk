@@ -320,7 +320,6 @@ void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int pane
             ConvertToPanelGraphic16(gif_frame.frame, panel_graphic, panel);
         else
             ConvertToPanelGraphic25(gif_frame.frame, panel_graphic, panel);
-        m_aPanelGraphics.push_back(panel_graphic);
 
         // GIFs have a very low-resolution duration field, with 10ms units.
         // The panels run at 30 FPS internally, or 33 1/3 ms, but GIF can only
@@ -333,6 +332,7 @@ void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int pane
         else
             seconds = gif_frame.milliseconds / 1000.0;
 
+        m_aPanelGraphics.push_back(panel_graphic);
         m_iFrameDurations.push_back(seconds);
     }
 

@@ -47,6 +47,13 @@ void SMXGif::GIFImage::Blit(SMXGif::GIFImage &src, int dst_left, int dst_top, in
             get(x + dst_left, y + dst_top) = src.get(x, y);
     }
 }
+bool SMXGif::GIFImage::operator==(const GIFImage &rhs) const
+{
+    return
+        width == rhs.width &&
+        height == rhs.height &&
+        image == rhs.image;
+}
 
 class DataStream
 {
@@ -394,6 +401,14 @@ void GIFDecoder::ReadAllFrames(vector<SMXGif::SMXGifFrame> &frames)
             gif_frame.height = global_data.height;
             gif_frame.milliseconds = global_data.duration * 10;
             gif_frame.frame = frame_image;
+
+            // If this frame is identical to the previous one, just extend the previous frame.
+            if(!frames.empty() && gif_frame.frame == frames.back().frame)
+            {
+                frames.back().milliseconds += gif_frame.milliseconds;
+                continue;
+            }
+
             frames.push_back(gif_frame);
 
             frame++;

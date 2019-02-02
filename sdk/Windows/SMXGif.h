@@ -47,6 +47,8 @@ namespace SMXGif
         // Copy src into a rectangle in this image.
         void Blit(GIFImage &src, int dst_left, int dst_top, int dst_width, int dst_height);
 
+        bool operator==(const GIFImage &rhs) const;
+
     private:
         std::vector<Color> image;
     };
