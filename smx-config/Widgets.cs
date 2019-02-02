@@ -253,13 +253,15 @@ namespace smx_config
             // Set the range for the slider.
             if(config.fsr())
             {
-                // 16-bit FSR thresholds
+                // 16-bit FSR thresholds.
                 slider.Minimum = 5;
                 slider.Maximum = 1023;
+                slider.MinimumDistance = 5;
             } else {
                 // 8-bit load cell thresholds
                 slider.Minimum = 20;
                 slider.Maximum = 200;
+                slider.MinimumDistance = 10;
             }
 
             int lower, upper;
