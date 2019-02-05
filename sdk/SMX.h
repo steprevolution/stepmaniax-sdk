@@ -287,8 +287,8 @@ struct SMXSensorTestModeData
     // The DIP switch settings on each panel.  This is used for diagnostics displays.
     int iDIPSwitchPerPanel[9];
 
-    // Bad sensor selection DIP indication for each panel.
-    bool iBadSensorDIP[9][4];
+    // Bad sensor selection jumper indication for each panel.
+    bool iBadJumper[9][4];
 };
 
 #endif

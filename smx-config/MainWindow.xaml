@@ -606,7 +606,7 @@ Use if the platform is too sensitive.</clr:String>
                                     <TextBlock
                                         HorizontalAlignment="Center" VerticalAlignment="Center"
                                         TextWrapping="Wrap" TextAlignment="Center"
-                                        Text="Some sensors on this panel have incorrect DIP switch selections."
+                                        Text="Some sensors on this panel have incorrect jumpers."
                                     />
                                 </DockPanel>
                                 

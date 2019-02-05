@@ -55,7 +55,7 @@ namespace smx_config
 
                 Warning = !args.controller[SelectedPad].test_data.bHaveDataFromPanel[PanelIndex] ||
                            args.controller[SelectedPad].test_data.AnySensorsOnPanelNotResponding(PanelIndex) ||
-                           args.controller[SelectedPad].test_data.AnyBadDIPSwitchSettingsOnPanel(PanelIndex);
+                           args.controller[SelectedPad].test_data.AnyBadJumpersOnPanel(PanelIndex);
                         
             });
             onConfigChange.RefreshOnInputChange = true;
@@ -263,7 +263,7 @@ namespace smx_config
                 AnySensorsNotResponding = args.controller[SelectedPad].test_data.AnySensorsOnPanelNotResponding(PanelIndex);
 
                 // Don't show both warnings.
-                HaveIncorrectSensorDIP = !AnySensorsNotResponding && args.controller[SelectedPad].test_data.AnyBadDIPSwitchSettingsOnPanel(PanelIndex);
+                HaveIncorrectSensorDIP = !AnySensorsNotResponding && args.controller[SelectedPad].test_data.AnyBadJumpersOnPanel(PanelIndex);
             }
             NoResponseFromSensors.Visibility = AnySensorsNotResponding? Visibility.Visible:Visibility.Collapsed;
             BadSensorDIPSwitches.Visibility = HaveIncorrectSensorDIP? Visibility.Visible:Visibility.Collapsed;

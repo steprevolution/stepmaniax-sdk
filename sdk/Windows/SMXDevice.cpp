@@ -499,7 +499,7 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
     memset(output.sensorLevel, 0, sizeof(output.sensorLevel));
     memset(output.bBadSensorInput, 0, sizeof(output.bBadSensorInput));
     memset(output.iDIPSwitchPerPanel, 0, sizeof(output.iDIPSwitchPerPanel));
-    memset(output.iBadSensorDIP, 0, sizeof(output.iBadSensorDIP));
+    memset(output.iBadJumper, 0, sizeof(output.iBadJumper));
     
     for(int iPanel = 0; iPanel < 9; ++iPanel)
     {
@@ -518,15 +518,15 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
         output.bHaveDataFromPanel[iPanel] = true;
 
         // These bits are true if that sensor's most recent reading is invalid.
-        output.bBadSensorInput[iPanel][0] = pad_data.bad_sensor_0;
-        output.bBadSensorInput[iPanel][1] = pad_data.bad_sensor_1;
-        output.bBadSensorInput[iPanel][2] = pad_data.bad_sensor_2;
-        output.bBadSensorInput[iPanel][3] = pad_data.bad_sensor_3;
+        output.bBadSensorInput[iPanel][0] = false; //pad_data.bad_sensor_0;
+        output.bBadSensorInput[iPanel][1] = false; //pad_data.bad_sensor_1;
+        output.bBadSensorInput[iPanel][2] = false; //pad_data.bad_sensor_2;
+        output.bBadSensorInput[iPanel][3] = false; //pad_data.bad_sensor_3;
         output.iDIPSwitchPerPanel[iPanel]  = pad_data.dip;
-        output.iBadSensorDIP[iPanel][0] = pad_data.bad_sensor_dip_0;
-        output.iBadSensorDIP[iPanel][1] = pad_data.bad_sensor_dip_1;
-        output.iBadSensorDIP[iPanel][2] = pad_data.bad_sensor_dip_2;
-        output.iBadSensorDIP[iPanel][3] = pad_data.bad_sensor_dip_3;
+        output.iBadJumper[iPanel][0] = pad_data.bad_sensor_dip_0;
+        output.iBadJumper[iPanel][1] = pad_data.bad_sensor_dip_1;
+        output.iBadJumper[iPanel][2] = pad_data.bad_sensor_dip_2;
+        output.iBadJumper[iPanel][3] = pad_data.bad_sensor_dip_3;
 
         for(int iSensor = 0; iSensor < 4; ++iSensor)
             output.sensorLevel[iPanel][iSensor] = pad_data.sensors[iSensor];

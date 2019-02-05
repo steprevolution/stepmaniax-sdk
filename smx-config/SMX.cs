@@ -230,7 +230,7 @@ namespace SMX
         public int[] iDIPSwitchPerPanel;
 
         [MarshalAs(UnmanagedType.ByValArray, ArraySubType=UnmanagedType.I1, SizeConst = 9*4)]
-        public bool[] iBadSensorDIP;
+        public bool[] iBadJumper;
 
         public override bool Equals(object obj)
         {
@@ -240,7 +240,7 @@ namespace SMX
                 Helpers.SequenceEqual(sensorLevel, other.sensorLevel) &&
                 Helpers.SequenceEqual(bBadSensorInput, other.bBadSensorInput) &&
                 Helpers.SequenceEqual(iDIPSwitchPerPanel, other.iDIPSwitchPerPanel) &&
-                Helpers.SequenceEqual(iBadSensorDIP, other.iBadSensorDIP);
+                Helpers.SequenceEqual(iBadJumper, other.iBadJumper);
         }
 
         // Dummy override to silence a bad warning.  We don't use these in containers that need
@@ -259,12 +259,12 @@ namespace SMX
             return false;
         }
 
-        public bool AnyBadDIPSwitchSettingsOnPanel(int panel)
+        public bool AnyBadJumpersOnPanel(int panel)
         {
             if(!bHaveDataFromPanel[panel])
                 return false;
             for(int sensor = 0; sensor < 4; ++sensor)
-                if(iBadSensorDIP[panel*4+sensor])
+                if(iBadJumper[panel*4+sensor])
                     return true;
 
             return false;
