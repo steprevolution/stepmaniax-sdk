@@ -303,10 +303,11 @@ void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int pane
     {
         const SMXGif::SMXGifFrame &gif_frame = frames[frame_no];
 
-        // If the bottom-left pixel is opaque, this is the loop frame, which marks the
+        // If the bottom-left pixel is white, this is the loop frame, which marks the
         // frame the animation should start at after a loop.  This is global to the
         // animation, not specific to each panel.
-        if(gif_frame.frame.get(0, gif_frame.frame.height-1).color[3] != 0)
+        SMXGif::Color marker = gif_frame.frame.get(0, gif_frame.frame.height-1);
+        if(marker.color[3] == 0xFF && marker.color[0] >= 0x80)
         {
             // We shouldn't see more than one of these.  If we do, use the first.
             if(m_iLoopFrame != -1)
