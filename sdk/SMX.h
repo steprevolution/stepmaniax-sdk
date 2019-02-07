@@ -12,6 +12,7 @@
 struct SMXInfo;
 struct SMXConfig;
 enum SensorTestMode;
+enum PanelTestMode;
 enum SMXUpdateCallbackReason;
 struct SMXSensorTestModeData;
 
@@ -101,9 +102,14 @@ SMX_API void SMX_FactoryReset(int pad);
 // for diagnostics.
 SMX_API void SMX_ForceRecalibration(int pad);
 
-// Set a panel test mode and request test data.  This is used by the configuration tool.
+// Set a sensor test mode and request test data.  This is used by the configuration tool.
 SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode);
 SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data);
+
+// Set a panel test mode.  These only appear as debug lighting on the panel and don't
+// return data to us.  Lights can't be updated while a panel test mode is active.
+// This applies to all connected pads.
+SMX_API void SMX_SetPanelTestMode(PanelTestMode mode);
 
 // Return the build version of the DLL, which is based on the git tag at build time.  This
 // is only intended for diagnostic logging, and it's also the version we show in SMXConfig.
@@ -289,6 +295,13 @@ struct SMXSensorTestModeData
 
     // Bad sensor selection jumper indication for each panel.
     bool iBadJumper[9][4];
+};
+
+// The values also correspond with the protocol and must not be changed.
+// These are panel-side diagnostics modes.
+enum PanelTestMode {
+    PanelTestMode_Off = '0',
+    PanelTestMode_PressureTest = '1',
 };
 
 #endif

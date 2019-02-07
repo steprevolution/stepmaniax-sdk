@@ -62,8 +62,10 @@ SMX_API void SMX_GetInfo(int pad, SMXInfo *info) { SMXManager::g_pSMX->GetDevice
 SMX_API uint16_t SMX_GetInputState(int pad) { return SMXManager::g_pSMX->GetDevice(pad)->GetInputState(); }
 SMX_API void SMX_FactoryReset(int pad) { SMXManager::g_pSMX->GetDevice(pad)->FactoryReset(); }
 SMX_API void SMX_ForceRecalibration(int pad) { SMXManager::g_pSMX->GetDevice(pad)->ForceRecalibration(); }
-SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode) { SMXManager::g_pSMX->GetDevice(pad)->SetSensorTestMode((SensorTestMode) mode); }
+SMX_API void SMX_SetTestMode(int pad, SensorTestMode mode) { SMXManager::g_pSMX->GetDevice(pad)->SetSensorTestMode(mode); }
 SMX_API bool SMX_GetTestData(int pad, SMXSensorTestModeData *data) { return SMXManager::g_pSMX->GetDevice(pad)->GetTestData(*data); }
+SMX_API void SMX_SetPanelTestMode(PanelTestMode mode) { SMXManager::g_pSMX->SetPanelTestMode(mode); }
+
 SMX_API void SMX_SetLights(const char lightData[864])
 {
     SMX_SetLights2(lightData, 864);

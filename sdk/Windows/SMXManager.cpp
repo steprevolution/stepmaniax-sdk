@@ -135,6 +135,9 @@ void SMX::SMXManager::ThreadMain()
         // since this actually just queues commands, which are actually handled in Update.
         SendLightUpdates();
 
+        // Send panel test mode commands if needed.
+        UpdatePanelTestMode();
+
         // See if there are any new devices.
         AttemptConnections();
 
@@ -245,6 +248,10 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
 {
     g_Lock.AssertNotLockedByCurrentThread();
     LockMutex L(g_Lock);
+
+    // Don't send lights when a panel test mode is active.
+    if(m_PanelTestMode != PanelTestMode_Off)
+        return;
 
     // Separate top and bottom lights commands.
     //
@@ -489,6 +496,43 @@ void SMX::SMXManager::SendLightUpdates()
 
     // Remove the command we've sent.
     m_aPendingLightsCommands.erase(m_aPendingLightsCommands.begin(), m_aPendingLightsCommands.begin()+1);
+}
+
+void SMX::SMXManager::SetPanelTestMode(PanelTestMode mode)
+{
+    g_Lock.AssertNotLockedByCurrentThread();
+    LockMutex Lock(g_Lock);
+    m_PanelTestMode = mode;
+}
+
+void SMX::SMXManager::UpdatePanelTestMode()
+{
+    // If the test mode has changed, send the new test mode.
+    //
+    // When the test mode is enabled, send the test mode again periodically, or it'll time
+    // out on the master and be turned off.  Don't repeat the PanelTestMode_Off command.
+    g_Lock.AssertLockedByCurrentThread();
+    uint32_t now = GetTickCount();
+    if(m_PanelTestMode == m_LastSentPanelTestMode && 
+        (m_PanelTestMode == PanelTestMode_Off || now - m_SentPanelTestModeAtTicks < 1000))
+        return;
+
+    // When we first send the test mode command (not for repeats), turn off lights.
+    if(m_LastSentPanelTestMode == PanelTestMode_Off)
+    {
+        // The 'l' command used to set lights, but it's now only used to turn lights off
+        // for cases like this.
+        string sData = "l";
+        sData.append(108, 0);
+        sData += "\n";
+        for(int iPad = 0; iPad < 2; ++iPad)
+            m_pDevices[iPad]->SendCommandLocked(sData);
+    }
+
+    m_SentPanelTestModeAtTicks = now;
+    m_LastSentPanelTestMode = m_PanelTestMode;
+    for(int iPad = 0; iPad < 2; ++iPad)
+        m_pDevices[iPad]->SendCommandLocked(ssprintf("t %c\n", m_PanelTestMode));
 }
 
 void SMX::SMXManager::RunInHelperThread(function<void()> func)

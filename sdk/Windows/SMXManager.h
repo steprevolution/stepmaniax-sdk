@@ -45,6 +45,7 @@ public:
     shared_ptr<SMXDevice> GetDevice(int pad);
     void SetLights(const string sLights[2]);
     void ReenableAutoLights();
+    void SetPanelTestMode(PanelTestMode mode);
 
     // Run a function in the user callback thread.
     void RunInHelperThread(function<void()> func);
@@ -76,6 +77,13 @@ private:
     };
     vector<PendingCommand> m_aPendingLightsCommands;
     double m_fDelayLightCommandsUntil = 0;
+
+    // Panel test mode.  This is separate from the sensor test mode (pressure display),
+    // which is handled in SMXDevice.
+    void UpdatePanelTestMode();
+    uint32_t m_SentPanelTestModeAtTicks = 0;
+    PanelTestMode m_PanelTestMode = PanelTestMode_Off;
+    PanelTestMode m_LastSentPanelTestMode = PanelTestMode_Off;
 };
 }
 

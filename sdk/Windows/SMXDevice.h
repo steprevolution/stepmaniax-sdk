@@ -121,7 +121,7 @@ private:
     bool IsConnectedLocked() const;
 
     // Test/diagnostics mode handling.
-    void UpdateTestMode();
+    void UpdateSensorTestMode();
     void HandleSensorTestDataResponse(const string &sReadBuffer);
     SensorTestMode m_WaitingForSensorTestModeResponse = SensorTestMode_Off;
     SensorTestMode m_SensorTestMode = SensorTestMode_Off;

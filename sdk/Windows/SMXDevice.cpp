@@ -359,7 +359,7 @@ void SMX::SMXDevice::Update(wstring &sError)
 
     CheckActive();
     SendConfig();
-    UpdateTestMode();
+    UpdateSensorTestMode();
 
     {
         uint16_t iOldState = m_pConnection->GetInputState();
@@ -396,7 +396,7 @@ void SMX::SMXDevice::CheckActive()
 }
 
 // Check if we need to request test mode data.
-void SMX::SMXDevice::UpdateTestMode()
+void SMX::SMXDevice::UpdateSensorTestMode()
 {
     m_Lock.AssertLockedByCurrentThread();
 
