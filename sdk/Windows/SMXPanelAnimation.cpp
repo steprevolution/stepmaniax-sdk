@@ -310,7 +310,7 @@ void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int pane
         if(marker.color[3] == 0xFF && marker.color[0] >= 0x80)
         {
             // We shouldn't see more than one of these.  If we do, use the first.
-            if(m_iLoopFrame != -1)
+            if(m_iLoopFrame == -1)
                 m_iLoopFrame = frame_no;
         }
 
