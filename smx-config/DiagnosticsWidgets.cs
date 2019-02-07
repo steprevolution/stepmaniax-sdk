@@ -208,7 +208,7 @@ namespace smx_config
             DiagnosticMode.AddHandler(ComboBox.SelectionChangedEvent, new RoutedEventHandler(delegate(object sender, RoutedEventArgs e)
             {
                 for(int pad = 0; pad < 2; ++pad)
-                    SMX.SMX.SetTestMode(pad, GetTestMode());
+                    SMX.SMX.SetSensorTestMode(pad, GetTestMode());
             }));
 
             OnConfigChange onConfigChange;
@@ -220,13 +220,13 @@ namespace smx_config
             Loaded += delegate(object sender, RoutedEventArgs e)
             {
                 for(int pad = 0; pad < 2; ++pad)
-                    SMX.SMX.SetTestMode(pad, GetTestMode());
+                    SMX.SMX.SetSensorTestMode(pad, GetTestMode());
             };
 
             Unloaded += delegate(object sender, RoutedEventArgs e)
             {
                 for(int pad = 0; pad < 2; ++pad)
-                    SMX.SMX.SetTestMode(pad, SMX.SMX.SensorTestMode.Off);
+                    SMX.SMX.SetSensorTestMode(pad, SMX.SMX.SensorTestMode.Off);
             };
         }
 
@@ -351,6 +351,21 @@ namespace smx_config
                 result[i] = Template.FindName("Panel" + i, this) as DiagnosticsPanelButton;
             }
             return result;
+        }
+    }
+
+    public class PanelTestModeCheckbox: CheckBox
+    {
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+        }
+
+        protected override void OnClick()
+        {
+            base.OnClick();
+
+            SMX.SMX.SetPanelTestMode((bool) IsChecked? SMX.SMX.PanelTestMode.PressureTest:SMX.SMX.PanelTestMode.Off);
         }
     }
 }

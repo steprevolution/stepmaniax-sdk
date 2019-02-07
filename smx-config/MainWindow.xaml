@@ -609,7 +609,7 @@ Use if the platform is too sensitive.</clr:String>
                                         Text="Some sensors on this panel have incorrect jumpers."
                                     />
                                 </DockPanel>
-                                
+
                                 <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Left" VerticalAlignment="Top"
                                     Margin="10,10,0,0"
@@ -626,7 +626,16 @@ Use if the platform is too sensitive.</clr:String>
                                         Margin="10,0,0,0"
                                     />
                                 </StackPanel>
-
+                                <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Left" VerticalAlignment="Top"
+                                    Margin="10,10,0,0"
+                                >
+                                    <controls:PanelTestModeCheckbox
+                                        x:Name="PanelTestModeCheckbox"
+                                        HorizontalAlignment="Left" VerticalAlignment="Top"
+                                        Content="Panel test mode"
+                                    />
+                                </StackPanel>
                             </StackPanel>
 
                             <StackPanel

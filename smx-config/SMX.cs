@@ -318,6 +318,8 @@ namespace SMX
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_GetTestData(int pad, out SMXSensorTestModeData data);
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void SMX_SetPanelTestMode(int mode);
+        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_SetLights2(byte[] buf, int lightDataSize);
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_ReenableAutoLights();
@@ -459,7 +461,7 @@ namespace SMX
                 Tare = '3',
         };
 
-        public static void SetTestMode(int pad, SensorTestMode mode)
+        public static void SetSensorTestMode(int pad, SensorTestMode mode)
         {
             if(!DLLAvailable()) return;
             SMX_SetTestMode(pad, (int) mode);
@@ -473,6 +475,17 @@ namespace SMX
             }
 
             return SMX_GetTestData(pad, out data);
+        }
+
+        public enum PanelTestMode {
+            Off = '0',
+            PressureTest = '1',
+        };
+
+        public static void SetPanelTestMode(PanelTestMode mode)
+        {
+            if(!DLLAvailable()) return;
+            SMX_SetPanelTestMode((int) mode);
         }
 
         public static void FactoryReset(int pad)
