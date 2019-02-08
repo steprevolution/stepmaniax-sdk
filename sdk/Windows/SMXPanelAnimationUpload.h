@@ -9,9 +9,8 @@
 // This is used to upload panel animations to the firmware.  This is
 // only needed for offline animations.  For live animations, either
 // use SMX_LightsAnimation_SetAuto, or to control lights directly
-// (recommended), use SMX_SetLights.
-//
-// Before starting, load animations into SMXPanelAnimation.
+// (recommended), use SMX_SetLights.  animations[] contains the animations
+// to load.
 //
 // Prepare the currently loaded animations to be stored on the pad.
 // Return false with an error message on error.
@@ -19,11 +18,11 @@
 // All LightTypes must be loaded before beginning the upload.
 //
 // If a lights upload is already in progress, returns an error.
-SMX_API bool SMX_LightsUpload_PrepareUpload(int pad, const char **error);
+SMX_API bool SMX_LightsUpload_PrepareUpload(int pad, SMX_LightsType type, const SMXPanelAnimation animations[9], const char **error);
 
 typedef void SMX_LightsUploadCallback(int progress, void *pUser);
 
-// After a successful call to SMX_LightsUpload_Init, begin uploading data
+// After a successful call to SMX_LightsUpload_PrepareUpload, begin uploading data
 // to the master controller for the given pad and animation type.
 //
 // The callback will be called as the upload progresses, with progress values

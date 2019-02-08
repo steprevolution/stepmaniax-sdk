@@ -15,9 +15,6 @@ enum SMX_LightsType
 class SMXPanelAnimation
 {
 public:
-    // Return the animation loaded by SMX_LightsAnimation_Load.
-    static SMXPanelAnimation GetLoadedAnimation(int pad, int panel, SMX_LightsType type);
-
     void Load(const std::vector<SMXGif::SMXGifFrame> &frames, int panel);
 
     // The high-level animated GIF frames:
@@ -39,7 +36,8 @@ public:
 // Load an animated GIF as a panel animation.  pad is the pad this animation is for (0 or 1),
 // and type is which animation this is for.  Any previously loaded animation will be replaced.
 // On error, false is returned and error is set to a plain-text error message which is valid
-// until the next call.
+// until the next call.  On success, the animation can be uploaded to the pad if supported using
+// SMX_LightsUpload_BeginUpload, or used directly with SMX_LightsAnimation_SetAuto.
 SMX_API bool SMX_LightsAnimation_Load(const char *gif, int size, int pad, SMX_LightsType type, const char **error);
 
 // Enable or disable automatically handling lights animations.  If enabled, any animations

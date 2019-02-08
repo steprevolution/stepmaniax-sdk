@@ -242,16 +242,7 @@ namespace smx_config
                 SMX.SMXConfig config = activePad.Item2;
                 
                 bool uploadsSupported = config.masterVersion >= 4;
-                bool uploadPossible = Helpers.PanelLoadErrors == null;
-                
                 LeaveRunning.Visibility = uploadsSupported? Visibility.Collapsed:Visibility.Visible;
-                LeaveRunningOrUpload.Visibility = uploadsSupported && uploadPossible? Visibility.Visible:Visibility.Collapsed;
-                LeaveRunningCantUpload.Visibility = uploadsSupported && !uploadPossible? Visibility.Visible:Visibility.Collapsed;
-
-                // If we have an error reason, set it.  This is only visible when
-                // we're showing LeaveRunningCantUpload.
-                if(Helpers.PanelLoadErrors != null)
-                    UploadErrorReason.Text = Helpers.PanelLoadErrors;
                 break;
             }
         }
@@ -466,16 +457,28 @@ namespace smx_config
                 // Save the GIF to disk so we can load it quickly later.
                 Helpers.SaveAnimationToDisk(pad, type, buf);
 
-                // Try to prepare animations for upload.  This updates Helpers.PanelLoadErrors.
-                Helpers.PrepareLoadedAnimations();
-
                 // Refresh after loading a GIF to update the "Leave this application running" text.
                 CurrentSMXDevice.singleton.FireConfigurationChanged(null);
             }
+
+            // For firmwares that support it, upload the animation to the pad now.  Otherwise,
+            // we'll run the animation directly.
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                int pad = activePad.Item1;
+
+                SMX.SMXConfig config;
+                if(!SMX.SMX.GetConfig(pad, out config))
+                    continue;
+
+                if(config.masterVersion >= 4)
+                    UploadLatestGIF();
+
+                break;
+            }
         }
 
-        // The "Upload animation to pad" button was clicked.
-        private void UploadGIFs(object sender, RoutedEventArgs e)
+        private void UploadLatestGIF()
         {
             // Create a progress window.  Center it on top of the main window.
             ProgressWindow dialog = new ProgressWindow();

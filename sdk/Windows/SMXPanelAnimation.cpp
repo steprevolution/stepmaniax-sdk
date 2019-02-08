@@ -188,10 +188,10 @@ struct AnimationStateForPad
             char *out = &result[panel*iBytesPerPanel];
 
             // Add the released animation, then overlay the pressed animation if we're pressed.
-            OverlayLights(out, animations[panel][SMX_LightsType_Released].GetAnimationFrame());
+            OverlayLights(out, animations[SMX_LightsType_Released][panel].GetAnimationFrame());
             bool bPressed = bool(iPadState & (1 << panel));
             if(bPressed && bUsePressedAnimations)
-                OverlayLights(out, animations[panel][SMX_LightsType_Pressed].GetAnimationFrame());
+                OverlayLights(out, animations[SMX_LightsType_Pressed][panel].GetAnimationFrame());
             else if(bPressed && !bUsePressedAnimations)
             {
                 // Light all LEDs on this panel using stepColor.
@@ -217,7 +217,7 @@ struct AnimationStateForPad
     }
 
     // State for both animations on each panel:
-    AnimationState animations[9][NUM_SMX_LightsType];
+    AnimationState animations[NUM_SMX_LightsType][9];
 };
 
 namespace
@@ -283,14 +283,6 @@ namespace {
     }
 }
 
-// Return the SMXPanelAnimation.  The rest of the animation state is internal.
-SMXPanelAnimation SMXPanelAnimation::GetLoadedAnimation(int pad, int panel, SMX_LightsType type)
-{
-    g_Lock.AssertNotLockedByCurrentThread();
-    LockMutex L(g_Lock);
-    return pad_states[pad].animations[panel][type].animation;
-}
-
 // Load an array of animation frames as a panel animation.  Each frame must
 // be 14x15 or 23x24.
 void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int panel)
@@ -342,6 +334,8 @@ void SMXPanelAnimation::Load(const vector<SMXGif::SMXGifFrame> &frames, int pane
         m_iLoopFrame = 0;
 }
 
+#include "SMXPanelAnimationUpload.h"
+
 // Load a GIF into SMXLoadedPanelAnimations::animations.
 bool SMX_LightsAnimation_Load(const char *gif, int size, int pad, SMX_LightsType type, const char **error)
 {
@@ -362,15 +356,24 @@ bool SMX_LightsAnimation_Load(const char *gif, int size, int pad, SMX_LightsType
         return false;
     }
 
+    // Load the graphics into SMXPanelAnimations.
+    SMXPanelAnimation animations[9];
+    for(int panel = 0; panel < 9; ++panel)
+        animations[panel].Load(frames, panel);
+
+    // Set up the upload for this graphic.
+    if(!SMX_LightsUpload_PrepareUpload(pad, type, animations, error))
+        return false;
+
     // Lock while we access pad_states.
     g_Lock.AssertNotLockedByCurrentThread();
     LockMutex L(g_Lock);
 
-    // Load the animation for each panel into SMXPanelAnimations.
+    // Commit the animation to pad_states now that we know there are no errors.
     for(int panel = 0; panel < 9; ++panel)
     {
-        SMXPanelAnimation &animation = pad_states[pad].animations[panel][type].animation;
-        animation.Load(frames, panel);
+        SMXPanelAnimation &animation = pad_states[pad].animations[type][panel].animation;
+        animation = animations[panel];
     }
 
     return true;
@@ -434,26 +437,27 @@ private:
         for(int panel = 0; panel < 9; ++panel)
         {
             // The released animation is always playing.
-            pad_state.animations[panel][SMX_LightsType_Released].Play();
+            pad_state.animations[SMX_LightsType_Released][panel].Play();
 
             // The pressed animation only plays while the button is pressed,
             // and rewind when it's released.
             bool bPressed = iPadState & (1 << panel);
             if(bPressed)
-                pad_state.animations[panel][SMX_LightsType_Pressed].Play();
+                pad_state.animations[SMX_LightsType_Pressed][panel].Play();
             else
-                pad_state.animations[panel][SMX_LightsType_Pressed].Stop();
+                pad_state.animations[SMX_LightsType_Pressed][panel].Stop();
         }
 
         // Set the current state.
         asLightsDataOut = pad_state.GetLightsCommand(iPadState, config);
 
         // Advance animations.
-        for(int panel = 0; panel < 9; ++panel)
+        for(int type = 0; type < NUM_SMX_LightsType; ++type)
         {
-            for(auto &animation_state: pad_state.animations[panel])
-                animation_state.Update();
+            for(int panel = 0; panel < 9; ++panel)
+                pad_state.animations[type][panel].Update();
         }
+
         return true;
     }
 

@@ -58,7 +58,6 @@ namespace smx_config
             // Load animations, and tell the SDK to handle auto-lighting as long as
             // we're running.
             Helpers.LoadSavedPanelAnimations();
-            Helpers.PrepareLoadedAnimations();
             SMX.SMX.LightsAnimation_SetAuto(true);
 
             CreateTrayIcon();

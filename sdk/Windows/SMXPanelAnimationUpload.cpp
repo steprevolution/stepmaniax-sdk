@@ -20,12 +20,6 @@ using namespace SMX;
 // Panel animations are sent to the master controller one panel at a time, and
 // each animation can take several commands to upload to fit in the protocol packet
 // size.  These commands are stateful.
-
-// XXX: should be able to upload both pads in parallel
-// XXX: we can only update all animations in one go, so save the last loaded animations
-// so the user doesn't have to manually load both to change one of them
-// do this in SMXConfig, not the SDK
-
 namespace
 {
     // Panel names for error messages.
@@ -75,11 +69,6 @@ namespace PanelLightGraphic
         uint8_t delay[64];
     };
 
-    struct master_animation_data_t
-    {
-        animation_timing_t animation_timings[2];
-    };
-
     // Commands to upload data:
 #pragma pack(push, 1)
     struct upload_packet
@@ -101,6 +90,17 @@ namespace PanelLightGraphic
         uint16_t offset = 0;
         uint8_t size = 0;
         uint8_t data[240];
+    };
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+    struct delay_packet
+    {
+        // 'd' to ask the master to delay.
+        uint8_t cmd = 'd';
+
+        // How long to delay:
+        uint16_t milliseconds = 0;
     };
 #pragma pack(pop)
 
@@ -226,95 +226,76 @@ namespace ProtocolHelpers
     }
 
     // Create the master data.  This just has timing information.
-    bool CreateMasterAnimationData(int pad, PanelLightGraphic::master_animation_data_t &master_data, const char **error)
+    bool CreateMasterAnimationData(SMX_LightsType type,
+        const SMXPanelAnimation &animation,
+        PanelLightGraphic::animation_timing_t &animation_timing, const char **error)
     {
-        // The second animation's graphic indices start where the first one's end.
-        int first_graphic = 0;
+        // Released (idle) animations use frames 0-31, and pressed animations use 32-63.
+        int first_graphic = type == SMX_LightsType_Released? 0:32;
 
-        // XXX: It's possible to reuse graphics, which allows us to dedupe animation frames.
-        // We can store 64 total animation graphics shared across the pressed and released
-        // animation, and each animation can have up to 64 timed frames which point into
-        // the graphic list.
-        for(int type = 0; type < NUM_SMX_LightsType; ++type)
-        {
-            // All animations of each type have the same timing for all panels, since
-            // they come from the same GIF, so just look at the first frame.
-            const SMXPanelAnimation &animation = SMXPanelAnimation::GetLoadedAnimation(pad, 0, SMX_LightsType(type));
+        // Check that we don't have more frames than we can fit in animation_timing.
+        // This is currently the same as the "too many frames" error below, but if
+        // we support longer delays (staying on the same graphic for multiple animation_timings)
+        // or deduping they'd be different.
+        if(animation.m_aPanelGraphics.size() > arraylen(animation_timing.frames))
+	    {
+            *error = "The animation is too long.";
+            return false;
+	    }
 
-            PanelLightGraphic::animation_timing_t &animation_timing = master_data.animation_timings[type];
+        memset(&animation_timing.frames[0], 0xFF, sizeof(animation_timing.frames));
+        for(int i = 0; i < animation.m_aPanelGraphics.size(); ++i)
+            animation_timing.frames[i] = i + first_graphic;
 
-            // Check that we don't have more frames than we can fit in animation_timing.
-            // This is currently the same as the "too many frames" error below, but if
-            // we support longer delays (staying on the same graphic for multiple animation_timings)
-            // or deduping they'd be different.
-            if(animation.m_aPanelGraphics.size() > arraylen(animation_timing.frames))
-	        {
-                *error = "The animation is too long.";
-                return false;
-	        }
+        // Set frame delays.
+        memset(&animation_timing.delay[0], 0, sizeof(animation_timing.delay));
+        vector<uint8_t> delays = get_frame_delays(animation);
+        for(int i = 0; i < delays.size() && i < 64; ++i)
+            animation_timing.delay[i] = delays[i];
 
-            memset(&animation_timing.frames[0], 0xFF, sizeof(animation_timing.frames));
-            for(int i = 0; i < animation.m_aPanelGraphics.size(); ++i)
-            {
-                animation_timing.frames[i] = first_graphic;
-                first_graphic++;
-            }
+        // These frame numbers are relative to the animation, so don't add first_graphic.
+        animation_timing.loop_animation_frame = animation.m_iLoopFrame;
 
-            // Set frame delays.
-            memset(&animation_timing.delay[0], 0, sizeof(animation_timing.delay));
-            vector<uint8_t> delays = get_frame_delays(animation);
-            for(int i = 0; i < delays.size() && i < 64; ++i)
-                animation_timing.delay[i] = delays[i];
-
-            // These frame numbers are relative to the animation, so don't add first_graphic.
-            // XXX: frame index, not source frame
-            animation_timing.loop_animation_frame = animation.m_iLoopFrame;
-        }
         return true;
     }
 
     // Pack panel graphics.
     bool CreatePanelAnimationData(PanelLightGraphic::panel_animation_data_t &panel_data,
-        int pad, int panel, const char **error)
+        int pad, SMX_LightsType type, int panel, const SMXPanelAnimation &animation, const char **error)
     {
         // We have a single buffer of animation frames for each panel, which we pack
         // both the pressed and released frames into.  This is the index of the next
         // frame.
-        int next_graphic_idx = 0;
+        int next_graphic_idx = type == SMX_LightsType_Released? 0:32;
 
-        for(int type = 0; type < NUM_SMX_LightsType; ++type)
+        // Create this animation's 4-bit palette.
+        if(!ProtocolHelpers::CreatePalette(animation, panel_data.palettes[type]))
         {
-            const SMXPanelAnimation &animation = SMXPanelAnimation::GetLoadedAnimation(pad, panel, SMX_LightsType(type));
+            *error = SMX::CreateError(SMX::ssprintf("The %s panel uses too many colors.", panel_names[panel]));
+            return false;
+        }
 
-            // Create this animation's 4-bit palette.
-            if(!ProtocolHelpers::CreatePalette(animation, panel_data.palettes[type]))
+        // Create a small 4-bit paletted graphic with the 4-bit palette we created.
+        // These are the graphics we'll send to the controller.
+        for(const auto &panel_graphic: animation.m_aPanelGraphics)
+        {
+            if(next_graphic_idx > arraylen(panel_data.graphics))
             {
-                *error = SMX::CreateError(SMX::ssprintf("The %s panel uses too many colors.", panel_names[panel]));
+                *error = "The animation has too many frames.";
                 return false;
             }
 
-            // Create a small 4-bit paletted graphic with the 4-bit palette we created.
-            // These are the graphics we'll send to the controller.
-            for(const auto &panel_graphic: animation.m_aPanelGraphics)
-            {
-                if(next_graphic_idx > arraylen(panel_data.graphics))
-                {
-                    *error = "The animation has too many frames.";
-                    return false;
-                }
+            ProtocolHelpers::CreatePackedGraphic(panel_graphic, panel_data.palettes[type], panel_data.graphics[next_graphic_idx]);
+            next_graphic_idx++;
+        }
 
-                ProtocolHelpers::CreatePackedGraphic(panel_graphic, panel_data.palettes[type], panel_data.graphics[next_graphic_idx]);
-                next_graphic_idx++;
-            }
-
-            // Apply color scaling to the palette, in the same way SMXManager::SetLights does.
-            // Do this after we've finished creating the graphic, so this is only applied to
-            // the final result and doesn't affect palettization.
-            for(PanelLightGraphic::color_t &color: panel_data.palettes[type].colors)
-            {
-                for(int i = 0; i < 3; ++i)
-                    color.rgb[i] = uint8_t(color.rgb[i] * 0.6666f);
-            }
+        // Apply color scaling to the palette, in the same way SMXManager::SetLights does.
+        // Do this after we've finished creating the graphic, so this is only applied to
+        // the final result and doesn't affect palettization.
+        for(PanelLightGraphic::color_t &color: panel_data.palettes[type].colors)
+        {
+            for(int i = 0; i < 3; ++i)
+                color.rgb[i] = uint8_t(color.rgb[i] * 0.6666f);
         }
 
         return true;
@@ -322,7 +303,7 @@ namespace ProtocolHelpers
 
     // Create upload packets to upload a block of data.
     void CreateUploadPackets(vector<PanelLightGraphic::upload_packet> &packets,
-        const void *data_block, int size,
+        const void *data_block, int start, int size,
         uint8_t panel, int animation_idx)
     {
         const uint8_t *buf = (const uint8_t *) data_block;
@@ -331,14 +312,15 @@ namespace ProtocolHelpers
             PanelLightGraphic::upload_packet packet;
             packet.panel = panel;
             packet.animation_idx = animation_idx;
-            packet.offset = offset;
+            packet.offset = start + offset;
 
             int bytes_left = size - offset;
             packet.size = min(sizeof(PanelLightGraphic::upload_packet::data), bytes_left);
-            memcpy(packet.data, buf + offset, packet.size);
+            memcpy(packet.data, buf, packet.size);
             packets.push_back(packet);
 
             offset += packet.size;
+            buf += packet.size;
         }
     }
 }
@@ -349,23 +331,16 @@ namespace LightsUploadData
 }
 
 // Prepare the loaded graphics for upload.
-bool SMX_LightsUpload_PrepareUpload(int pad, const char **error)
+bool SMX_LightsUpload_PrepareUpload(int pad, SMX_LightsType type, const SMXPanelAnimation animations[9], const char **error)
 {
-    // Check that all panel animations are loaded.
-    for(int type = 0; type < NUM_SMX_LightsType; ++type)
-    {
-        const SMXPanelAnimation &animation = SMXPanelAnimation::GetLoadedAnimation(pad, 0, SMX_LightsType(type));
-        if(animation.m_aPanelGraphics.empty())
-        {
-            *error = "Load all panel animations before preparing the upload.";
-            return false;
-        }
-    }
-
     // Create master animation data.
-    PanelLightGraphic::master_animation_data_t master_data;
-    memset(&master_data, 0xFF, sizeof(master_data));
-    if(!ProtocolHelpers::CreateMasterAnimationData(pad, master_data, error))
+    PanelLightGraphic::animation_timing_t master_animation_data;
+    memset(&master_animation_data, 0xFF, sizeof(master_animation_data));
+
+    // All animations of each type have the same timing for all panels, since
+    // they come from the same GIF, so just use the first frame to generate the
+    // master data.
+    if(!ProtocolHelpers::CreateMasterAnimationData(type, animations[0], master_animation_data, error))
         return false;
 
     // Create panel animation data.
@@ -373,49 +348,112 @@ bool SMX_LightsUpload_PrepareUpload(int pad, const char **error)
     memset(&all_panel_data, 0xFF, sizeof(all_panel_data));
     for(int panel = 0; panel < 9; ++panel)
     {
-        if(!ProtocolHelpers::CreatePanelAnimationData(all_panel_data[panel], pad, panel, error))
+        if(!ProtocolHelpers::CreatePanelAnimationData(all_panel_data[panel], pad, type, panel, animations[panel], error))
             return false;
     }
 
     // We successfully created the data, so there's nothing else that can fail from
     // here on.
+    //
+    // A list of the final commands we'll send:
+    vector<string> &pad_commands = LightsUploadData::commands[pad];
+    pad_commands.clear();
 
-    // Create upload packets.
-    vector<PanelLightGraphic::upload_packet> packets;
-    for(int type = 0; type < NUM_SMX_LightsType; ++type)
+    // Add an upload packet to pad_commands:
+    auto add_packet_command = [&pad_commands](const PanelLightGraphic::upload_packet &packet) {
+        string command((char *) &packet, sizeof(packet));
+        pad_commands.push_back(command);
+    };
+
+    // Add a command to briefly delay the master, to give panels a chance to finish writing to EEPROM.
+    auto add_delay = [&pad_commands](int milliseconds) {
+        PanelLightGraphic::delay_packet packet;
+        packet.milliseconds = milliseconds;
+
+        string command((char *) &packet, sizeof(packet));
+        pad_commands.push_back(command);
+    };
+
+    // Create the packets we'll send, grouped by panel.
+    vector<PanelLightGraphic::upload_packet> packetsPerPanel[9];
+    for(int panel = 0; panel < 9; ++panel)
     {
-        const auto &master_data_block = master_data.animation_timings[type];
-        ProtocolHelpers::CreateUploadPackets(packets, &master_data_block, sizeof(master_data_block), 0xFF, type);
-
-        for(int panel = 0; panel < 9; ++panel)
+        // Only upload the panel graphic data and the palette we're changing.  If type
+        // is 0 (SMX_LightsType_Released), we're uploading the first 32 graphics and palette
+        // 0.  If it's 1 (SMX_LightsType_Pressed), we're uploading the second 32 graphics
+        // and palette 1.
+        const auto &panel_data_block = all_panel_data[panel];
         {
-            const auto &panel_data_block = all_panel_data[panel];
-            ProtocolHelpers::CreateUploadPackets(packets, &panel_data_block, sizeof(panel_data_block), panel, type);
+            int first_graphic = type == SMX_LightsType_Released? 0:32;
+            const PanelLightGraphic::graphic_t *graphics = &panel_data_block.graphics[first_graphic];
+            int offset = offsetof(PanelLightGraphic::panel_animation_data_t, graphics[first_graphic]);
+            ProtocolHelpers::CreateUploadPackets(packetsPerPanel[panel], graphics, offset, sizeof(PanelLightGraphic::graphic_t) * 32, panel, type);
+        }
+
+        {
+            const PanelLightGraphic::palette_t *palette = &panel_data_block.palettes[type];
+            int offset = offsetof(PanelLightGraphic::panel_animation_data_t, palettes[type]);
+            ProtocolHelpers::CreateUploadPackets(packetsPerPanel[panel], palette, offset, sizeof(PanelLightGraphic::palette_t), panel, type);
         }
     }
 
-    // The last packet has the final_packet flag set, to let the master know we're finished.
-    packets.back().final_packet = true;
+    // It takes 3.4ms per byte to write to EEPROM, and we need to avoid writing data
+    // to any single panel faster than that or data won't be written.  However, we're
+    // writing each data separately to each panel, so we can write data to panel 1, then
+    // immediately write to panel 2 while panel 1 is busy doing the write.  Taking advantage
+    // of this makes the upload go much faster.  Panels will miss commands while they're
+    // writing data, but we don't care if panel 1 misses a command that's writing to panel
+    // 2 that it would ignore anyway.
+    //
+    // We write the first set of packets for each panel, then explicitly delay long enough
+    // for them to finish before writing the next set of packets.  
 
-    // Make a list of strings containing the packets.  We don't need the
-    // structs anymore, so this is all we need to keep around.
-    vector<string> &pad_commands = LightsUploadData::commands[pad];
-    pad_commands.clear();
-    for(const auto &packet: packets)
+    while(1)
     {
-        string command((char *) &packet, sizeof(packet));
-        pad_commands.push_back(command);
+        bool added_any_packets = false;
+        int max_size = 0;
+        for(int panel = 0; panel < 9; ++panel)
+        {
+            // Pull this panel's next packet.  It doesn't actually matter what order we
+            // send the packets in.
+            // Add the next packet for each panel.
+            vector<PanelLightGraphic::upload_packet> &packets = packetsPerPanel[panel];
+            if(packets.empty())
+                continue;
+
+            PanelLightGraphic::upload_packet packet = packets.back();
+            packets.pop_back();
+            add_packet_command(packet);
+            max_size = max(max_size, packet.size);
+            added_any_packets = true;
+        }
+
+        // Delay long enough for the biggest write in this burst to finish.  We do this
+        // by sending a command to the master to tell it to delay synchronously by the
+        // right amount.
+        int millisecondsToDelay = lrintf(max_size * 3.4);
+        add_delay(millisecondsToDelay);
+
+        // Stop if there were no more packets to add.
+        if(!added_any_packets)
+            break;
     }
+
+    // Add the master data.
+    vector<PanelLightGraphic::upload_packet> masterPackets;
+    ProtocolHelpers::CreateUploadPackets(masterPackets, &master_animation_data, 0, sizeof(master_animation_data), 0xFF, type);
+    masterPackets.back().final_packet = true;
+    for(const auto &packet: masterPackets)
+        add_packet_command(packet);
 
     return true;
 }
 
 // Start sending a prepared upload.
 //
-// The commands to send to upload the data are in pad_commands[pad].
+// The commands to send to upload the data are in LightsUploadData::commands[pad].
 void SMX_LightsUpload_BeginUpload(int pad, SMX_LightsUploadCallback pCallback, void *pUser)
 {
-    // XXX: should we disable panel lights while doing this?
     shared_ptr<SMXDevice> pDevice = SMXManager::g_pSMX->GetDevice(pad);
     vector<string> asCommands = LightsUploadData::commands[pad];
     int iTotalCommands = asCommands.size();
@@ -430,9 +468,11 @@ void SMX_LightsUpload_BeginUpload(int pad, SMX_LightsUploadCallback pCallback, v
             //
             // If this isn't the last command, make sure progress isn't 100.
             // Once we send 100%, the callback is no longer valid.
-            int progress = (i*100) / (iTotalCommands-1);
+            int progress;
             if(i != iTotalCommands-1)
-                progress = min(progress, 99);
+                progress = min((i*100) / (iTotalCommands - 1), 99);
+            else
+                progress = 100;
 
             // We're currently in the SMXManager thread.  Call the user thread from
             // the user callback thread.
