@@ -387,9 +387,6 @@ void SMX::SMXDevice::CheckActive()
 
     m_pConnection->SetActive(true);
 
-    // Reset panels.
-    SendCommandLocked("R\n");
-
     // Read the current configuration.  The device will return a "g" response containing
     // its current SMXConfig.
     SendCommandLocked("g\n");
