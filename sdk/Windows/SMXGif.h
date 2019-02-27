@@ -26,7 +26,7 @@ namespace SMXGif
         }
         bool operator==(const Color &rhs) const
         {
-            return !memcmp(color, rhs.color, sizeof(*color));
+            return !memcmp(color, rhs.color, sizeof(color));
         }
     };
 
