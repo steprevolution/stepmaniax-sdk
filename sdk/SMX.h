@@ -256,13 +256,22 @@ struct SMXConfig
     // The default color to set the platform LED strip to.
     uint8_t platformStripColor[3];
 
+    // The maximum tare value to calibrate to (except on startup).
+    uint16_t autoCalibrationMaxTare;
+
+    // Which panels to enable auto-lighting for.  Disabled panels will be unlit.
+    // 0x01 = panel 0, 0x02 = panel 1, 0x04 = panel 2, etc.  This only affects
+    // the master controller's built-in auto lighting and not lights data send
+    // from the SDK.
+    uint16_t autoLightPanelMask;
+
     // Pad the struct to 250 bytes.  This keeps this struct size from changing
     // as we add fields, so the ABI doesn't change.  Applications should leave
     // any data in here unchanged when calling SMX_SetConfig.
-    uint8_t padding[124];
+    uint8_t padding[120];
 };
 #pragma pack(pop)
-static_assert(offsetof(SMXConfig, padding) == 126, "Incorrect padding alignment");
+static_assert(offsetof(SMXConfig, padding) == 130, "Incorrect padding alignment");
 static_assert(sizeof(SMXConfig) == 250, "Expected 250 bytes");
 
 // The values (except for Off) correspond with the protocol and must not be changed.

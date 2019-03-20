@@ -103,8 +103,17 @@ namespace SMX
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
         public Byte[] platformStripColor;
 
+        // The maximum tare value to calibrate to (except on startup).
+        public UInt16 autoCalibrationMaxTare;
+
+        // Which panels to enable auto-lighting for.  Disabled panels will be unlit.
+        // 0x01 = panel 0, 0x02 = panel 1, 0x04 = panel 2, etc.  This only affects
+        // the master controller's built-in auto lighting and not lights data send
+        // from the SDK.
+        public UInt16 autoLightPanelMask;
+
         // Pad this struct to exactly 250 bytes.
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 124)]
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 120)]
         public Byte[] padding;
 
         // enabledSensors is a mask of which panels are enabled.  Return this as an array
