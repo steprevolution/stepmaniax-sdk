@@ -221,6 +221,35 @@ namespace SMX
 
             return result;
         }
+
+        // autoLightPanelMask controls which lights the master controller will light.  Only the
+        // first 9 bits (0x1ff) are meaningful for our 9 panels.  As a special case, we use 0xFFFF
+        // to indicate that "light all panels" was checked.  The controller doesn't care about this
+        // since it only looks at the first 9 bits.
+        public bool getLightAllPanelsMode() { return autoLightPanelMask == 0xFFFF; }
+
+        public void setLightAllPanelsMode(bool enable)
+        {
+            if(enable)
+                autoLightPanelMask = 0xFFFF;
+            else
+                refreshAutoLightPanelMask(false);
+        }
+
+        // If we're not in light all panels mode, set autoLightPanelMask to the currently
+        // enabled panels.  This should be called if enabledSensors is changed.
+        public void refreshAutoLightPanelMask(bool onlyIfEnabled=true)
+        {
+            if(onlyIfEnabled && getLightAllPanelsMode())
+                return;
+
+            // Set autoLightPanelMask to just the enabled panels.
+            autoLightPanelMask = 0;
+            bool[] enabledPanels = GetEnabledPanels();
+            for(int i = 0; i < 9; ++i)
+                if(enabledPanels[i])
+                    autoLightPanelMask |= (UInt16) (1 << i);
+        }
     };  
 
     public struct SMXSensorTestModeData

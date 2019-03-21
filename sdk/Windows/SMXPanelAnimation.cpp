@@ -187,6 +187,10 @@ struct AnimationStateForPad
             // The portion of lights data for this panel:
             char *out = &result[panel*iBytesPerPanel];
 
+            // Skip this panel if it's not in autoLightPanelMask.
+            if(!(config.autoLightPanelMask & (1 << panel)))
+                continue;
+
             // Add the released animation, then overlay the pressed animation if we're pressed.
             OverlayLights(out, animations[SMX_LightsType_Released][panel].GetAnimationFrame());
             bool bPressed = bool(iPadState & (1 << panel));

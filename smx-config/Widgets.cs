@@ -909,6 +909,10 @@ namespace smx_config
                         config.enabledSensors[index] |= (byte) mask;
                 }
 
+                // If we're not in "light all panels" mode, sync up autoLightPanelMask
+                // with the new enabledSensors.
+                config.refreshAutoLightPanelMask();
+
                 SMX.SMX.SetConfig(pad, config);
             }
         }
@@ -985,4 +989,46 @@ namespace smx_config
             this.Source = ImageFrames[Frame];
         }
     };
+
+    public class LightAllPanelsCheckbox: CheckBox
+    {
+        public static readonly DependencyProperty LightAllPanelsProperty = DependencyProperty.Register("LightAllPanels",
+            typeof(bool), typeof(LightAllPanelsCheckbox), new FrameworkPropertyMetadata(false));
+        public bool LightAllPanels {
+            get { return (bool) GetValue(LightAllPanelsProperty); }
+            set { SetValue(LightAllPanelsProperty, value); }
+        }
+
+        OnConfigChange onConfigChange;
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
+                LoadUIFromConfig(ActivePad.GetFirstActivePadConfig(args));
+            });
+        }
+
+        private void LoadUIFromConfig(SMX.SMXConfig config)
+        {
+            LightAllPanels = config.getLightAllPanelsMode();
+        }
+
+        protected override void OnClick()
+        {
+            //SMX.SMXConfig firstConfig = ActivePad.GetFirstActivePadConfig();
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                int pad = activePad.Item1;
+                SMX.SMXConfig config = activePad.Item2;
+                config.setLightAllPanelsMode(!LightAllPanels);
+                SMX.SMX.SetConfig(pad, config);
+            }
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+
+            // Refresh the UI.
+            //LoadUIFromConfig(firstConfig);
+        }
+    }
 }

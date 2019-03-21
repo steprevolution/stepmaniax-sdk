@@ -879,8 +879,22 @@ Input will be disabled from deselected panels.</TextBlock>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <controls:PanelSelector Focusable="false" />
                     </StackPanel>
-
                     <Separator Margin="0,10,0,10" />
+                    <TextBlock HorizontalAlignment="Center" Margin="0,0,0,10" VerticalAlignment="Top" TextAlignment="Center"
+                            xml:space="preserve" FontSize="16">Options</TextBlock>
+
+                    <controls:LightAllPanelsCheckbox VerticalAlignment="Center"
+                            x:Name="LightAllPanelsCheckbox"
+                            DockPanel.Dock="Right" Content="Light all panels"
+                            HorizontalAlignment="Center"
+                            IsChecked="{Binding Path=LightAllPanels, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
+                    />
+
+                    <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,0,0,0" TextAlignment="Center">Show light animations on all panels
+instead of only panels with sensors.</TextBlock>
+                    
+                    <Separator Margin="0,10,0,10" />
+                    
                     <TextBlock HorizontalAlignment="Center"
                         xml:space="preserve" FontSize="16">Import/export settings</TextBlock>
                     <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,5,0,0" TextAlignment="Center"
