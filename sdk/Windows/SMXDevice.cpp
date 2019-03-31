@@ -515,10 +515,10 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
         output.bHaveDataFromPanel[iPanel] = true;
 
         // These bits are true if that sensor's most recent reading is invalid.
-        output.bBadSensorInput[iPanel][0] = false; //pad_data.bad_sensor_0;
-        output.bBadSensorInput[iPanel][1] = false; //pad_data.bad_sensor_1;
-        output.bBadSensorInput[iPanel][2] = false; //pad_data.bad_sensor_2;
-        output.bBadSensorInput[iPanel][3] = false; //pad_data.bad_sensor_3;
+        output.bBadSensorInput[iPanel][0] = pad_data.bad_sensor_0;
+        output.bBadSensorInput[iPanel][1] = pad_data.bad_sensor_1;
+        output.bBadSensorInput[iPanel][2] = pad_data.bad_sensor_2;
+        output.bBadSensorInput[iPanel][3] = pad_data.bad_sensor_3;
         output.iDIPSwitchPerPanel[iPanel]  = pad_data.dip;
         output.iBadJumper[iPanel][0] = pad_data.bad_sensor_dip_0;
         output.iBadJumper[iPanel][1] = pad_data.bad_sensor_dip_1;
