@@ -492,7 +492,11 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
 
     m_HaveSensorTestModeData = true;
     SMXSensorTestModeData &output = m_SensorTestData;
+
+    bool bLastHaveDataFromPanel[9];
+    memcpy(bLastHaveDataFromPanel, output.bHaveDataFromPanel, sizeof(output.bHaveDataFromPanel));
     memset(output.bHaveDataFromPanel, 0, sizeof(output.bHaveDataFromPanel));
+
     memset(output.sensorLevel, 0, sizeof(output.sensorLevel));
     memset(output.bBadSensorInput, 0, sizeof(output.bBadSensorInput));
     memset(output.iDIPSwitchPerPanel, 0, sizeof(output.iDIPSwitchPerPanel));
@@ -508,7 +512,8 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
         // steps from the player.
         if(pad_data.sig1 != 0 || pad_data.sig2 != 1 || pad_data.sig3 != 0)
         {
-            // Log(ssprintf("Invalid data: %i %i %i", sig1, sig2, sig3));
+            if(bLastHaveDataFromPanel[iPanel])
+                Log(ssprintf("No data from panel %i (%02x %02x %02x)", iPanel, pad_data.sig1, pad_data.sig2, pad_data.sig3));
             output.bHaveDataFromPanel[iPanel] = false;
             continue;
         }
