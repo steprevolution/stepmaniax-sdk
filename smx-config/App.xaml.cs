@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Threading;
 
 namespace smx_config
 {
@@ -23,6 +24,13 @@ namespace smx_config
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // If an instance is already running, foreground it and exit.
+            if(ForegroundExistingInstance())
+            {
+                Shutdown();
+                return;
+            }
 
             // If we're being launched on startup, but the LaunchOnStartup setting is false,
             // then the user turned off auto-launching but we're still being launched for some
@@ -82,13 +90,38 @@ namespace smx_config
                 window.Closed += MainWindowClosed;
                 window.Show();
             }
-            else if(window.WindowState == WindowState.Minimized)
+            else if(IsMinimizedToTray())
             {
-                window.WindowState = WindowState.Normal;
+                window.Visibility = Visibility.Visible;
                 window.Activate();
             }
             else
-                window.WindowState = WindowState.Minimized;
+            {
+                MinimizeToTray();
+            }
+        }
+
+        public bool IsMinimizedToTray()
+        {
+            return window.Visibility == Visibility.Collapsed;
+        }
+
+        public void MinimizeToTray()
+        {
+            // Just hide the window.  Don't actually set the window to minimized, since it
+            // won't do anything and it causes problems when restoring the window.
+            window.Visibility = Visibility.Collapsed;
+        }
+
+        public void BringToForeground()
+        {
+            // Restore or create the window.  Don't minimize if we're already restored.
+            if(window == null || IsMinimizedToTray())
+                ToggleMainWindow();
+
+            // Focus the window.
+            window.WindowState = WindowState.Normal;
+            window.Activate();
         }
 
         private void MainWindowClosed(object sender, EventArgs e)
@@ -121,6 +154,33 @@ namespace smx_config
                 CurrentSMXDevice.singleton.Shutdown();
                 CurrentSMXDevice.singleton = null;
             }
+        }
+
+        // If another instance other than this one is running, send it WM_USER to tell it to
+        // foreground itself.  Return true if another instance was found.
+        private bool ForegroundExistingInstance()
+        {
+            bool createdNew = false;
+            EventWaitHandle SMXConfigEvent = new EventWaitHandle(false, EventResetMode.AutoReset, "SMXConfigEvent", out createdNew);
+            if(!createdNew)
+            {
+                // Signal the event to foreground the existing instance.
+                SMXConfigEvent.Set();
+                return true;
+            }
+
+            ThreadPool.RegisterWaitForSingleObject(SMXConfigEvent, ForegroundApplicationCallback, this, Timeout.Infinite, false);
+
+            return false;
+        }
+
+        private static void ForegroundApplicationCallback(Object self, Boolean timedOut)
+        {
+            // This is called when another instance sends us a message over SMXConfigEvent.
+            Application.Current.Dispatcher.Invoke(new Action(() => {
+                App application = (App) Application.Current;
+                application.BringToForeground();
+            }));
         }
 
         // Create a tray icon.  For some reason there's no WPF interface for this,

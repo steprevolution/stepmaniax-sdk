@@ -357,6 +357,9 @@ namespace smx_config
             shortcut.WindowStyle = 0;
             shortcut.Save();
         }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
     }
 
     // This class just makes it easier to assemble binary command packets.

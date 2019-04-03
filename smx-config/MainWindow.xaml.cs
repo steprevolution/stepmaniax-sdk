@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Interop;
 
 namespace smx_config
 {
@@ -65,19 +66,15 @@ namespace smx_config
                 if(result == MessageBoxResult.No)
                     e.Cancel = true;
             };
-
-            StateChanged += delegate(object sender, EventArgs e)
-            {
-                // Closing the main window entirely when minimized to the tray would be
-                // nice, but with WPF we don't really save memory by doing that, so
-                // just hide the window.
-                ShowInTaskbar = WindowState != WindowState.Minimized;
-            };
         }
 
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
+
+            // Add our WndProc hook.
+            HwndSource source = (HwndSource) PresentationSource.FromVisual(this);
+            source.AddHook(new HwndSourceHook(WndProcHook));
 
             Version1.Content = "SMXConfig version " + SMX.SMX.Version();
             Version2.Content = "SMXConfig version " + SMX.SMX.Version();
@@ -515,6 +512,22 @@ namespace smx_config
             // Show the progress window as a modal dialog.  This function won't return
             // until we call dialog.Close above.
             dialog.ShowDialog();
+        }
+
+        const int WM_SYSCOMMAND = 0x0112;
+        const int SC_MINIMIZE = 0xF020;
+        private IntPtr WndProcHook(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam, ref bool handled)
+        {
+            App application = (App) Application.Current;
+
+            if(msg == WM_SYSCOMMAND && ((int)wparam & 0xFFF0) == SC_MINIMIZE)
+            {
+                // Cancel minimize, and call MinimizeToTray instead.
+                handled = true;
+                application.MinimizeToTray(); 
+            }
+
+            return IntPtr.Zero;
         }
     }
 } 
