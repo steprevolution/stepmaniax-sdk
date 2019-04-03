@@ -90,13 +90,13 @@ namespace smx_config
 
             config.individualPanelFSRLow[7] =       // cardinal
             config.individualPanelFSRLow[1] =       // up
-            config.individualPanelFSRLow[2] = 100;  // corner
+            config.individualPanelFSRLow[2] = 275;  // corner
             config.individualPanelFSRHigh[7] =      // cardinal
             config.individualPanelFSRHigh[1] =      // up
-            config.individualPanelFSRHigh[2] = 200; // corner
+            config.individualPanelFSRHigh[2] = 300; // corner
 
-            config.individualPanelFSRLow[4] = 100;   // center
-            config.individualPanelFSRHigh[4] = 200;
+            config.individualPanelFSRLow[4] = 275;   // center
+            config.individualPanelFSRHigh[4] = 300;
 
             SyncUnifiedThresholds(ref config);
         }
@@ -115,13 +115,13 @@ namespace smx_config
 
             config.individualPanelFSRLow[7] =       // cardinal
             config.individualPanelFSRLow[1] =       // up
-            config.individualPanelFSRLow[2] = 100;  // corner
+            config.individualPanelFSRLow[2] = 650;  // corner
             config.individualPanelFSRHigh[7] =      // cardinal
             config.individualPanelFSRHigh[1] =      // up
-            config.individualPanelFSRHigh[2] = 200; // corner
+            config.individualPanelFSRHigh[2] = 700; // corner
 
-            config.individualPanelFSRLow[4] = 100;   // center
-            config.individualPanelFSRHigh[4] = 200;
+            config.individualPanelFSRLow[4] = 650;   // center
+            config.individualPanelFSRHigh[4] = 700;
 
             SyncUnifiedThresholds(ref config);
         }
@@ -140,13 +140,13 @@ namespace smx_config
 
             config.individualPanelFSRLow[7] =       // cardinal
             config.individualPanelFSRLow[1] =       // up
-            config.individualPanelFSRLow[2] = 100;  // corner
+            config.individualPanelFSRLow[2] = 800;  // corner
             config.individualPanelFSRHigh[7] =      // cardinal
             config.individualPanelFSRHigh[1] =      // up
-            config.individualPanelFSRHigh[2] = 200; // corner
+            config.individualPanelFSRHigh[2] = 875; // corner
 
-            config.individualPanelFSRLow[4] = 100;   // center
-            config.individualPanelFSRHigh[4] = 200;
+            config.individualPanelFSRLow[4] = 800;   // center
+            config.individualPanelFSRHigh[4] = 875;
 
             SyncUnifiedThresholds(ref config);
         }
