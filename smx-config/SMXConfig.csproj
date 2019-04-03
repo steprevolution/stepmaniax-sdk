@@ -212,6 +212,12 @@
   <ItemGroup>
     <Resource Include="Resources\DIP labels.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\sensor_down.png" />
+    <Resource Include="Resources\sensor_left.png" />
+    <Resource Include="Resources\sensor_right.png" />
+    <Resource Include="Resources\sensor_up.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -9,7 +9,8 @@
         x:Name="root"
         Title="StepManiaX Platform"
         Icon="Resources/window icon.png"
-        Height="700" Width="525" ResizeMode="CanMinimize">
+        Height="700" Width="525" ResizeMode="CanMinimize"
+        UseLayoutRounding="True">
     <Window.Resources>
         <clr:String x:Key="HighPresetDescription" xml:space="preserve">Lighter steps will activate the arrows.
 Use if small children are having difficulty pressing the arrows.</clr:String>
@@ -522,7 +523,7 @@ Use if the platform is too sensitive.</clr:String>
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical"
-                                        Margin="50,300,0,0"
+                                        Margin="50,265,0,0"
                                         Width="200"
                                         HorizontalAlignment="Left" VerticalAlignment="Top">
                                 <DockPanel x:Name="SensorBarPanel" HorizontalAlignment="Center">
@@ -537,19 +538,23 @@ Use if the platform is too sensitive.</clr:String>
                                     </ComboBox>
 
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <controls:LevelBar x:Name="SensorBar1" Margin="0,0,5,0"/>
+                                        <Image Source="Resources/sensor_left.png" Width="24" Height="24" />
+                                        <controls:LevelBar x:Name="SensorBar1" Margin="0,2,5,0"/>
                                         <Label x:Name="SensorBarLevel1" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <controls:LevelBar x:Name="SensorBar3" Margin="0,0,5,0"/>
+                                        <Image Source="Resources/sensor_up.png" Width="24" Height="24" />
+                                        <controls:LevelBar x:Name="SensorBar3" Margin="0,2,5,0"/>
                                         <Label x:Name="SensorBarLevel3" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <controls:LevelBar x:Name="SensorBar4" Margin="0,0,5,0"/>
+                                        <Image Source="Resources/sensor_down.png" Width="24" Height="24" />
+                                        <controls:LevelBar x:Name="SensorBar4" Margin="0,2,5,0"/>
                                         <Label x:Name="SensorBarLevel4" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <controls:LevelBar x:Name="SensorBar2" Margin="0,0,0,0"/>
+                                        <Image Source="Resources/sensor_right.png" Width="24" Height="24" />
+                                        <controls:LevelBar x:Name="SensorBar2" Margin="0,2,0,0"/>
                                         <Label x:Name="SensorBarLevel2" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                 </DockPanel>
