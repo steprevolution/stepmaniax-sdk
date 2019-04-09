@@ -56,7 +56,10 @@ namespace smx_config
                 Warning = !args.controller[SelectedPad].test_data.bHaveDataFromPanel[PanelIndex] ||
                            args.controller[SelectedPad].test_data.AnySensorsOnPanelNotResponding(PanelIndex) ||
                            args.controller[SelectedPad].test_data.AnyBadJumpersOnPanel(PanelIndex);
-                        
+
+                // Only show this panel button if the panel's input is enabled.
+                SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig(args);
+                Visibility = ShouldBeDisplayed(config)? Visibility.Visible:Visibility.Collapsed;
             });
             onConfigChange.RefreshOnInputChange = true;
             onConfigChange.RefreshOnTestDataChange = true;
@@ -67,10 +70,17 @@ namespace smx_config
             base.OnClick();
 
             // Select this panel.
-            Console.WriteLine(SelectedPanel + " -> " + Panel);
             SelectedPanel = Panel;
 
             CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+        }
+
+        // Return true if this button should be displayed.
+        private bool ShouldBeDisplayed(SMX.SMXConfig config)
+        {
+            bool[] enabledPanels = config.GetEnabledPanels();
+            int PanelIndex = Panel % 9;
+            return enabledPanels[PanelIndex];
         }
     }
 
@@ -244,6 +254,10 @@ namespace smx_config
 
         private void Refresh(LoadFromConfigDelegateArgs args)
         {
+            // First, make sure a valid panel is selected.
+            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig(args);
+            SelectValidPanel(config);
+
             RefreshSelectedPanel();
 
             P1Diagnostics.Visibility = args.controller[0].info.connected? Visibility.Visible:Visibility.Collapsed;
@@ -267,8 +281,8 @@ namespace smx_config
             }
             NoResponseFromSensors.Visibility = AnySensorsNotResponding? Visibility.Visible:Visibility.Collapsed;
             BadSensorDIPSwitches.Visibility = HaveIncorrectSensorDIP? Visibility.Visible:Visibility.Collapsed;
+
             // Adjust the DIP labels to match the PCB.
-            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig(args);
             bool DIPLabelsOnLeft = config.masterVersion < 4;
             DIPLabelRight.Visibility = DIPLabelsOnLeft? Visibility.Collapsed:Visibility.Visible;
             DIPLabelLeft.Visibility = DIPLabelsOnLeft? Visibility.Visible:Visibility.Collapsed;
@@ -329,8 +343,19 @@ namespace smx_config
             }
 
         }
+        
+        // If the selected panel isn't enabled for input, select another one.
+        private void SelectValidPanel(SMX.SMXConfig config)
+        {
+            bool[] enabledPanels = config.GetEnabledPanels();
+            int SelectedPanelIndex = SelectedPanel % 9;
 
-        // Update the selected color picker based on the value of selectedButton.
+            // If we're not selected, or this button is visible, we don't need to do anything.
+            if(!enabledPanels[SelectedPanelIndex])
+                SelectedPanel = config.GetFirstEnabledPanel();
+        }
+
+        // Update the selected diagnostics button based on the value of selectedButton.
         private void RefreshSelectedPanel()
         {
             LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();

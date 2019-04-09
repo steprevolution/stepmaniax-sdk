@@ -150,6 +150,20 @@ namespace SMX
             if(panels[8]) enabledSensors[4] |= 0xF0;
         }
 
+        // Return the index of the first enabled panel, or 1 (up) if no panels
+        // are enabled.
+        public int GetFirstEnabledPanel()
+        {
+            bool[] enabledPanels = GetEnabledPanels();
+            for(int i = 0; i < 9; ++i)
+            {
+                if(enabledPanels[i])
+                    return i;
+            }
+
+            return 0;
+        }
+
         // The layout of this structure (and the underlying C struct) matches the firmware configuration
         // data.  This is a bit inconvenient for the panel thresholds which aren't contiguous, so these
         // helpers just convert them to and from arrays.
