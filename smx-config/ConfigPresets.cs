@@ -95,8 +95,8 @@ namespace smx_config
             config.individualPanelFSRHigh[1] =      // up
             config.individualPanelFSRHigh[2] = 300; // corner
 
-            config.individualPanelFSRLow[4] = 275;   // center
-            config.individualPanelFSRHigh[4] = 300;
+            config.individualPanelFSRLow[4] = 400;   // center
+            config.individualPanelFSRHigh[4] = 500;
 
             SyncUnifiedThresholds(ref config);
         }
@@ -120,8 +120,8 @@ namespace smx_config
             config.individualPanelFSRHigh[1] =      // up
             config.individualPanelFSRHigh[2] = 700; // corner
 
-            config.individualPanelFSRLow[4] = 650;   // center
-            config.individualPanelFSRHigh[4] = 700;
+            config.individualPanelFSRLow[4] = 845;   // center
+            config.individualPanelFSRHigh[4] = 895;
 
             SyncUnifiedThresholds(ref config);
         }
@@ -145,8 +145,8 @@ namespace smx_config
             config.individualPanelFSRHigh[1] =      // up
             config.individualPanelFSRHigh[2] = 875; // corner
 
-            config.individualPanelFSRLow[4] = 800;   // center
-            config.individualPanelFSRHigh[4] = 875;
+            config.individualPanelFSRLow[4] = 845;   // center
+            config.individualPanelFSRHigh[4] = 895;
 
             SyncUnifiedThresholds(ref config);
         }
