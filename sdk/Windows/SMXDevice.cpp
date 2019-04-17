@@ -200,7 +200,11 @@ void SMX::SMXDevice::FactoryReset()
     // Send a factory reset command, and then read the new configuration.
     LockMutex Lock(m_Lock);
     SendCommandLocked("f\n");
-    SendCommandLocked("g\n", [&](string response) {
+
+    SMXDeviceInfo deviceInfo = m_pConnection->GetDeviceInfo();
+
+    SendCommandLocked(deviceInfo.m_iFirmwareVersion >= 5? "G":"g\n",
+    [&](string response) {
         // We now have the new configuration.
         m_Lock.AssertLockedByCurrentThread();
         CallUpdateCallback(SMXUpdateCallback_FactoryResetCommandComplete);
@@ -260,7 +264,10 @@ void SMX::SMXDevice::HandlePackets()
             HandleSensorTestDataResponse(buf);
             break;
 
+        // 'g' is sent by firmware versions 1-4.  Version 5 and newer send 'G', to ensure
+        // older code doesn't misinterpret the modified config packet format.
         case 'g':
+        case 'G':
         {
             // This command reads back the configuration we wrote with 'w', or the defaults if
             // we haven't written any.
@@ -310,8 +317,11 @@ void SMX::SMXDevice::SendConfig()
     if(m_bWaitingForConfigResponse)
         return;
 
-    // Write configuration command:
-    string sData = ssprintf("w");
+    SMXDeviceInfo deviceInfo = m_pConnection->GetDeviceInfo();
+
+    // Write configuration command.  This is "w" in versions 1-4, and "W" in versions 5
+    // and newer.
+    string sData = ssprintf(deviceInfo.m_iFirmwareVersion >= 5? "W":"w");
     int8_t iSize = sizeof(SMXConfig);
 
     // Firmware through version 3 allowed config packets up to 128 bytes.  Additions
@@ -344,8 +354,10 @@ void SMX::SMXDevice::SendConfig()
     m_bWaitingForConfigResponse = true;
 
     // After we write the configuration, read back the updated configuration to
-    // verify it.
-    SendCommandLocked("g\n", [this](string response) {
+    // verify it.  This command is "g" in versions 1-4, and "G" in versions 5 and
+    // newer.
+    SendCommandLocked(
+        deviceInfo.m_iFirmwareVersion >= 5? "G":"g\n", [this](string response) {
         m_bWaitingForConfigResponse = false;
     });
 }
@@ -387,9 +399,11 @@ void SMX::SMXDevice::CheckActive()
 
     m_pConnection->SetActive(true);
 
-    // Read the current configuration.  The device will return a "g" response containing
-    // its current SMXConfig.
-    SendCommandLocked("g\n");
+    SMXDeviceInfo deviceInfo = m_pConnection->GetDeviceInfo();
+
+    // Read the current configuration.  The device will return a "g" or "G" response
+    // containing its current SMXConfig.
+    SendCommandLocked(deviceInfo.m_iFirmwareVersion >= 5? "G":"g\n");
 }
 
 // Check if we need to request test mode data.

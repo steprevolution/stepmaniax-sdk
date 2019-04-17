@@ -34,33 +34,18 @@ namespace smx_config
         // Return true if the config matches, only comparing values that we set in presets.
         static private bool SamePreset(SMX.SMXConfig config1, SMX.SMXConfig config2)
         {
-            // These aren't arrays for compatibility reasons.
-            if( config1.panelThreshold0High != config2.panelThreshold0High ||
-                config1.panelThreshold1High != config2.panelThreshold1High ||
-                config1.panelThreshold2High != config2.panelThreshold2High ||
-                config1.panelThreshold3High != config2.panelThreshold3High ||
-                config1.panelThreshold4High != config2.panelThreshold4High ||
-                config1.panelThreshold5High != config2.panelThreshold5High ||
-                config1.panelThreshold6High != config2.panelThreshold6High ||
-                config1.panelThreshold7High != config2.panelThreshold7High ||
-                config1.panelThreshold8High != config2.panelThreshold8High)
-                return false;
-            if( config1.panelThreshold0Low != config2.panelThreshold0Low ||
-                config1.panelThreshold1Low != config2.panelThreshold1Low ||
-                config1.panelThreshold2Low != config2.panelThreshold2Low ||
-                config1.panelThreshold3Low != config2.panelThreshold3Low ||
-                config1.panelThreshold4Low != config2.panelThreshold4Low ||
-                config1.panelThreshold5Low != config2.panelThreshold5Low ||
-                config1.panelThreshold6Low != config2.panelThreshold6Low ||
-                config1.panelThreshold7Low != config2.panelThreshold7Low ||
-                config1.panelThreshold8Low != config2.panelThreshold8Low)
-                return false;
-
-            for(int i = 0; i < 9; ++i)
+            for(int panel = 0; panel < 9; ++panel)
             {
-                if(config1.individualPanelFSRLow[i] != config2.individualPanelFSRLow[i] ||
-                    config1.individualPanelFSRHigh[i] != config2.individualPanelFSRHigh[i])
-                    return false;
+                if(config1.panelSettings[panel].loadCellLowThreshold != config2.panelSettings[panel].loadCellLowThreshold ||
+                    config1.panelSettings[panel].loadCellHighThreshold != config2.panelSettings[panel].loadCellHighThreshold)
+                        return false;
+
+                for(int sensor = 0; sensor < 4; ++sensor)
+                {
+                    if(config1.panelSettings[panel].fsrLowThreshold[sensor] != config2.panelSettings[panel].fsrLowThreshold[sensor] ||
+                        config1.panelSettings[panel].fsrHighThreshold[sensor] != config2.panelSettings[panel].fsrHighThreshold[sensor])
+                        return false;
+                }
             }
 
             return true;
@@ -76,79 +61,56 @@ namespace smx_config
             }
         }
 
+        static private void SetPreset(ref SMX.SMXConfig config,
+            byte loadCellLow, byte loadCellHigh, byte loadCellLowCenter, byte loadCellHighCenter,
+            UInt16 fsrLow, UInt16 fsrHigh, UInt16 fsrLowCenter, UInt16 fsrHighCenter)
+        {
+            for(int panel = 0; panel < 9; ++panel)
+            {
+                config.panelSettings[panel].loadCellLowThreshold = loadCellLow;
+                config.panelSettings[panel].loadCellHighThreshold = loadCellHigh;
+            }
+
+            // Center:
+            config.panelSettings[4].loadCellLowThreshold = loadCellLowCenter;
+            config.panelSettings[4].loadCellHighThreshold = loadCellHighCenter;
+
+            for(int panel = 0; panel < 9; ++panel)
+            {
+                for(int sensor = 0; sensor < 4; ++sensor)
+                {
+                    config.panelSettings[panel].fsrLowThreshold[sensor] = fsrLow;
+                    config.panelSettings[panel].fsrHighThreshold[sensor] = fsrHigh;
+                }
+            }
+
+            // Center:
+            for(int sensor = 0; sensor < 4; ++sensor)
+            {
+                config.panelSettings[4].fsrLowThreshold[sensor] = fsrLowCenter;
+                config.panelSettings[4].fsrHighThreshold[sensor] = fsrHighCenter;
+            }
+        }
+
         static private void SetHighPreset(ref SMX.SMXConfig config)
         {
-            config.panelThreshold7Low =      // cardinal
-            config.panelThreshold1Low =      // up
-            config.panelThreshold2Low = 20;  // corner
-            config.panelThreshold7High =     // cardinal
-            config.panelThreshold1High =     // up
-            config.panelThreshold2High = 25; // corner
-
-            config.panelThreshold4Low = 20; // center
-            config.panelThreshold4High = 30;
-
-            config.individualPanelFSRLow[7] =       // cardinal
-            config.individualPanelFSRLow[1] =       // up
-            config.individualPanelFSRLow[2] = 275;  // corner
-            config.individualPanelFSRHigh[7] =      // cardinal
-            config.individualPanelFSRHigh[1] =      // up
-            config.individualPanelFSRHigh[2] = 300; // corner
-
-            config.individualPanelFSRLow[4] = 400;   // center
-            config.individualPanelFSRHigh[4] = 500;
-
-            SyncUnifiedThresholds(ref config);
+            SetPreset(ref config,
+                20, 25, 20, 30,
+                275, 300, 275, 300);
         }
 
         static private void SetNormalPreset(ref SMX.SMXConfig config)
         {
-            config.panelThreshold7Low =      // cardinal
-            config.panelThreshold1Low =      // up
-            config.panelThreshold2Low = 33;  // corner
-            config.panelThreshold7High =     // cardinal
-            config.panelThreshold1High =     // up
-            config.panelThreshold2High = 42; // corner
-
-            config.panelThreshold4Low = 35;  // center
-            config.panelThreshold4High = 60;
-
-            config.individualPanelFSRLow[7] =       // cardinal
-            config.individualPanelFSRLow[1] =       // up
-            config.individualPanelFSRLow[2] = 650;  // corner
-            config.individualPanelFSRHigh[7] =      // cardinal
-            config.individualPanelFSRHigh[1] =      // up
-            config.individualPanelFSRHigh[2] = 700; // corner
-
-            config.individualPanelFSRLow[4] = 845;   // center
-            config.individualPanelFSRHigh[4] = 895;
-
-            SyncUnifiedThresholds(ref config);
+            SetPreset(ref config,
+                33, 42, 35, 60,
+                650, 700, 845, 895);
         }
 
         static private void SetLowPreset(ref SMX.SMXConfig config)
         {
-            config.panelThreshold7Low =      // cardinal
-            config.panelThreshold1Low =      // up
-            config.panelThreshold2Low = 70;  // corner
-            config.panelThreshold7High =     // cardinal
-            config.panelThreshold1High =     // up
-            config.panelThreshold2High = 80; // corner
-
-            config.panelThreshold4Low = 100; // center
-            config.panelThreshold4High = 120;
-
-            config.individualPanelFSRLow[7] =       // cardinal
-            config.individualPanelFSRLow[1] =       // up
-            config.individualPanelFSRLow[2] = 800;  // corner
-            config.individualPanelFSRHigh[7] =      // cardinal
-            config.individualPanelFSRHigh[1] =      // up
-            config.individualPanelFSRHigh[2] = 875; // corner
-
-            config.individualPanelFSRLow[4] = 845;   // center
-            config.individualPanelFSRHigh[4] = 895;
-
-            SyncUnifiedThresholds(ref config);
+            SetPreset(ref config,
+                70, 80, 100, 120,
+                800, 875, 845, 895);
         }
 
         // The simplified configuration scheme sets thresholds for up, center, cardinal directions
@@ -158,18 +120,21 @@ namespace smx_config
         static public void SyncUnifiedThresholds(ref SMX.SMXConfig config)
         {
             // left = right = down (cardinal)
-            config.panelThreshold3Low = config.panelThreshold5Low = config.panelThreshold7Low;
-            config.panelThreshold3High = config.panelThreshold5High = config.panelThreshold7High;
+            config.panelSettings[3].loadCellLowThreshold = config.panelSettings[5].loadCellLowThreshold = config.panelSettings[7].loadCellLowThreshold;
+            config.panelSettings[3].loadCellHighThreshold = config.panelSettings[5].loadCellHighThreshold = config.panelSettings[7].loadCellHighThreshold;
 
             // UL = DL = DR = UR (corners)
-            config.panelThreshold0Low = config.panelThreshold6Low = config.panelThreshold8Low = config.panelThreshold2Low;
-            config.panelThreshold0High = config.panelThreshold6High = config.panelThreshold8High = config.panelThreshold2High;
+            config.panelSettings[0].loadCellLowThreshold = config.panelSettings[6].loadCellLowThreshold = config.panelSettings[8].loadCellLowThreshold = config.panelSettings[2].loadCellLowThreshold;
+            config.panelSettings[0].loadCellHighThreshold = config.panelSettings[6].loadCellHighThreshold = config.panelSettings[8].loadCellHighThreshold = config.panelSettings[2].loadCellHighThreshold;
 
             // Do the same for FSR thresholds.
-            config.individualPanelFSRLow[3] = config.individualPanelFSRLow[5] = config.individualPanelFSRLow[7];
-            config.individualPanelFSRHigh[3] = config.individualPanelFSRHigh[5] = config.individualPanelFSRHigh[7];
-            config.individualPanelFSRLow[0] = config.individualPanelFSRLow[6] = config.individualPanelFSRLow[8] = config.individualPanelFSRLow[2];
-            config.individualPanelFSRHigh[0] = config.individualPanelFSRHigh[6] = config.individualPanelFSRHigh[8] = config.individualPanelFSRHigh[2];
+            for(int sensor = 0; sensor < 4; ++sensor)
+            {
+                config.panelSettings[3].fsrLowThreshold[sensor] = config.panelSettings[5].fsrLowThreshold[sensor] = config.panelSettings[7].fsrLowThreshold[sensor];
+                config.panelSettings[3].fsrHighThreshold[sensor] = config.panelSettings[5].fsrHighThreshold[sensor] = config.panelSettings[7].fsrHighThreshold[sensor];
+                config.panelSettings[0].fsrLowThreshold[sensor] = config.panelSettings[6].fsrLowThreshold[sensor] = config.panelSettings[8].fsrLowThreshold[sensor] = config.panelSettings[2].fsrLowThreshold[sensor];
+                config.panelSettings[0].fsrHighThreshold[sensor] = config.panelSettings[6].fsrHighThreshold[sensor] = config.panelSettings[8].fsrHighThreshold[sensor] = config.panelSettings[2].fsrHighThreshold[sensor];
+            }
         }
 
         // Return true if the panel thresholds are already synced, so SyncUnifiedThresholds would

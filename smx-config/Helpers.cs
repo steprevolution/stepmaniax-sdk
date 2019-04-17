@@ -528,27 +528,13 @@ namespace smx_config
         {
             Dictionary<string, Object> dict = new Dictionary<string, Object>();
             List<int> panelLowThresholds = new List<int>();
-            panelLowThresholds.Add(config.panelThreshold0Low);
-            panelLowThresholds.Add(config.panelThreshold1Low);
-            panelLowThresholds.Add(config.panelThreshold2Low);
-            panelLowThresholds.Add(config.panelThreshold3Low);
-            panelLowThresholds.Add(config.panelThreshold4Low);
-            panelLowThresholds.Add(config.panelThreshold5Low);
-            panelLowThresholds.Add(config.panelThreshold6Low);
-            panelLowThresholds.Add(config.panelThreshold7Low);
-            panelLowThresholds.Add(config.panelThreshold8Low);
+            for(int panel = 0; panel < 9; ++panel)
+                panelLowThresholds.Add(config.panelSettings[panel].loadCellLowThreshold);
             dict.Add("panelLowThresholds", panelLowThresholds);
 
             List<int> panelHighThresholds = new List<int>();
-            panelHighThresholds.Add(config.panelThreshold0High);
-            panelHighThresholds.Add(config.panelThreshold1High);
-            panelHighThresholds.Add(config.panelThreshold2High);
-            panelHighThresholds.Add(config.panelThreshold3High);
-            panelHighThresholds.Add(config.panelThreshold4High);
-            panelHighThresholds.Add(config.panelThreshold5High);
-            panelHighThresholds.Add(config.panelThreshold6High);
-            panelHighThresholds.Add(config.panelThreshold7High);
-            panelHighThresholds.Add(config.panelThreshold8High);
+            for(int panel = 0; panel < 9; ++panel)
+                panelLowThresholds.Add(config.panelSettings[panel].loadCellHighThreshold);
             dict.Add("panelHighThresholds", panelHighThresholds);
 
             // Store the enabled panel mask as a simple list of which panels are selected.
@@ -582,26 +568,12 @@ namespace smx_config
 
             // Read the thresholds.  If any values are missing, we'll leave the value in config alone.
             List<Object> newPanelLowThresholds = dict.Get("panelLowThresholds", new List<Object>());
-            config.panelThreshold0Low = newPanelLowThresholds.Get(0, config.panelThreshold0Low);
-            config.panelThreshold1Low = newPanelLowThresholds.Get(1, config.panelThreshold1Low);
-            config.panelThreshold2Low = newPanelLowThresholds.Get(2, config.panelThreshold2Low);
-            config.panelThreshold3Low = newPanelLowThresholds.Get(3, config.panelThreshold3Low);
-            config.panelThreshold4Low = newPanelLowThresholds.Get(4, config.panelThreshold4Low);
-            config.panelThreshold5Low = newPanelLowThresholds.Get(5, config.panelThreshold5Low);
-            config.panelThreshold6Low = newPanelLowThresholds.Get(6, config.panelThreshold6Low);
-            config.panelThreshold7Low = newPanelLowThresholds.Get(7, config.panelThreshold7Low);
-            config.panelThreshold8Low = newPanelLowThresholds.Get(8, config.panelThreshold8Low);
+            for(int panel = 0; panel < 9; ++panel)
+                config.panelSettings[panel].loadCellLowThreshold = newPanelLowThresholds.Get(panel, config.panelSettings[panel].loadCellLowThreshold);
 
             List<Object> newPanelHighThresholds = dict.Get("panelHighThresholds", new List<Object>());
-            config.panelThreshold0High = newPanelHighThresholds.Get(0, config.panelThreshold0High);
-            config.panelThreshold1High = newPanelHighThresholds.Get(1, config.panelThreshold1High);
-            config.panelThreshold2High = newPanelHighThresholds.Get(2, config.panelThreshold2High);
-            config.panelThreshold3High = newPanelHighThresholds.Get(3, config.panelThreshold3High);
-            config.panelThreshold4High = newPanelHighThresholds.Get(4, config.panelThreshold4High);
-            config.panelThreshold5High = newPanelHighThresholds.Get(5, config.panelThreshold5High);
-            config.panelThreshold6High = newPanelHighThresholds.Get(6, config.panelThreshold6High);
-            config.panelThreshold7High = newPanelHighThresholds.Get(7, config.panelThreshold7High);
-            config.panelThreshold8High = newPanelHighThresholds.Get(8, config.panelThreshold8High);
+            for(int panel = 0; panel < 9; ++panel)
+                config.panelSettings[panel].loadCellHighThreshold = newPanelHighThresholds.Get(panel, config.panelSettings[panel].loadCellHighThreshold);
 
             List<Object> enabledPanelList = dict.Get<List<Object>>("enabledPanels", null);
             if(enabledPanelList != null)

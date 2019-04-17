@@ -27,22 +27,38 @@ namespace SMX
         PlatformFlags_FSR = 1 << 1,
     };
 
+    public struct PackedSensorSettings {
+        // Load cell thresholds:
+        public Byte loadCellLowThreshold;
+        public Byte loadCellHighThreshold;
+
+        // FSR thresholds (16-bit):
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+        public UInt16[] fsrLowThreshold;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+        public UInt16[] fsrHighThreshold;
+
+        // This must be left unchanged.
+        public UInt16 reserved;
+    };
+
     [StructLayout(LayoutKind.Sequential, Pack=1)]  
     public struct SMXConfig {  
-        public Byte unused1, unused2;
-        public Byte unused3, unused4;
-        public Byte unused5, unused6;
-        public UInt16 masterDebounceMilliseconds;
-        public Byte panelThreshold7Low, panelThreshold7High; // was "cardinal"
-        public Byte panelThreshold4Low, panelThreshold4High; // was "center"
-        public Byte panelThreshold2Low, panelThreshold2High; // was "corner"
+        public Byte masterVersion;
+        public Byte configVersion;
+
+        // Packed flags (SMXConfigFlags).
+        public Byte flags;
+
+        public UInt16 debounceNodelayMilliseconds;
+        public UInt16 debounceDelayMs;
         public UInt16 panelDebounceMicroseconds;
-        public UInt16 autoCalibrationPeriodMilliseconds;
         public Byte autoCalibrationMaxDeviation;
         public Byte badSensorMinimumDelaySeconds;
         public UInt16 autoCalibrationAveragesPerUpdate;
-        public Byte unused7, unused8;
-        public Byte panelThreshold1Low, panelThreshold1High; // was "up"
+        public UInt16 autoCalibrationSamplesPerAverage;
+        public UInt16 autoCalibrationMaxTare;
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 5)]
         public Byte[] enabledSensors;
@@ -52,27 +68,28 @@ namespace SMX
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3*9)]
         public Byte[] stepColor;
 
+        // The default color to set the platform LED strip to.
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+        public Byte[] platformStripColor;
+
+        // Which panels to enable auto-lighting for.  Disabled panels will be unlit.
+        // 0x01 = panel 0, 0x02 = panel 1, 0x04 = panel 2, etc.  This only affects
+        // the master controller's built-in auto lighting and not lights data send
+        // from the SDK.
+        public UInt16 autoLightPanelMask;
+
         public Byte panelRotation;
-        public UInt16 autoCalibrationSamplesPerAverage;
-        public Byte masterVersion;
-        public Byte configVersion;
 
-        // The remaining thresholds (configVersion >= 2).
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
-        public Byte[] unused9;
-        public Byte panelThreshold0Low, panelThreshold0High;
-        public Byte panelThreshold3Low, panelThreshold3High;
-        public Byte panelThreshold5Low, panelThreshold5High;
-        public Byte panelThreshold6Low, panelThreshold6High;
-        public Byte panelThreshold8Low, panelThreshold8High;
+        // Per-panel sensor settings:
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
+        public PackedSensorSettings[] panelSettings;
 
-        // Master delay debouncing (version >= 3).  If enabled, this will add a
-        // corresponding delay to inputs, which the game needs to compensate for.
-        // This is disabled by default.
-        public UInt16 debounceDelayMs;
+        // These are internal tunables and should be left unchanged.
+        public Byte preDetailsDelayMilliseconds;
 
-        // Packed flags (SMXConfigFlags).
-        public Byte flags;
+        // Pad this struct to exactly 250 bytes.
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 13)]
+        public Byte[] padding;
 
         // It would be simpler to set flags to [MarshalAs(UnmanagedType.U8)], but
         // that doesn't work.
@@ -91,30 +108,6 @@ namespace SMX
         {
             return masterVersion >= 4 && (configFlags & SMXConfigFlags.PlatformFlags_FSR) != 0;
         }
-
-        // Thresholds when in FSR mode.  Note that these are 16-bit thresholds, compared
-        // to the 8-bit load cell thresholds.
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
-        public UInt16[] individualPanelFSRLow;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 9)]
-        public UInt16[] individualPanelFSRHigh;
-
-        // The default color to set the platform LED strip to.
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-        public Byte[] platformStripColor;
-
-        // The maximum tare value to calibrate to (except on startup).
-        public UInt16 autoCalibrationMaxTare;
-
-        // Which panels to enable auto-lighting for.  Disabled panels will be unlit.
-        // 0x01 = panel 0, 0x02 = panel 1, 0x04 = panel 2, etc.  This only affects
-        // the master controller's built-in auto lighting and not lights data send
-        // from the SDK.
-        public UInt16 autoLightPanelMask;
-
-        // Pad this struct to exactly 250 bytes.
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 120)]
-        public Byte[] padding;
 
         // enabledSensors is a mask of which panels are enabled.  Return this as an array
         // for convenience.
@@ -167,60 +160,47 @@ namespace SMX
         // The layout of this structure (and the underlying C struct) matches the firmware configuration
         // data.  This is a bit inconvenient for the panel thresholds which aren't contiguous, so these
         // helpers just convert them to and from arrays.
+        // XXX: used?
         public Byte[] GetLowThresholds()
         {
             return new Byte[] {
-                panelThreshold0Low,
-                panelThreshold1Low,
-                panelThreshold2Low,
-                panelThreshold3Low,
-                panelThreshold4Low,
-                panelThreshold5Low,
-                panelThreshold6Low,
-                panelThreshold7Low,
-                panelThreshold8Low,
+                panelSettings[0].loadCellLowThreshold,
+                panelSettings[1].loadCellLowThreshold,
+                panelSettings[2].loadCellLowThreshold,
+                panelSettings[3].loadCellLowThreshold,
+                panelSettings[4].loadCellLowThreshold,
+                panelSettings[5].loadCellLowThreshold,
+                panelSettings[6].loadCellLowThreshold,
+                panelSettings[7].loadCellLowThreshold,
+                panelSettings[8].loadCellLowThreshold,
             };
         }
 
         public Byte[] GetHighThresholds()
         {
             return new Byte[] {
-                panelThreshold0High,
-                panelThreshold1High,
-                panelThreshold2High,
-                panelThreshold3High,
-                panelThreshold4High,
-                panelThreshold5High,
-                panelThreshold6High,
-                panelThreshold7High,
-                panelThreshold8High,
+                panelSettings[0].loadCellHighThreshold,
+                panelSettings[1].loadCellHighThreshold,
+                panelSettings[2].loadCellHighThreshold,
+                panelSettings[3].loadCellHighThreshold,
+                panelSettings[4].loadCellHighThreshold,
+                panelSettings[5].loadCellHighThreshold,
+                panelSettings[6].loadCellHighThreshold,
+                panelSettings[7].loadCellHighThreshold,
+                panelSettings[8].loadCellHighThreshold,
             };
         }
 
         public void SetLowThresholds(Byte[] values)
         {
-            panelThreshold0Low = values[0];
-            panelThreshold1Low = values[1];
-            panelThreshold2Low = values[2];
-            panelThreshold3Low = values[3];
-            panelThreshold4Low = values[4];
-            panelThreshold5Low = values[5];
-            panelThreshold6Low = values[6];
-            panelThreshold7Low = values[7];
-            panelThreshold8Low = values[8];
+            for(int panel = 0; panel < 9; ++panel)
+                panelSettings[panel].loadCellLowThreshold = values[panel];
         }
         
         public void SetHighThresholds(Byte[] values)
         {
-            panelThreshold0High = values[0];
-            panelThreshold1High = values[1];
-            panelThreshold2High = values[2];
-            panelThreshold3High = values[3];
-            panelThreshold4High = values[4];
-            panelThreshold5High = values[5];
-            panelThreshold6High = values[6];
-            panelThreshold7High = values[7];
-            panelThreshold8High = values[8];
+            for(int panel = 0; panel < 9; ++panel)
+                panelSettings[panel].loadCellHighThreshold = values[panel];
         }
 
         // Create an empty SMXConfig.
@@ -229,10 +209,13 @@ namespace SMX
             SMXConfig result = new SMXConfig();
             result.enabledSensors = new Byte[5];
             result.stepColor = new Byte[3*9];
-            result.individualPanelFSRLow = new UInt16[9];
-            result.individualPanelFSRHigh = new UInt16[9];
+            result.panelSettings = new PackedSensorSettings[9];
             result.platformStripColor = new Byte[3];
-
+            for(int panel = 0; panel < 9; ++panel)
+            {
+                result.panelSettings[panel].fsrLowThreshold = new UInt16[4];
+                result.panelSettings[panel].fsrHighThreshold = new UInt16[4];
+            }
             return result;
         }
 

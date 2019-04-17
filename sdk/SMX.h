@@ -2,6 +2,7 @@
 #define SMX_H
 
 #include <stdint.h>
+#include <stddef.h> // for offsetof
 
 #ifdef SMX_EXPORTS
 #define SMX_API extern "C" __declspec(dllexport)
@@ -151,65 +152,30 @@ enum SMXConfigFlags {
     // If set, panels are using FSRs, otherwise load cells.
     PlatformFlags_FSR = 1 << 1,
 };
+#pragma pack(push, 1)
+
+struct packed_sensor_settings_t {
+    // Load cell thresholds:
+    uint8_t loadCellLowThreshold;
+    uint8_t loadCellHighThreshold;
+
+    // FSR thresholds:
+    uint16_t fsrLowThreshold[4];
+    uint16_t fsrHighThreshold[4];
+
+    // This must be left unchanged.
+    uint16_t reserved;
+};
+
+static_assert(sizeof(packed_sensor_settings_t) == 20, "Incorrect packed_sensor_settings_t size");
 
 // The configuration for a connected controller.  This can be retrieved with SMX_GetConfig
 // and modified with SMX_SetConfig.
 //
 // The order and packing of this struct corresponds to the configuration packet sent to
 // the master controller, so it must not be changed.
-#pragma pack(push, 1)
 struct SMXConfig
 {
-    // These fields are unused and must be left at their existing values.
-    uint8_t unused1 = 0xFF, unused2 = 0xFF;
-    uint8_t unused3 = 0xFF, unused4 = 0xFF;
-    uint8_t unused5 = 0xFF, unused6 = 0xFF;
-
-    // Panel thresholds are labelled by their numpad position, eg. Panel8 is up.
-    // If m_iFirmwareVersion is 1, Panel7 corresponds to all of up, down, left and
-    // right, and Panel2 corresponds to UpLeft, UpRight, DownLeft and DownRight.  For
-    // later firmware versions, each panel is configured independently.
-    //
-    // Setting a value to 0xFF disables that threshold.
-    uint16_t masterDebounceMilliseconds = 0;
-    uint8_t panelThreshold7Low = 0xFF, panelThreshold7High = 0xFF; // was "cardinal"
-    uint8_t panelThreshold4Low = 0xFF, panelThreshold4High = 0xFF; // was "center"
-    uint8_t panelThreshold2Low = 0xFF, panelThreshold2High = 0xFF; // was "corner"
-
-    // These are internal tunables and should be left unchanged.
-    uint16_t panelDebounceMicroseconds = 4000;
-    uint16_t autoCalibrationPeriodMilliseconds = 1000;
-    uint8_t autoCalibrationMaxDeviation = 100;
-    uint8_t badSensorMinimumDelaySeconds = 15;
-    uint16_t autoCalibrationAveragesPerUpdate = 60;
-
-    uint8_t unused7 = 0xFF, unused8 = 0xFF;
-
-    uint8_t panelThreshold1Low = 0xFF, panelThreshold1High = 0xFF; // was "up"
-
-    // Which sensors on each panel to enable.  This can be used to disable sensors that
-    // we know aren't populated.  This is packed, with four sensors on two pads per byte:
-    // enabledSensors[0] & 1 is the first sensor on the first pad, and so on.
-    uint8_t enabledSensors[5];
-
-    // How long the master controller will wait for a lights command before assuming the
-    // game has gone away and resume auto-lights.  This is in 128ms units.
-    uint8_t autoLightsTimeout = 1000/128; // 1 second
-
-    // The color to use for each panel when auto-lighting in master mode.  This doesn't
-    // apply when the pads are in autonomous lighting mode (no master), since they don't
-    // store any configuration by themselves.  These colors should be scaled to the 0-170
-    // range.
-    uint8_t stepColor[3*9];
-
-    // The rotation of the panel, where 0 is the standard rotation, 1 means the panel is
-    // rotated right 90 degrees, 2 is rotated 180 degrees, and 3 is rotated 270 degrees.
-    // This value is unused.
-    uint8_t panelRotation;
-
-    // This is an internal tunable that should be left unchanged.
-    uint16_t autoCalibrationSamplesPerAverage = 500;
-
     // The firmware version of the master controller.  Where supported (version 2 and up), this
     // will always read back the firmware version.  This will default to 0xFF on version 1, and
     // we'll always write 0xFF here so it doesn't change on that firmware version.
@@ -230,34 +196,47 @@ struct SMXConfig
     // - 0x00: configVersion added
     // - 0x02: panelThreshold0Low through panelThreshold8High added
     // - 0x03: debounceDelayMs added
-    uint8_t configVersion = 0x03;
-
-    // The remaining thresholds (configVersion >= 2).
-    uint8_t unused9[10];
-    uint8_t panelThreshold0Low, panelThreshold0High;
-    uint8_t panelThreshold3Low, panelThreshold3High;
-    uint8_t panelThreshold5Low, panelThreshold5High;
-    uint8_t panelThreshold6Low, panelThreshold6High;
-    uint8_t panelThreshold8Low, panelThreshold8High;
-
-    // Master delay debouncing (version >= 3).  If enabled, this will add a
-    // corresponding delay to inputs, which the game needs to compensate for.
-    // This is disabled by default.
-    uint16_t debounceDelayMs = 0;
+    uint8_t configVersion = 0x05;
 
     // Packed flags (masterVersion >= 4).
     uint8_t flags = 0;
 
-    // Thresholds when in FSR mode.  Note that these are 16-bit thresholds, compared
-    // to the 8-bit load cell thresholds.
-    uint16_t individualPanelFSRLow[9];
-    uint16_t individualPanelFSRHigh[9];
+    // Panel thresholds are labelled by their numpad position, eg. Panel8 is up.
+    // If m_iFirmwareVersion is 1, Panel7 corresponds to all of up, down, left and
+    // right, and Panel2 corresponds to UpLeft, UpRight, DownLeft and DownRight.  For
+    // later firmware versions, each panel is configured independently.
+    //
+    // Setting a value to 0xFF disables that threshold.
 
-    // The default color to set the platform LED strip to.
-    uint8_t platformStripColor[3];
+    // These are internal tunables and should be left unchanged.
+    uint16_t debounceNodelayMilliseconds = 0;
+    uint16_t debounceDelayMs = 0;
+    uint16_t panelDebounceMicroseconds = 4000;
+    uint8_t autoCalibrationMaxDeviation = 100;
+    uint8_t badSensorMinimumDelaySeconds = 15;
+    uint16_t autoCalibrationAveragesPerUpdate = 60;
+    uint16_t autoCalibrationSamplesPerAverage = 500;
 
     // The maximum tare value to calibrate to (except on startup).
     uint16_t autoCalibrationMaxTare;
+
+    // Which sensors on each panel to enable.  This can be used to disable sensors that
+    // we know aren't populated.  This is packed, with four sensors on two pads per byte:
+    // enabledSensors[0] & 1 is the first sensor on the first pad, and so on.
+    uint8_t enabledSensors[5];
+
+    // How long the master controller will wait for a lights command before assuming the
+    // game has gone away and resume auto-lights.  This is in 128ms units.
+    uint8_t autoLightsTimeout = 1000/128; // 1 second
+
+    // The color to use for each panel when auto-lighting in master mode.  This doesn't
+    // apply when the pads are in autonomous lighting mode (no master), since they don't
+    // store any configuration by themselves.  These colors should be scaled to the 0-170
+    // range.
+    uint8_t stepColor[3*9];
+
+    // The default color to set the platform LED strip to.
+    uint8_t platformStripColor[3];
 
     // Which panels to enable auto-lighting for.  Disabled panels will be unlit.
     // 0x01 = panel 0, 0x02 = panel 1, 0x04 = panel 2, etc.  This only affects
@@ -265,13 +244,25 @@ struct SMXConfig
     // from the SDK.
     uint16_t autoLightPanelMask;
 
+    // The rotation of the panel, where 0 is the standard rotation, 1 means the panel is
+    // rotated right 90 degrees, 2 is rotated 180 degrees, and 3 is rotated 270 degrees.
+    // This value is unused.
+    uint8_t panelRotation;
+
+    // Per-panel sensor settings:
+    packed_sensor_settings_t panelSettings[9];
+
+    // These are internal tunables and should be left unchanged.
+    uint8_t preDetailsDelayMilliseconds;
+
     // Pad the struct to 250 bytes.  This keeps this struct size from changing
     // as we add fields, so the ABI doesn't change.  Applications should leave
     // any data in here unchanged when calling SMX_SetConfig.
-    uint8_t padding[120];
+    uint8_t padding[13];
 };
 #pragma pack(pop)
-static_assert(offsetof(SMXConfig, padding) == 130, "Incorrect padding alignment");
+
+static_assert(offsetof(SMXConfig, padding) == 237, "Incorrect padding alignment");
 static_assert(sizeof(SMXConfig) == 250, "Expected 250 bytes");
 
 // The values (except for Off) correspond with the protocol and must not be changed.
