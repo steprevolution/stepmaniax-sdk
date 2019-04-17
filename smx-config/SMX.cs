@@ -487,11 +487,10 @@ namespace SMX
         public static bool GetConfig(int pad, out SMXConfig config)
         {
             if(!DLLAvailable()) {
-                config = new SMXConfig();
-                config.enabledSensors = new Byte[5];
-                config.stepColor = new Byte[3*9];
+                config = SMXConfig.Create();
                 return false;
             }
+
             return SMX_GetConfig(pad, out config);
         }
                 
