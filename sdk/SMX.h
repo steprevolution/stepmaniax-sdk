@@ -210,7 +210,7 @@ struct SMXConfig
 
     // These are internal tunables and should be left unchanged.
     uint16_t debounceNodelayMilliseconds = 0;
-    uint16_t debounceDelayMs = 0;
+    uint16_t debounceDelayMilliseconds = 0;
     uint16_t panelDebounceMicroseconds = 4000;
     uint8_t autoCalibrationMaxDeviation = 100;
     uint8_t badSensorMinimumDelaySeconds = 15;
@@ -218,7 +218,7 @@ struct SMXConfig
     uint16_t autoCalibrationSamplesPerAverage = 500;
 
     // The maximum tare value to calibrate to (except on startup).
-    uint16_t autoCalibrationMaxTare;
+    uint16_t autoCalibrationMaxTare = 0xFFFF;
 
     // Which sensors on each panel to enable.  This can be used to disable sensors that
     // we know aren't populated.  This is packed, with four sensors on two pads per byte:
@@ -242,7 +242,7 @@ struct SMXConfig
     // 0x01 = panel 0, 0x02 = panel 1, 0x04 = panel 2, etc.  This only affects
     // the master controller's built-in auto lighting and not lights data send
     // from the SDK.
-    uint16_t autoLightPanelMask;
+    uint16_t autoLightPanelMask = 0xFFFF;
 
     // The rotation of the panel, where 0 is the standard rotation, 1 means the panel is
     // rotated right 90 degrees, 2 is rotated 180 degrees, and 3 is rotated 270 degrees.
@@ -253,7 +253,7 @@ struct SMXConfig
     packed_sensor_settings_t panelSettings[9];
 
     // These are internal tunables and should be left unchanged.
-    uint8_t preDetailsDelayMilliseconds;
+    uint8_t preDetailsDelayMilliseconds = 5;
 
     // Pad the struct to 250 bytes.  This keeps this struct size from changing
     // as we add fields, so the ABI doesn't change.  Applications should leave
