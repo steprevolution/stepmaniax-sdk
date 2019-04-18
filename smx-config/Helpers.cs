@@ -526,16 +526,33 @@ namespace smx_config
         // Export configurable values in SMXConfig to a JSON string.
         public static string ExportSettingsToJSON(SMX.SMXConfig config)
         {
+            // The user only uses one of low or high thresholds.  Only export the
+            // settings the user is actually using.
             Dictionary<string, Object> dict = new Dictionary<string, Object>();
-            List<int> panelLowThresholds = new List<int>();
-            for(int panel = 0; panel < 9; ++panel)
-                panelLowThresholds.Add(config.panelSettings[panel].loadCellLowThreshold);
-            dict.Add("panelLowThresholds", panelLowThresholds);
+            if(config.fsr())
+            {
+                List<int> fsrLowThresholds = new List<int>();
+                for(int panel = 0; panel < 9; ++panel)
+                    fsrLowThresholds.Add(config.panelSettings[panel].fsrLowThreshold[0]);
+                dict.Add("fsrLowThresholds", fsrLowThresholds);
 
-            List<int> panelHighThresholds = new List<int>();
-            for(int panel = 0; panel < 9; ++panel)
-                panelLowThresholds.Add(config.panelSettings[panel].loadCellHighThreshold);
-            dict.Add("panelHighThresholds", panelHighThresholds);
+                List<int> fsrHighThresholds = new List<int>();
+                for(int panel = 0; panel < 9; ++panel)
+                    fsrHighThresholds.Add(config.panelSettings[panel].fsrHighThreshold[0]);
+                dict.Add("fsrHighThresholds", fsrHighThresholds);
+            }
+            else
+            {
+                List<int> panelLowThresholds = new List<int>();
+                for(int panel = 0; panel < 9; ++panel)
+                    panelLowThresholds.Add(config.panelSettings[panel].loadCellLowThreshold);
+                dict.Add("panelLowThresholds", panelLowThresholds);
+
+                List<int> panelHighThresholds = new List<int>();
+                for(int panel = 0; panel < 9; ++panel)
+                    panelLowThresholds.Add(config.panelSettings[panel].loadCellHighThreshold);
+                dict.Add("panelHighThresholds", panelHighThresholds);
+            }
 
             // Store the enabled panel mask as a simple list of which panels are selected.
             bool[] enabledPanels = config.GetEnabledPanels();
@@ -567,13 +584,29 @@ namespace smx_config
             Dictionary<string, Object> dict = SMXJSON.ParseJSON.Parse<Dictionary<string, Object>>(json);
 
             // Read the thresholds.  If any values are missing, we'll leave the value in config alone.
-            List<Object> newPanelLowThresholds = dict.Get("panelLowThresholds", new List<Object>());
-            for(int panel = 0; panel < 9; ++panel)
-                config.panelSettings[panel].loadCellLowThreshold = newPanelLowThresholds.Get(panel, config.panelSettings[panel].loadCellLowThreshold);
-
-            List<Object> newPanelHighThresholds = dict.Get("panelHighThresholds", new List<Object>());
-            for(int panel = 0; panel < 9; ++panel)
-                config.panelSettings[panel].loadCellHighThreshold = newPanelHighThresholds.Get(panel, config.panelSettings[panel].loadCellHighThreshold);
+            if(config.fsr())
+            {
+                List<Object> newPanelLowThresholds = dict.Get("fsrLowThresholds", new List<Object>());
+                List<Object> newPanelHighThresholds = dict.Get("fsrHighThresholds", new List<Object>());
+                for(int panel = 0; panel < 9; ++panel)
+                {
+                    for(int sensor = 0; sensor < 4; ++sensor)
+                    {
+                        config.panelSettings[panel].fsrLowThreshold[sensor] = (UInt16) newPanelLowThresholds.Get(panel, (int) config.panelSettings[panel].fsrLowThreshold[sensor]);
+                        config.panelSettings[panel].fsrHighThreshold[sensor] = (UInt16) newPanelHighThresholds.Get(panel, (int) config.panelSettings[panel].fsrHighThreshold[sensor]);
+                    }
+                }
+            }
+            else
+            {
+                List<Object> newPanelLowThresholds = dict.Get("panelLowThresholds", new List<Object>());
+                List<Object> newPanelHighThresholds = dict.Get("panelHighThresholds", new List<Object>());
+                for(int panel = 0; panel < 9; ++panel)
+                {
+                    config.panelSettings[panel].loadCellLowThreshold = newPanelLowThresholds.Get(panel, config.panelSettings[panel].loadCellLowThreshold);
+                    config.panelSettings[panel].loadCellHighThreshold = newPanelHighThresholds.Get(panel, config.panelSettings[panel].loadCellHighThreshold);
+                }
+            }
 
             List<Object> enabledPanelList = dict.Get<List<Object>>("enabledPanels", null);
             if(enabledPanelList != null)
