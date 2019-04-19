@@ -103,6 +103,7 @@ private:
     // The configuration we've read from the device.  m_bHaveConfig is true if we've received
     // a configuration from the device since we've connected to it.
     SMXConfig config;
+    vector<uint8_t> rawConfig;
     bool m_bHaveConfig = false;
 
     // This is the configuration the user has set, if he's changed anything.  We send this to

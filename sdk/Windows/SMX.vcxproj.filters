@@ -46,6 +46,9 @@
     <ClInclude Include="SMXPanelAnimationUpload.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="SMXConfigPacket.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SMX.cpp">
@@ -82,6 +85,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SMXPanelAnimationUpload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SMXConfigPacket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

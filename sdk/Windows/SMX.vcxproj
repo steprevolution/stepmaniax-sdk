@@ -14,6 +14,7 @@
     <ClInclude Include="..\SMX.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="SMXBuildVersion.h" />
+    <ClInclude Include="SMXConfigPacket.h" />
     <ClInclude Include="SMXDevice.h" />
     <ClInclude Include="SMXDeviceConnection.h" />
     <ClInclude Include="SMXDeviceSearch.h" />
@@ -28,6 +29,7 @@
   <ItemGroup>
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="SMX.cpp" />
+    <ClCompile Include="SMXConfigPacket.cpp" />
     <ClCompile Include="SMXDevice.cpp" />
     <ClCompile Include="SMXDeviceConnection.cpp" />
     <ClCompile Include="SMXDeviceSearch.cpp" />

@@ -4,6 +4,7 @@
 #include "Helpers.h"
 #include "SMXDeviceConnection.h"
 #include "SMXDeviceSearch.h"
+#include "SMXConfigPacket.h"
 #include <windows.h>
 #include <memory>
 #include <vector>
@@ -283,11 +284,27 @@ void SMX::SMXDevice::HandlePackets()
                 continue;
             }
 
-            // Copy in the configuration.
-            // Log(ssprintf("Read back configuration: %i bytes, first byte %i", iSize, buf[2]));
-            memcpy(&config, buf.data()+2, min(iSize, sizeof(config)));
+            // Store the raw config data in rawConfig.  For V1-4 firmwares, this is the
+            // old config format.
+            rawConfig.resize(iSize);
+            memcpy(rawConfig.data(), buf.data()+2, min(iSize, sizeof(config)));
+
+            if(buf[0] == 'g')
+            {
+                // Convert the old config format to the new one, so the rest of the SDK and
+                // user code doesn't need to deal with multiple formats.
+                ConvertToNewConfig(rawConfig, config);
+            }
+            else
+            {
+                // This is the new config format.  Copy it directly into config.
+                memcpy(&config, buf.data()+2, min(iSize, sizeof(config)));
+            }
+
             m_bHaveConfig = true;
             buf.erase(buf.begin(), buf.begin()+iSize+2);
+
+            // Log(ssprintf("Read back configuration: %i bytes, first byte %i", iSize, buf[2]));
 
             CallUpdateCallback(SMXUpdateCallback_Updated);
             break;
@@ -322,18 +339,24 @@ void SMX::SMXDevice::SendConfig()
     // Write configuration command.  This is "w" in versions 1-4, and "W" in versions 5
     // and newer.
     string sData = ssprintf(deviceInfo.m_iFirmwareVersion >= 5? "W":"w");
-    int8_t iSize = sizeof(SMXConfig);
 
-    // Firmware through version 3 allowed config packets up to 128 bytes.  Additions
-    // to the packet later on brought it up to 126, so the maximum was raised to 250.
-    // Older firmware won't use the extra fields, but will ignore the packet if it's
-    // larger than it supports, so just truncate the packet for these devices to make
-    // sure this doesn't happen.
-    if(config.masterVersion <= 3)
-        iSize = min(iSize, offsetof(SMXConfig, flags));
+    // Append the config packet.
+    if(deviceInfo.m_iFirmwareVersion < 5)
+    {
+        // Convert wanted_config to the old configuration format.
+        vector<uint8_t> outputConfig = rawConfig;
+        ConvertToOldConfig(wanted_config, outputConfig);
 
-    sData.append((char *) &iSize, sizeof(iSize));
-    sData.append((char *) &wanted_config, sizeof(wanted_config));
+        uint8_t iSize = (uint8_t) outputConfig.size();
+        sData.append((char *) &iSize, sizeof(iSize));
+        sData.append((char *) outputConfig.data(), outputConfig.size());
+    }
+    else
+    {
+        int8_t iSize = sizeof(SMXConfig);
+        sData.append((char *) &iSize, sizeof(iSize));
+        sData.append((char *) &wanted_config, sizeof(wanted_config));
+    }
 
     // Don't send another config packet until this one finishes, so if we get a bunch of
     // SetConfig calls quickly we won't spam the device, which can get slow.
