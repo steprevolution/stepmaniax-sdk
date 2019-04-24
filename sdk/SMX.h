@@ -163,11 +163,14 @@ struct packed_sensor_settings_t {
     uint8_t fsrLowThreshold[4];
     uint8_t fsrHighThreshold[4];
 
+    uint16_t combinedLowThreshold;
+    uint16_t combinedHighThreshold;
+    
     // This must be left unchanged.
     uint16_t reserved;
 };
 
-static_assert(sizeof(packed_sensor_settings_t) == 12, "Incorrect packed_sensor_settings_t size");
+static_assert(sizeof(packed_sensor_settings_t) == 16, "Incorrect packed_sensor_settings_t size");
 
 // The configuration for a connected controller.  This can be retrieved with SMX_GetConfig
 // and modified with SMX_SetConfig.
@@ -258,11 +261,11 @@ struct SMXConfig
     // Pad the struct to 250 bytes.  This keeps this struct size from changing
     // as we add fields, so the ABI doesn't change.  Applications should leave
     // any data in here unchanged when calling SMX_SetConfig.
-    uint8_t padding[85];
+    uint8_t padding[49];
 };
 #pragma pack(pop)
 
-static_assert(offsetof(SMXConfig, padding) == 165, "Incorrect padding alignment");
+static_assert(offsetof(SMXConfig, padding) == 201, "Incorrect padding alignment");
 static_assert(sizeof(SMXConfig) == 250, "Expected 250 bytes");
 
 // The values (except for Off) correspond with the protocol and must not be changed.

@@ -39,6 +39,9 @@ namespace SMX
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public Byte[] fsrHighThreshold;
 
+        public UInt16 combinedLowThreshold;
+        public UInt16 combinedHighThreshold;
+
         // This must be left unchanged.
         public UInt16 reserved;
     };
@@ -88,7 +91,7 @@ namespace SMX
         public Byte preDetailsDelayMilliseconds;
 
         // Pad this struct to exactly 250 bytes.
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 85)]
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 49)]
         public Byte[] padding;
 
         // It would be simpler to set flags to [MarshalAs(UnmanagedType.U8)], but
