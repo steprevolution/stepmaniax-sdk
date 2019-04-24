@@ -63,7 +63,7 @@ namespace smx_config
 
         static private void SetPreset(ref SMX.SMXConfig config,
             byte loadCellLow, byte loadCellHigh, byte loadCellLowCenter, byte loadCellHighCenter,
-            UInt16 fsrLow, UInt16 fsrHigh, UInt16 fsrLowCenter, UInt16 fsrHighCenter)
+            byte fsrLow, byte fsrHigh, byte fsrLowCenter, byte fsrHighCenter)
         {
             for(int panel = 0; panel < 9; ++panel)
             {
@@ -96,21 +96,21 @@ namespace smx_config
         {
             SetPreset(ref config,
                 20, 25, 20, 30,
-                275, 300, 275, 300);
+                100, 112, 100, 112);
         }
 
         static private void SetNormalPreset(ref SMX.SMXConfig config)
         {
             SetPreset(ref config,
                 33, 42, 35, 60,
-                650, 700, 845, 895);
+                162, 175, 212, 225);
         }
 
         static private void SetLowPreset(ref SMX.SMXConfig config)
         {
             SetPreset(ref config,
                 70, 80, 100, 120,
-                800, 875, 845, 895);
+                200, 219, 212, 225);
         }
 
         // The simplified configuration scheme sets thresholds for up, center, cardinal directions

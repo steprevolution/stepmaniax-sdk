@@ -592,8 +592,8 @@ namespace smx_config
                 {
                     for(int sensor = 0; sensor < 4; ++sensor)
                     {
-                        config.panelSettings[panel].fsrLowThreshold[sensor] = (UInt16) newPanelLowThresholds.Get(panel, (int) config.panelSettings[panel].fsrLowThreshold[sensor]);
-                        config.panelSettings[panel].fsrHighThreshold[sensor] = (UInt16) newPanelHighThresholds.Get(panel, (int) config.panelSettings[panel].fsrHighThreshold[sensor]);
+                        config.panelSettings[panel].fsrLowThreshold[sensor] = (byte) newPanelLowThresholds.Get(panel, (int) config.panelSettings[panel].fsrLowThreshold[sensor]);
+                        config.panelSettings[panel].fsrHighThreshold[sensor] = (byte) newPanelHighThresholds.Get(panel, (int) config.panelSettings[panel].fsrHighThreshold[sensor]);
                     }
                 }
             }

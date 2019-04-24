@@ -166,8 +166,8 @@ namespace smx_config
                 config.panelSettings[panelIdx].loadCellLowThreshold = lower;
                 config.panelSettings[panelIdx].loadCellHighThreshold = upper;
             } else {
-                UInt16 lower = (UInt16) slider.LowerValue;
-                UInt16 upper = (UInt16) slider.UpperValue;
+                byte lower = (byte) slider.LowerValue;
+                byte upper = (byte) slider.UpperValue;
                 for(int sensor = 0; sensor < 4; ++sensor)
                 {
                     config.panelSettings[panelIdx].fsrLowThreshold[sensor] = lower;
@@ -222,7 +222,7 @@ namespace smx_config
             {
                 // 16-bit FSR thresholds.
                 slider.Minimum = 5;
-                slider.Maximum = 1023;
+                slider.Maximum = 250;
                 slider.MinimumDistance = 5;
             } else {
                 // 8-bit load cell thresholds

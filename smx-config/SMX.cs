@@ -34,10 +34,10 @@ namespace SMX
 
         // FSR thresholds (16-bit):
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-        public UInt16[] fsrLowThreshold;
+        public Byte[] fsrLowThreshold;
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-        public UInt16[] fsrHighThreshold;
+        public Byte[] fsrHighThreshold;
 
         // This must be left unchanged.
         public UInt16 reserved;
@@ -88,7 +88,7 @@ namespace SMX
         public Byte preDetailsDelayMilliseconds;
 
         // Pad this struct to exactly 250 bytes.
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 13)]
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 85)]
         public Byte[] padding;
 
         // It would be simpler to set flags to [MarshalAs(UnmanagedType.U8)], but
@@ -213,8 +213,8 @@ namespace SMX
             result.platformStripColor = new Byte[3];
             for(int panel = 0; panel < 9; ++panel)
             {
-                result.panelSettings[panel].fsrLowThreshold = new UInt16[4];
-                result.panelSettings[panel].fsrHighThreshold = new UInt16[4];
+                result.panelSettings[panel].fsrLowThreshold = new Byte[4];
+                result.panelSettings[panel].fsrHighThreshold = new Byte[4];
             }
             return result;
         }
