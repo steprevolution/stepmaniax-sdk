@@ -538,22 +538,22 @@ Use if the platform is too sensitive.</clr:String>
                                     </ComboBox>
 
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <Image Source="Resources/sensor_left.png" Width="24" Height="24" />
-                                        <controls:LevelBar x:Name="SensorBar1" Margin="0,2,5,0"/>
+                                        <Image Source="Resources/sensor_left.png" Width="24" Height="24" Margin="0,0,6,0" />
+                                        <controls:LevelBar x:Name="SensorBar1" Margin="0,2,5,0" />
                                         <Label x:Name="SensorBarLevel1" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <Image Source="Resources/sensor_up.png" Width="24" Height="24" />
+                                        <Image Source="Resources/sensor_up.png" Width="24" Height="24" Margin="0,0,6,0" />
                                         <controls:LevelBar x:Name="SensorBar3" Margin="0,2,5,0"/>
                                         <Label x:Name="SensorBarLevel3" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <Image Source="Resources/sensor_down.png" Width="24" Height="24" />
+                                        <Image Source="Resources/sensor_down.png" Width="24" Height="24" Margin="0,0,6,0" />
                                         <controls:LevelBar x:Name="SensorBar4" Margin="0,2,5,0"/>
                                         <Label x:Name="SensorBarLevel4" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
                                     <StackPanel DockPanel.Dock="Left" Orientation="Vertical">
-                                        <Image Source="Resources/sensor_right.png" Width="24" Height="24" />
+                                        <Image Source="Resources/sensor_right.png" Width="24" Height="24" Margin="0,0,6,0" />
                                         <controls:LevelBar x:Name="SensorBar2" Margin="0,2,0,0"/>
                                         <Label x:Name="SensorBarLevel2" HorizontalAlignment="Center" Content="xxx"/>
                                     </StackPanel>
@@ -897,9 +897,17 @@ Input will be disabled from deselected panels.</TextBlock>
 
                     <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,0,0,0" TextAlignment="Center">Show light animations on all panels
 instead of only panels with sensors.</TextBlock>
-                    
+
+                    <controls:EnableCenterTopSensorCheckbox VerticalAlignment="Center"
+                            x:Name="EnableCenterTopSensorCheckbox"
+                            DockPanel.Dock="Right" Content="Enable top sensor on center panel (usually off)"
+                            HorizontalAlignment="Center"
+                            Margin="0 10 0 0"
+                            IsChecked="{Binding Path=EnableSensor, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
+                    />
+
                     <Separator Margin="0,10,0,10" />
-                    
+
                     <TextBlock HorizontalAlignment="Center"
                         xml:space="preserve" FontSize="16">Import/export settings</TextBlock>
                     <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,5,0,0" TextAlignment="Center"

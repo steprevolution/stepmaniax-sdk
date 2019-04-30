@@ -153,6 +153,7 @@ namespace smx_config
             ConnectedPads.Visibility = EitherControllerConnected? Visibility.Visible:Visibility.Hidden;
             PanelColorP1.Visibility = args.controller[0].info.connected? Visibility.Visible:Visibility.Collapsed;
             PanelColorP2.Visibility = args.controller[1].info.connected? Visibility.Visible:Visibility.Collapsed;
+            EnableCenterTopSensorCheckbox.Visibility = args.firmwareVersion() >= 5? Visibility.Visible:Visibility.Collapsed;
 
             // Show the color slider or GIF UI depending on which one is set in flags.
             // If both pads are turned on, just use the first one.

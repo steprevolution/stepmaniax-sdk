@@ -31,6 +31,20 @@ namespace smx_config
         // Data for each of two controllers:
         public LoadFromConfigDelegateArgsPerController[] controller;
 
+        // If we have more than one connected controller, we expect them to be the same version.
+        // Return the newest firmware version that's connected.
+        public int firmwareVersion()
+        {
+            int result = 1;
+            foreach(var data in controller)
+            {
+                if(data.info.connected && data.info.m_iFirmwareVersion > result)
+                    result = data.info.m_iFirmwareVersion;
+
+            }
+            return result;
+        }
+
         // The control that changed the configuration (passed to FireConfigurationChanged).
         public object source;
     };

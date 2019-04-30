@@ -996,4 +996,50 @@ namespace smx_config
             //LoadUIFromConfig(firstConfig);
         }
     }
+
+    public class EnableCenterTopSensorCheckbox: CheckBox
+    {
+        public static readonly DependencyProperty EnableSensorProperty = DependencyProperty.Register("EnableSensor",
+            typeof(bool), typeof(EnableCenterTopSensorCheckbox), new FrameworkPropertyMetadata(false));
+        public bool EnableSensor {
+            get { return (bool) GetValue(EnableSensorProperty); }
+            set { SetValue(EnableSensorProperty, value); }
+        }
+
+        OnConfigChange onConfigChange;
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
+                LoadUIFromConfig(ActivePad.GetFirstActivePadConfig(args));
+            });
+        }
+
+        private void LoadUIFromConfig(SMX.SMXConfig config)
+        {
+            // Center panel, top sensor:
+            bool enabled = config.panelSettings[4].fsrHighThreshold[2] < 255;
+            EnableSensor = enabled;
+        }
+
+        protected override void OnClick()
+        {
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                int pad = activePad.Item1;
+                SMX.SMXConfig config = activePad.Item2;
+
+                // Disable the sensor by setting its high threshold to 255, and enable it by syncing it up
+                // with the other thresholds.
+                if(!EnableSensor)
+                    config.panelSettings[4].fsrHighThreshold[2] = config.panelSettings[4].fsrHighThreshold[0];
+                else
+                    config.panelSettings[4].fsrHighThreshold[2] = 255;
+                SMX.SMX.SetConfig(pad, config);
+            }
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+        }
+    }
 }
