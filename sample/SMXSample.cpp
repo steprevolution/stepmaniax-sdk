@@ -53,10 +53,13 @@ public:
                 bool bLight = iPanel == iPanelToLight && iPad == 0;
                 if( !bLight )
                 {
-                    for( int iLED = 0; iLED < 16; ++iLED )
+                    // We're not lighting this panel, so append black for the 4x4 and 3x3 lights.
+                    for( int iLED = 0; iLED < 25; ++iLED )
                         addColor( 0, 0, 0 );
                     continue;
                 }
+
+                // Append light data for the outer 4x4 grid of lights.
                 addColor( 0xFF, 0, 0 );
                 addColor( 0xFF, 0, 0 );
                 addColor( 0xFF, 0, 0 );
@@ -73,10 +76,22 @@ public:
                 addColor( 0xFF, 0xFF, 0 );
                 addColor( 0xFF, 0xFF, 0 );
                 addColor( 0xFF, 0xFF, 0 );
+
+                // Append light data for the inner 3x3 grid of lights, if present.  These
+                // are ignored if the platform doesn't have them.
+                addColor( 0xFF, 0, 0 );
+                addColor( 0xFF, 0, 0 );
+                addColor( 0xFF, 0, 0 );
+                addColor( 0, 0xFF, 0 );
+                addColor( 0, 0xFF, 0 );
+                addColor( 0, 0xFF, 0 );
+                addColor( 0, 0, 0xFF );
+                addColor( 0, 0, 0xFF );
+                addColor( 0, 0, 0xFF );
             }
         }
 
-        SMX_SetLights( sLightsData.data() );
+        SMX_SetLights2( sLightsData.data(), sLightsData.size() );
     }
 };
 
