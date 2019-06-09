@@ -403,12 +403,22 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
         double fCommandTimes[3] = { fNow, fNow, fNow };
 
         bool masterIsV4 = false;
+        bool anyMasterConnected = false;
         for(int iPad = 0; iPad < 2; ++iPad)
         {
             SMXConfig config;
-            if(m_pDevices[iPad]->GetConfigLocked(config) && config.masterVersion >= 4)
+            if(!m_pDevices[iPad]->GetConfigLocked(config))
+                continue;
+
+            anyMasterConnected = true;
+            if(config.masterVersion >= 4)
                 masterIsV4 = true;
         }
+
+        // If we don't have the config yet, the master is in the process of connecting, so don't
+        // queue lights.
+        if(!anyMasterConnected)
+            return;
 
         // If we're on master firmware < 4, set delay times.  For 4+, just queue commands.
         // We don't need to set fCommandTimes[0] since the '4' packet won't be sent.
@@ -416,7 +426,7 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
         {
             const double fDelayBetweenLightsCommands = 1/60.0;
             fCommandTimes[1] = fSendCommandAt;
-            fCommandTimes[2] = fCommandTimes[0] + fDelayBetweenLightsCommands;
+            fCommandTimes[2] = fCommandTimes[1] + fDelayBetweenLightsCommands;
         }
 
         // Update m_fDelayLightCommandsUntil, so we know when the next
