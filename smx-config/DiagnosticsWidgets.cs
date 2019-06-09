@@ -191,9 +191,6 @@ namespace smx_config
             P1Diagnostics = Template.FindName("P1Diagnostics", this) as FrameworkElement;
             P2Diagnostics = Template.FindName("P2Diagnostics", this) as FrameworkElement;
 
-            // Only show the mode dropdown in debug mode.  In regular use, just show calibrated values.
-            DiagnosticMode.Visibility = Helpers.GetDebug()? Visibility.Visible:Visibility.Collapsed;
-
             DIPLabelRight = Template.FindName("DIPLabelRight", this) as FrameworkElement;
             DIPLabelLeft = Template.FindName("DIPLabelLeft", this) as FrameworkElement;
 
