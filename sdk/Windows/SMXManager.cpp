@@ -486,26 +486,46 @@ void SMX::SMXManager::ReenableAutoLights()
 void SMX::SMXManager::SendLightUpdates()
 {
     g_Lock.AssertLockedByCurrentThread();
-    if(m_aPendingLightsCommands.empty())
+
+    // If previous lights commands are being sent, wait for them to complete before
+    // queueing more.
+    if(m_iLightsCommandsInProgress > 0)
         return;
 
-    const PendingCommand &command = m_aPendingLightsCommands[0];
-
-    // See if it's time to send the next command.  We only need to look at the first
-    // command, since these are always sorted.
-    if(command.fTimeToSend > GetMonotonicTime())
-        return;
-
-    // Send the lights command for each pad.  If either pad isn't connected, this won't do
-    // anything.
-    for(int iPad = 0; iPad < 2; ++iPad)
+    // If we have more than one command queued, we can queue several of them if we're
+    // before fTimeToSend.  For the V4 pads that require more commands, this lets us queue
+    // the whole lights update at once.  V3 pads require us to time commands, so we can't
+    // spam both lights commands at once, which is handled by fTimeToSend.
+    while( !m_aPendingLightsCommands.empty() )
     {
-        if(!command.sPadCommand[iPad].empty())
-            m_pDevices[iPad]->SendCommandLocked(command.sPadCommand[iPad]);
-    }
+        // Send the lights command for each pad.  If either pad isn't connected, this won't do
+        // anything.
+        const PendingCommand &command = m_aPendingLightsCommands[0];
 
-    // Remove the command we've sent.
-    m_aPendingLightsCommands.erase(m_aPendingLightsCommands.begin(), m_aPendingLightsCommands.begin()+1);
+        // See if it's time to send this command.
+        if(command.fTimeToSend > GetMonotonicTime())
+            break;
+
+        for(int iPad = 0; iPad < 2; ++iPad)
+        {
+            if(!command.sPadCommand[iPad].empty())
+            {
+                // Count the number of commands we've queued.  We won't send any more until
+                // this reaches 0 and all queued commands were sent.
+                m_iLightsCommandsInProgress++;
+
+                // The completion callback is guaranteed to always be called, even if the controller
+                // disconnects and the command wasn't sent.
+                m_pDevices[iPad]->SendCommandLocked(command.sPadCommand[iPad], [this, iPad](string response) {
+                    g_Lock.AssertLockedByCurrentThread();
+                    m_iLightsCommandsInProgress--;
+                });
+            }
+        }
+
+        // Remove the command we've sent.
+        m_aPendingLightsCommands.erase(m_aPendingLightsCommands.begin(), m_aPendingLightsCommands.begin()+1);
+    }
 }
 
 void SMX::SMXManager::SetPanelTestMode(PanelTestMode mode)

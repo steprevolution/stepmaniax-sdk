@@ -76,6 +76,7 @@ private:
         string sPadCommand[2];
     };
     vector<PendingCommand> m_aPendingLightsCommands;
+    int m_iLightsCommandsInProgress = 0;
     double m_fDelayLightCommandsUntil = 0;
 
     // Panel test mode.  This is separate from the sensor test mode (pressure display),
