@@ -46,7 +46,8 @@ public:
     void SetLights(const string sLights[2]);
     void ReenableAutoLights();
     void SetPanelTestMode(PanelTestMode mode);
-
+    void SetOnlySendLightsOnChange(bool value) { m_bOnlySendLightsOnChange = value; }
+    
     // Run a function in the user callback thread.
     void RunInHelperThread(function<void()> func);
 
@@ -85,6 +86,8 @@ private:
     uint32_t m_SentPanelTestModeAtTicks = 0;
     PanelTestMode m_PanelTestMode = PanelTestMode_Off;
     PanelTestMode m_LastSentPanelTestMode = PanelTestMode_Off;
+
+    bool m_bOnlySendLightsOnChange = false;
 };
 }
 

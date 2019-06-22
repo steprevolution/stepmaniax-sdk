@@ -98,3 +98,6 @@ SMX_API void SMX_SetLights2(const char *lightData, int lightDataSize)
 }
 SMX_API void SMX_ReenableAutoLights() { SMXManager::g_pSMX->ReenableAutoLights(); }
 SMX_API const char *SMX_Version() { return SMX_BUILD_VERSION; }
+
+// This isn't exposed in the public API, since this is only used internally.
+SMX_API void SMX_SetOnlySendLightsOnChange(bool value) { SMXManager::g_pSMX->SetOnlySendLightsOnChange(value); }

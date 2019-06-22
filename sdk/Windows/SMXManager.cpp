@@ -253,6 +253,22 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
     if(m_PanelTestMode != PanelTestMode_Off)
         return;
 
+    // If m_bOnlySendLightsOnChange is true, only send lights commands if the lights have
+    // actually changed.  This is only used for internal testing, and the controllers normally
+    // expect to receive regular lights updates, even if the lights aren't actually changing.
+    if(m_bOnlySendLightsOnChange)
+    {
+        static string sLastPanelLights[2];
+        if(sPanelLights[0] == sLastPanelLights[0] && sPanelLights[1] == sLastPanelLights[1])
+        {
+            Log("no change");
+            return;
+        }
+
+        sLastPanelLights[0] = sPanelLights[0];
+        sLastPanelLights[1] = sPanelLights[1];
+    }
+
     // Separate top and bottom lights commands.
     //
     // sPanelLights[iPad] is
