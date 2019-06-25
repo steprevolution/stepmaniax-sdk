@@ -201,6 +201,8 @@ namespace smx_config
                     SMX.SMX.ForceRecalibration(pad);
             };
             
+            // Note that we won't get a MouseUp if the display is hidden due to a controller
+            // disconnection while the mouse is held.  We handle this in Refresh().
             Button LightAll = Template.FindName("LightAll", this) as Button;
             LightAll.PreviewMouseDown += delegate(object sender, MouseButtonEventArgs e)
             {
@@ -256,6 +258,12 @@ namespace smx_config
             SelectValidPanel(config);
 
             RefreshSelectedPanel();
+
+            // Make sure SetShowAllLights is disabled if the controller is disconnected, since
+            // we can miss mouse up events.
+            bool EitherControllerConnected = args.controller[0].info.connected || args.controller[1].info.connected;
+            if(!EitherControllerConnected)
+                SetShowAllLights?.Invoke(false);
 
             P1Diagnostics.Visibility = args.controller[0].info.connected? Visibility.Visible:Visibility.Collapsed;
             P2Diagnostics.Visibility = args.controller[1].info.connected? Visibility.Visible:Visibility.Collapsed;
