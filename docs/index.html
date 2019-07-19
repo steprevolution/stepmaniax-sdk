@@ -16,7 +16,7 @@ You can either build the solution and link the resulting SMX.dll to your applica
 or import the source project and add it to your Visual Studio solution.  The SDK
 interface is <code>SMX.h</code>.
 <p>
-See <code>sample</code> for a sample application.
+See <code>SMXSample</code> for a sample application.
 <p>
 Up to two controllers are supported.  <code>SMX_GetInfo</code> can be used to check which
 controllers are connected.  Each <code>pad</code> argument to API calls can be 0 for the
@@ -35,7 +35,13 @@ HID interface, and instead use <code>SMX_GetInputState</code> to retrieve the in
 The platform can have up to nine panels.  Each panel has a grid of 4x4 RGB LEDs, which can
 be individually controlled at up to 30 FPS.
 <p>
-See <code>SMX_SetLights</code>.
+See <code>SMX_SetLights2</code>.
+
+<h2>Update notes</h2>
+
+2019-07-18-01: Added SMX_SetLights2.  This is the same as SMX_SetLights, with an added
+parameter to specify the size of the buffer.  This must be used to control the Gen4
+pads which have additional LEDs.
 
 <h2>Platform configuration</h2>
 
@@ -92,8 +98,31 @@ Get info about a pad.  Use this to detect which pads are currently connected.
 Get a mask of the currently pressed panels.
 
 <h3 class=ref>void SMX_SetLights(const char lightsData[864]);</h3>
+
+(deprecated)
+<p>
+Equivalent to SMX_SetLights2(lightsData, 864).  SMX_SetLights2 should be used instead.
+
+<h3 class=ref>void SMX_SetLights2(const char *lightsData, int lightDataSize);</h3>
 Update the lights.  Both pads are always updated together.  lightsData is a list of 8-bit RGB
-colors, one for each LED.  Each panel has lights in the following order:
+colors, one for each LED.
+<p>
+lightDataSize is the number of bytes in lightsData.  This should be 1350 (2 pads * 9 panels *
+25 lights * 3 RGB colors).  For backwards-compatibility, this can also be 864.
+<p>
+Each panel has lights in the following order:
+<p>
+<pre>
+00  01  02  03
+  16  17  18
+04  05  06  07
+  19  20  21
+08  09  10  11
+  22  23  24
+12  13  14  15
+</pre>
+
+Each panel has lights in the following order:
 <p>
 <pre>
 0123
@@ -110,13 +139,14 @@ Panels are in the following order:
 678 F01
 </pre>
 
-With 18 panels, 16 LEDs per panel and 3 bytes per LED, each light update has 864 bytes of data.
-<p>
 Lights will update at up to 30 FPS.  If lights data is sent more quickly, a best effort will be
 made to send the most recent lights data available, but the panels won't update more quickly.
 <p>
 The panels will return to automatic lighting if no lights are received for a while, so applications
 controlling lights should send light updates continually, even if the lights aren't changing.
+<p>
+For backwards compatibility, if lightDataSize is 864, the old 4x4-only order is used,
+which simply omits lights 16-24.
 
 <h3 class=ref>void SMX_ReenableAutoLights();</h3>
 
