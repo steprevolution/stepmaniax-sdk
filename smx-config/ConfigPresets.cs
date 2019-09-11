@@ -96,7 +96,7 @@ namespace smx_config
         {
             SetPreset(ref config,
                 20, 25, 20, 30,
-                100, 112, 100, 112);
+                140, 150, 140, 160);
         }
 
         static private void SetNormalPreset(ref SMX.SMXConfig config)
