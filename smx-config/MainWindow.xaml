@@ -145,8 +145,13 @@ Use if the platform is too sensitive.</clr:String>
                             <Label Margin="5,0,0,0" x:Name="LowerValue" Content="0" Width="30" HorizontalContentAlignment="Right"
                                    HorizontalAlignment="Left" VerticalAlignment="Top"
                             />
+                            <Image x:Name="ThresholdWarning"
+                                   Source="Resources/threshold_warning.png" Width="9" Height="28"
+                                   Margin="10,0,0,0"
+                                   Visibility="Visible"
+                                />
                             <controls:DoubleSlider x:Name="Slider"
-                                Margin="32,5,0,0"
+                                Margin="24,5,0,0"
                                 MinimumDistance="10"
                                 LowerValue="20" UpperValue="35"
                                 VerticalAlignment="Top"
@@ -854,6 +859,14 @@ a panel to activate and deactivate.
                             
 A panel will activate when it reaches the right side of the
 slider, and deactivate when it reaches the left side of the slider.</TextBlock>
+                        <TextBlock x:Name="ThresholdWarningText" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,0"
+                                   xml:space="preserve"
+                                   TextAlignment="Center"
+                                   Foreground="#F00"
+>Low thresholds above 140 are recommended.  Higher thresholds allow the
+panel to detect releases more quickly.
+                        </TextBlock>
+
 
                         <DockPanel DockPanel.Dock="Bottom"
                                     VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="0,0,5,0">

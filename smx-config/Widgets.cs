@@ -122,6 +122,7 @@ namespace smx_config
 
         DoubleSlider slider;
         Label LowerLabel, UpperLabel;
+        Image ThresholdWarning;
 
         OnConfigChange onConfigChange;
 
@@ -132,6 +133,7 @@ namespace smx_config
             slider = GetTemplateChild("Slider") as DoubleSlider;
             LowerLabel = GetTemplateChild("LowerValue") as Label;
             UpperLabel = GetTemplateChild("UpperValue") as Label;
+            ThresholdWarning = GetTemplateChild("ThresholdWarning") as Image;
 
             slider.ValueChanged += delegate(DoubleSlider slider) { SaveToConfig(); };
 
@@ -248,6 +250,10 @@ namespace smx_config
                 LowerLabel.Content = lower.ToString();
                 UpperLabel.Content = upper.ToString();
             }
+
+            int panelIdx = panelNameToIndex[Type];
+            bool ShowThresholdWarning = config.ShowThresholdWarning(panelIdx);
+            ThresholdWarning.Visibility = ShowThresholdWarning? Visibility.Visible:Visibility.Hidden;
 
             RefreshVisibility();
             UpdatingUI = false;

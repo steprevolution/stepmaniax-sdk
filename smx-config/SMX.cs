@@ -112,6 +112,24 @@ namespace SMX
             return masterVersion >= 4 && (configFlags & SMXConfigFlags.PlatformFlags_FSR) != 0;
         }
 
+        // Return true if the low threshold is set too low.
+        //
+        // Higher low threshold values make the panel respond to the panel being released more
+        // quickly.  It shouldn't be set too low.
+        public bool ShowThresholdWarning(int panel)
+        {
+            if(!fsr())
+                return false;
+
+            // Don't show warnings for disabled panels.
+            if(!GetEnabledPanels()[panel])
+                return false;
+
+            int lower = panelSettings[panel].fsrLowThreshold[0];
+            int MinimumRecommendedLowThreshold = 140;
+            return lower < MinimumRecommendedLowThreshold;
+        }
+
         // enabledSensors is a mask of which panels are enabled.  Return this as an array
         // for convenience.
         public bool[] GetEnabledPanels()
