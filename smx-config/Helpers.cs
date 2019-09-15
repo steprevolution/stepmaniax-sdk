@@ -550,7 +550,7 @@ namespace smx_config
 
                 List<int> panelHighThresholds = new List<int>();
                 for(int panel = 0; panel < 9; ++panel)
-                    panelLowThresholds.Add(config.panelSettings[panel].loadCellHighThreshold);
+                    panelHighThresholds.Add(config.panelSettings[panel].loadCellHighThreshold);
                 dict.Add("panelHighThresholds", panelHighThresholds);
             }
 
