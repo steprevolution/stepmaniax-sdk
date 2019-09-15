@@ -377,8 +377,8 @@ namespace smx_config
         // Return all panel selection buttons.
         DiagnosticsPanelButton[] getPanelSelectionButtons()
         {
-            DiagnosticsPanelButton[] result = new DiagnosticsPanelButton[9];
-            for(int i = 0; i < 9; ++i)
+            DiagnosticsPanelButton[] result = new DiagnosticsPanelButton[18];
+            for(int i = 0; i < 18; ++i)
             {
                 result[i] = Template.FindName("Panel" + i, this) as DiagnosticsPanelButton;
             }

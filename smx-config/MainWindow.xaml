@@ -513,17 +513,17 @@ Use if the platform is too sensitive.</clr:String>
                                 <Grid x:Name="P2Diagnostics" Margin="0,50,0,0"
                                     Background="#FFE5E5E5" Width="200" Height="200"
                                       HorizontalAlignment="Center" VerticalAlignment="Top">
-                                    <controls:DiagnosticsPanelButton Panel="9" Margin="-120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    <controls:DiagnosticsPanelButton Panel="10" Margin="0,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    <controls:DiagnosticsPanelButton Panel="11" Margin="120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel9" Panel="9" Margin="-120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel10" Panel="10" Margin="0,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel11" Panel="11" Margin="120,-120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
 
-                                    <controls:DiagnosticsPanelButton Panel="12" Margin="-120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    <controls:DiagnosticsPanelButton Panel="13" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    <controls:DiagnosticsPanelButton Panel="14" Margin="120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel12" Panel="12" Margin="-120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel13" Panel="13" Margin="0,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel14" Panel="14" Margin="120,0,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
 
-                                    <controls:DiagnosticsPanelButton Panel="15" Margin="-120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    <controls:DiagnosticsPanelButton Panel="16" Margin="0,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
-                                    <controls:DiagnosticsPanelButton Panel="17" Margin="120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel15" Panel="15" Margin="-120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel16" Panel="16" Margin="0,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <controls:DiagnosticsPanelButton x:Name="Panel17" Panel="17" Margin="120,120,0,0" SelectedPanel="{Binding Path=SelectedPanel, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
                                 </Grid>
                             </StackPanel>
 
