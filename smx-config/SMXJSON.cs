@@ -360,22 +360,25 @@ namespace SMXJSON
             List<Object> result = new List<Object>();
             while(true)
             {
+                SkipWhitespace(reader);
+                if(reader.Peek() == ']')
+                {
+                    reader.Read();
+                    return result;
+                }
+
+                if(result.Count > 0)
+                {
+                    int comma = reader.Read();
+                    if(comma == -1)
+                        throw new ParseError(reader, "Unexpected EOF reading array");
+                    if(comma != ',')
+                        throw new ParseError(reader, "Expected ',', got " + comma + " reading array");
+                    SkipWhitespace(reader);
+                }
+
                 Object value = ParseJSONValue(reader);
                 result.Add(value);
-
-                SkipWhitespace(reader);
-                int nextCharacter = reader.Read();
-                switch(nextCharacter)
-                {
-                case ']':
-                    return result;
-                case ',':
-                    continue;
-                case -1:
-                    throw new ParseError(reader, "Unexpected EOF reading array");
-                default:
-                    throw new ParseError(reader, "Unexpected token " + nextCharacter + " reading array");
-                }
             }
         }
         static private Dictionary<string, Object> ReadJSONDictionary(StringReader reader)
