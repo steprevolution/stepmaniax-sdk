@@ -581,6 +581,29 @@ void SMX::SMXManager::UpdatePanelTestMode()
         m_pDevices[iPad]->SendCommandLocked(ssprintf("t %c\n", m_PanelTestMode));
 }
 
+// Assign a serial number to master controllers if one isn't already assigned.  This
+// will have no effect if a serial is already set.
+//
+// We just assign a random number.  The serial number will be used as the USB serial
+// number, and can be queried in SMXInfo.
+void SMX::SMXManager::SetSerialNumbers()
+{
+    g_Lock.AssertNotLockedByCurrentThread();
+    LockMutex L(g_Lock);
+
+    m_aPendingLightsCommands.clear();
+    for(int iPad = 0; iPad < 2; ++iPad)
+    {
+        string sData = "s";
+        uint8_t serial[16];
+        SMX::GenerateRandom(serial, sizeof(serial));
+        sData.append((char *) serial, sizeof(serial));
+        sData.append(1, '\n');
+
+        m_pDevices[iPad]->SendCommandLocked(sData);
+    }
+}
+
 void SMX::SMXManager::RunInHelperThread(function<void()> func)
 {
     m_UserCallbackThread.RunInThread(func);

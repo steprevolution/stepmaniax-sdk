@@ -202,6 +202,22 @@ double SMX::GetMonotonicTime()
     return iTime / 10000000.0;
 }
 
+void SMX::GenerateRandom(void *pOut, int iSize)
+{
+    // These calls shouldn't fail.
+    HCRYPTPROV cryptProv;
+    if(!CryptAcquireContext(&cryptProv, nullptr,
+        L"Microsoft Base Cryptographic Provider v1.0",
+        PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+        throw exception("CryptAcquireContext error");
+
+    if(!CryptGenRandom(cryptProv, iSize, (BYTE *) pOut)) 
+        throw exception("CryptGenRandom error");
+
+    if(!CryptReleaseContext(cryptProv, 0))
+        throw exception("CryptReleaseContext error");
+}
+
 const char *SMX::CreateError(string error)
 {
     // Store the string in a static so it doesn't get deallocated.

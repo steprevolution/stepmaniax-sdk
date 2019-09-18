@@ -46,6 +46,7 @@ public:
     void SetLights(const string sLights[2]);
     void ReenableAutoLights();
     void SetPanelTestMode(PanelTestMode mode);
+    void SetSerialNumbers();
     void SetOnlySendLightsOnChange(bool value) { m_bOnlySendLightsOnChange = value; }
     
     // Run a function in the user callback thread.

@@ -26,6 +26,7 @@ string BinaryToHex(const void *pData_, int iNumBytes);
 string BinaryToHex(const string &sString);
 bool GetRandomBytes(void *pData, int iBytes);
 double GetMonotonicTime();
+void GenerateRandom(void *pOut, int iSize);
 
 // Create a char* string that will be valid until the next call to CreateError.
 // This is used to return error messages to the caller.
