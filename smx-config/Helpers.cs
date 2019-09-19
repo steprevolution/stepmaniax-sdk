@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Resources;
@@ -105,6 +107,19 @@ namespace smx_config
             if(error == 0)
                 return "";
             return new System.ComponentModel.Win32Exception(error).Message;
+        }
+
+        // https://stackoverflow.com/a/129395/136829
+        public static T DeepClone<T>(T obj)
+        {
+            using (var ms = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(ms, obj);
+                ms.Position = 0;
+
+                return (T) formatter.Deserialize(ms);
+            }
         }
 
         // Work around Enumerable.SequenceEqual not checking if the arrays are null.

@@ -141,7 +141,7 @@ namespace smx_config
         // have no effect.
         static public bool AreUnifiedThresholdsSynced(SMX.SMXConfig config)
         {
-            SMX.SMXConfig config2 = config;
+            SMX.SMXConfig config2 = Helpers.DeepClone(config);
             SyncUnifiedThresholds(ref config2);
             return SamePreset(config, config2);
         }

@@ -27,6 +27,7 @@ namespace SMX
         PlatformFlags_FSR = 1 << 1,
     };
 
+    [Serializable]
     public struct PackedSensorSettings {
         // Load cell thresholds:
         public Byte loadCellLowThreshold;
@@ -47,6 +48,7 @@ namespace SMX
     };
 
     [StructLayout(LayoutKind.Sequential, Pack=1)]  
+    [Serializable]
     public struct SMXConfig {  
         public Byte masterVersion;
         public Byte configVersion;
