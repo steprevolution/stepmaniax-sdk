@@ -26,7 +26,7 @@ namespace smx_config
     public struct LoadFromConfigDelegateArgs
     {
         // This indicates which fields changed since the last call.
-        public bool ConfigurationChanged, InputChanged, TestDataChanged;
+        public bool ConnectionsChanged, ConfigurationChanged, InputChanged, TestDataChanged;
 
         // Data for each of two controllers:
         public LoadFromConfigDelegateArgsPerController[] controller;
@@ -111,6 +111,7 @@ namespace smx_config
                 if(WasConnected[pad] != controller.info.connected)
                 {
                     args.ConfigurationChanged = true;
+                    args.ConnectionsChanged = true;
                     WasConnected[pad] = controller.info.connected;
                 }
 

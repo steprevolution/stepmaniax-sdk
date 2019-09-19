@@ -107,17 +107,11 @@ namespace smx_config
         }
 
         public static readonly DependencyProperty AdvancedModeEnabledProperty = DependencyProperty.Register("AdvancedModeEnabled",
-            typeof(bool), typeof(ThresholdSlider), new FrameworkPropertyMetadata(false, RefreshAdvancedModeEnabledCallback));
+            typeof(bool), typeof(ThresholdSlider), new FrameworkPropertyMetadata(false));
 
         public bool AdvancedModeEnabled {
             get { return (bool) GetValue(AdvancedModeEnabledProperty); }
             set { SetValue(AdvancedModeEnabledProperty, value); }
-        }
-
-        private static void RefreshAdvancedModeEnabledCallback(DependencyObject target, DependencyPropertyChangedEventArgs args)
-        {
-            ThresholdSlider self = target as ThresholdSlider;
-            self.RefreshVisibility();
         }
 
         DoubleSlider slider;
@@ -255,40 +249,7 @@ namespace smx_config
             bool ShowThresholdWarning = config.ShowThresholdWarning(panelIdx);
             ThresholdWarning.Visibility = ShowThresholdWarning? Visibility.Visible:Visibility.Hidden;
 
-            RefreshVisibility();
             UpdatingUI = false;
-        }
-
-        void RefreshVisibility()
-        {
-            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
-            this.Visibility = ShouldBeDisplayed(config)? Visibility.Visible:Visibility.Collapsed;
-        }
-
-        // Return true if this slider should be displayed.  Only display a slider if it affects
-        // at least one panel which is enabled.
-        private bool ShouldBeDisplayed(SMX.SMXConfig config)
-        {
-            bool[] enabledPanels = config.GetEnabledPanels();
-
-            // Up and center are shown in both modes.
-            switch(Type)
-            {
-            case "up-left":    return  AdvancedModeEnabled && enabledPanels[0];
-            case "up":         return                         enabledPanels[1];
-            case "up-right":   return  AdvancedModeEnabled && enabledPanels[2];
-            case "left":       return  AdvancedModeEnabled && enabledPanels[3];
-            case "center":     return                         enabledPanels[4];
-            case "right":      return  AdvancedModeEnabled && enabledPanels[5];
-            case "down-left":  return  AdvancedModeEnabled && enabledPanels[6];
-            case "down":       return  AdvancedModeEnabled && enabledPanels[7];
-            case "down-right": return  AdvancedModeEnabled && enabledPanels[8];
-
-            // Show cardinal and corner if at least one panel they affect is enabled.
-            case "cardinal":   return !AdvancedModeEnabled && (enabledPanels[3] || enabledPanels[5] || enabledPanels[8]);
-            case "corner":     return !AdvancedModeEnabled && (enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8]);
-            default:           return true;
-            }
         }
     }
     

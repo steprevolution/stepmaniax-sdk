@@ -135,7 +135,7 @@ Use if the platform is too sensitive.</clr:String>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type controls:ThresholdSlider}">
-                        <StackPanel Margin="0,0,0,0" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <StackPanel Margin="0,0,0,0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Image 
                                 Margin="0,0,0,0"
                                 Height="28" Width="28"
@@ -840,17 +840,15 @@ Use if the platform is too sensitive.</clr:String>
                                    xml:space="preserve"
                                    TextAlignment="Center"
 >Set the force required to trigger each arrow.</TextBlock>
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-left"    controls:ThresholdSlider.Icon="Resources/pad_up_left.png"    Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up"         controls:ThresholdSlider.Icon="Resources/pad_up.png"         Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-right"   controls:ThresholdSlider.Icon="Resources/pad_up_right.png"   Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="left"       controls:ThresholdSlider.Icon="Resources/pad_left.png"       Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="center"     controls:ThresholdSlider.Icon="Resources/pad_center.png"     Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="right"      controls:ThresholdSlider.Icon="Resources/pad_right.png"      Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="down-left"  controls:ThresholdSlider.Icon="Resources/pad_down_left.png"  Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="down"       controls:ThresholdSlider.Icon="Resources/pad_down.png"       Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="down-right" controls:ThresholdSlider.Icon="Resources/pad_down_right.png" Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="cardinal"   controls:ThresholdSlider.Icon="Resources/pad_cardinal.png"   Margin="0,8,0,0" />
-                        <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="corner"     controls:ThresholdSlider.Icon="Resources/pad_diagonal.png"   Margin="0,8,0,0" />
+                        <ScrollViewer
+                            Height="350"
+                            HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                            DockPanel.Dock="Top"
+                            >
+                            <DockPanel Margin="0,0,0,0" VerticalAlignment="Top" x:Name="ThresholdSliderContainer">
+                                <!-- CreateThresholdSliders adds ThresholdSliders here. -->
+                            </DockPanel>
+                        </ScrollViewer>
                         <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,25,0,0" VerticalAlignment="Top"
                                    xml:space="preserve"
                                    TextAlignment="Center"
@@ -879,6 +877,8 @@ panel to detect releases more quickly.
                                 DockPanel.Dock="Right" Content="Advanced view"
                                 VerticalAlignment="Center" HorizontalAlignment="Right"
                                 IsChecked="{Binding Path=AdvancedModeEnabled, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
+                                Checked="AdvancedModeEnabledCheckbox_Changed"
+                                Unchecked="AdvancedModeEnabledCheckbox_Changed"
                             />
                         </DockPanel>
                     </DockPanel>

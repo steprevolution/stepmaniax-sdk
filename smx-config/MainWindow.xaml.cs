@@ -68,6 +68,85 @@ namespace smx_config
             };
         }
 
+        List<string> thresholdSliderNames = new List<string>()
+        {
+            "up-left", "up", "up-right", "left", "center", "right", "down-left", "down", "down-right", "cardinal", "corner",
+        };
+
+        Dictionary<string,string> thresholdToIcon = new Dictionary<string, string>()
+        {
+            { "up-left",   "Resources/pad_up_left.png" },
+            { "up",        "Resources/pad_up.png" },
+            { "up-right",  "Resources/pad_up_right.png" },
+            { "left",      "Resources/pad_left.png" },
+            { "center",    "Resources/pad_center.png" },
+            { "right",     "Resources/pad_right.png" },
+            { "down-left", "Resources/pad_down_left.png" },
+            { "down",      "Resources/pad_down.png" },
+            { "down-right","Resources/pad_down_right.png" },
+            { "cardinal",  "Resources/pad_cardinal.png" },
+            { "corner",    "Resources/pad_diagonal.png" },
+        };
+
+        bool IsThresholdSliderShown(string type)
+        {
+            bool AdvancedModeEnabled = (bool) AdvancedModeEnabledCheckbox.IsChecked;
+            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
+            bool[] enabledPanels = config.GetEnabledPanels();
+
+            // Up and center are shown in both modes.
+            switch(type)
+            {
+            case "up-left":    return  AdvancedModeEnabled && enabledPanels[0];
+            case "up":         return                         enabledPanels[1];
+            case "up-right":   return  AdvancedModeEnabled && enabledPanels[2];
+            case "left":       return  AdvancedModeEnabled && enabledPanels[3];
+            case "center":     return                         enabledPanels[4];
+            case "right":      return  AdvancedModeEnabled && enabledPanels[5];
+            case "down-left":  return  AdvancedModeEnabled && enabledPanels[6];
+            case "down":       return  AdvancedModeEnabled && enabledPanels[7];
+            case "down-right": return  AdvancedModeEnabled && enabledPanels[8];
+
+            // Show cardinal and corner if at least one panel they affect is enabled.
+            case "cardinal":   return !AdvancedModeEnabled && (enabledPanels[3] || enabledPanels[5] || enabledPanels[8]);
+            case "corner":     return !AdvancedModeEnabled && (enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8]);
+            default:           return true;
+            }
+        }
+
+        ThresholdSlider CreateThresholdSlider(string type)
+        {
+            ThresholdSlider slider = new ThresholdSlider();
+            slider.Type = type;
+            string iconPath = "pack://application:,,,/" + thresholdToIcon[type];
+            slider.Icon = (new ImageSourceConverter()).ConvertFromString(iconPath) as ImageSource;
+            return slider;
+        }
+
+        void CreateThresholdSliders()
+        {
+            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
+            bool[] enabledPanels = config.GetEnabledPanels();
+
+            // remove the threshold sliders from xaml, create them all here
+            //
+            // remove the AdvancedModeEnabled binding and ShouldBeDisplayed, handle that here
+            // by creating the ones we need
+            //
+            // then we can add custom sliders too
+            ThresholdSliderContainer.Children.Clear();
+            foreach(string sliderName in thresholdSliderNames)
+            {
+                if(!IsThresholdSliderShown(sliderName))
+                    continue;
+
+                ThresholdSlider slider = CreateThresholdSlider(sliderName);
+                DockPanel.SetDock(slider, Dock.Top);
+                slider.Margin = new Thickness(0,8,0,0);
+                ThresholdSliderContainer.Children.Add(slider);
+            }
+        }
+
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -82,6 +161,8 @@ namespace smx_config
             AutoLightsColor.StartedDragging += delegate() { showAutoLightsColor.Start(); };
             AutoLightsColor.StoppedDragging += delegate() { showAutoLightsColor.Stop(); };
             AutoLightsColor.StoppedDragging += delegate() { showAutoLightsColor.Stop(); };
+
+            CreateThresholdSliders();
 
             // This doesn't happen at the same time AutoLightsColor is used, since they're on different tabs.
             Diagnostics.SetShowAllLights += delegate(bool on)
@@ -181,6 +262,12 @@ namespace smx_config
             RefreshConnectedPadList(args);
             RefreshUploadPadText(args);
             RefreshSelectedColorPicker();
+
+            // If a device has connected or disconnected, refresh the displayed threshold
+            // sliders.  Don't do this otherwise, or we'll do this when the sliders are
+            // dragged.
+            if(args.ConnectionsChanged)
+                CreateThresholdSliders();
 
             // Show the threshold warning explanation if any panels are showing the threshold warning icon.
             bool ShowThresholdWarningText = false;
@@ -383,6 +470,11 @@ namespace smx_config
                 SMX.SMX.FactoryReset(pad);
             }
             CurrentSMXDevice.singleton.FireConfigurationChanged(null);
+        }
+
+        private void AdvancedModeEnabledCheckbox_Changed(object sender, RoutedEventArgs e)
+        {
+            CreateThresholdSliders();
         }
 
         private void ExportSettings(object sender, RoutedEventArgs e)
