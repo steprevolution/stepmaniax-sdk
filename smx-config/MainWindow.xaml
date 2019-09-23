@@ -725,7 +725,8 @@ Use if the platform is too sensitive.</clr:String>
                    HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="0 0 0 10" />
         </Grid>
 
-        <TabControl x:Name="Main" Margin="0,0,0,0" Visibility='Visible' HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <TabControl x:Name="Main" Margin="0,0,0,0" Visibility='Visible' HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                    SelectionChanged="MainTab_Selected">
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
                     <StackPanel Margin="0,0,0,0" VerticalAlignment="Top">

@@ -652,5 +652,12 @@ namespace smx_config
 
             return IntPtr.Zero;
         }
+
+        private void MainTab_Selected(object sender, RoutedEventArgs e)
+        {
+            // Refresh the threshold sliders, in case the enabled panels were changed
+            // on the advanced tab.
+            CreateThresholdSliders();
+        }
     }
 } 
