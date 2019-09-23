@@ -377,6 +377,92 @@ namespace smx_config
         public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
     }
 
+    // The threshold sliders in the advanced tab affect different panels and sensors depending
+    // on the user's settings.  This handles managing which sensors each slider controls.
+    static class ThresholdSettings
+    {
+        public struct PanelAndSensor
+        {
+            public PanelAndSensor(int panel, int sensor)
+            {
+                this.panel = panel;
+                this.sensor = sensor;
+            }
+            public int panel;
+            public int sensor;
+        };
+        
+        // These correspond with ThresholdSlider.Type.
+        static Dictionary<string, int> panelNameToIndex = new Dictionary<string, int>() {
+            { "up-left",    0 },
+            { "up",         1 },
+            { "up-right",   2 },
+            { "left",       3 },
+            { "center",     4 },
+            { "right",      5 },
+            { "down-left",  6 },
+            { "down",       7 },
+            { "down-right", 8 },
+
+            // The cardinal and corner sliders write to the down and up-right panels, and
+            // are then synced to the other panels.
+            { "cardinal",   7 },
+            { "corner",     2 },
+        };
+
+        static public List<PanelAndSensor> GetControlledSensorsForSliderType(string Type, bool advancedMode)
+        {
+            List<PanelAndSensor> result = new List<PanelAndSensor>();
+
+            // Check if this slider is shown in this mode.
+            if(advancedMode)
+            {
+                // Hide the combo sliders in advanced mode.
+                if(Type == "cardinal" || Type == "corner")
+                    return result;
+            }
+
+            if(!advancedMode)
+            {
+                // Only these sliders are shown in normal mode.
+                if(Type != "up" && Type != "center" && Type != "cardinal" && Type != "corner")
+                    return result;
+            }
+
+            // If advanced mode is disabled, save to all panels this slider affects.  The down arrow controls
+            // all four cardinal panels.  (If advanced mode is enabled we'll never be a different cardinal
+            // direction, since those widgets won't exist.)  If it's disabled, just write to our own panel.
+            List<int> saveToPanels = new List<int>();
+            int ourPanelIdx = panelNameToIndex[Type];
+            saveToPanels.Add(ourPanelIdx);
+            if(!advancedMode)
+                saveToPanels.AddRange(ConfigPresets.GetPanelsToSyncUnifiedThresholds(ourPanelIdx));
+
+            foreach(int panelIdx in saveToPanels)
+            {
+                for(int sensor = 0; sensor < 4; ++sensor)
+                {
+                    PanelAndSensor panelAndSensor = new PanelAndSensor(panelIdx, sensor);
+                    result.Add(panelAndSensor);
+                }
+            }
+
+            return result;
+        }
+
+        // Return the sensors that are controlled by the aux threshold slider.  The other
+        // threshold sliders will leave these alone.
+        static public List<PanelAndSensor> GetAuxSensors()
+        {
+            List<PanelAndSensor> result = new List<PanelAndSensor>();
+            result.Add(new PanelAndSensor(1,0));
+            result.Add(new PanelAndSensor(1,1));
+            result.Add(new PanelAndSensor(1,2));
+            result.Add(new PanelAndSensor(1,3));
+            return result;
+        }
+    }
+
     // This class just makes it easier to assemble binary command packets.
     public class CommandBuffer
     {

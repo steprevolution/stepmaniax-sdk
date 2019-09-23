@@ -113,27 +113,46 @@ namespace smx_config
                 200, 219, 212, 225);
         }
 
+        // Return the extra panels that the given panel's sensitivities control when
+        // advanced threshold mode is off.
+        static public List<int> GetPanelsToSyncUnifiedThresholds(int fromPanel)
+        {
+            List<int> result = new List<int>();
+            switch(fromPanel)
+            {
+            case 7: // down (cardinal)
+                result.Add(3); // left
+                result.Add(5); // right
+                break;
+            case 2: // up-right (corners)
+                result.Add(0); // up-left
+                result.Add(6); // down-left
+                result.Add(8); // down-right
+                break;
+            }
+            return result;
+        }
+
         // The simplified configuration scheme sets thresholds for up, center, cardinal directions
         // and corners.  Rev1 firmware uses those only.  Copy cardinal directions (down) to the
         // other cardinal directions (except for up, which already had its own setting) and corners
         // to the other corners.
         static public void SyncUnifiedThresholds(ref SMX.SMXConfig config)
         {
-            // left = right = down (cardinal)
-            config.panelSettings[3].loadCellLowThreshold = config.panelSettings[5].loadCellLowThreshold = config.panelSettings[7].loadCellLowThreshold;
-            config.panelSettings[3].loadCellHighThreshold = config.panelSettings[5].loadCellHighThreshold = config.panelSettings[7].loadCellHighThreshold;
-
-            // UL = DL = DR = UR (corners)
-            config.panelSettings[0].loadCellLowThreshold = config.panelSettings[6].loadCellLowThreshold = config.panelSettings[8].loadCellLowThreshold = config.panelSettings[2].loadCellLowThreshold;
-            config.panelSettings[0].loadCellHighThreshold = config.panelSettings[6].loadCellHighThreshold = config.panelSettings[8].loadCellHighThreshold = config.panelSettings[2].loadCellHighThreshold;
-
-            // Do the same for FSR thresholds.
-            for(int sensor = 0; sensor < 4; ++sensor)
+            for(int fromPanel = 0; fromPanel < 9; ++fromPanel)
             {
-                config.panelSettings[3].fsrLowThreshold[sensor] = config.panelSettings[5].fsrLowThreshold[sensor] = config.panelSettings[7].fsrLowThreshold[sensor];
-                config.panelSettings[3].fsrHighThreshold[sensor] = config.panelSettings[5].fsrHighThreshold[sensor] = config.panelSettings[7].fsrHighThreshold[sensor];
-                config.panelSettings[0].fsrLowThreshold[sensor] = config.panelSettings[6].fsrLowThreshold[sensor] = config.panelSettings[8].fsrLowThreshold[sensor] = config.panelSettings[2].fsrLowThreshold[sensor];
-                config.panelSettings[0].fsrHighThreshold[sensor] = config.panelSettings[6].fsrHighThreshold[sensor] = config.panelSettings[8].fsrHighThreshold[sensor] = config.panelSettings[2].fsrHighThreshold[sensor];
+                foreach(int toPanel in GetPanelsToSyncUnifiedThresholds(fromPanel))
+                {
+                    config.panelSettings[toPanel].loadCellLowThreshold = config.panelSettings[fromPanel].loadCellLowThreshold;
+                    config.panelSettings[toPanel].loadCellHighThreshold = config.panelSettings[fromPanel].loadCellHighThreshold;
+
+                    // Do the same for FSR thresholds.
+                    for(int sensor = 0; sensor < 4; ++sensor)
+                    {
+                        config.panelSettings[toPanel].fsrLowThreshold[sensor] = config.panelSettings[fromPanel].fsrLowThreshold[sensor];
+                        config.panelSettings[toPanel].fsrHighThreshold[sensor] = config.panelSettings[fromPanel].fsrHighThreshold[sensor];
+                    }
+                }
             }
         }
 

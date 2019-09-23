@@ -118,7 +118,7 @@ namespace SMX
         //
         // Higher low threshold values make the panel respond to the panel being released more
         // quickly.  It shouldn't be set too low.
-        public bool ShowThresholdWarning(int panel)
+        public bool ShowThresholdWarning(int panel, int sensor)
         {
             if(!fsr())
                 return false;
@@ -127,7 +127,7 @@ namespace SMX
             if(!GetEnabledPanels()[panel])
                 return false;
 
-            int lower = panelSettings[panel].fsrLowThreshold[0];
+            int lower = panelSettings[panel].fsrLowThreshold[sensor];
             int MinimumRecommendedLowThreshold = 140;
             return lower < MinimumRecommendedLowThreshold;
         }

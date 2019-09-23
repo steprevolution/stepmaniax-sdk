@@ -94,22 +94,33 @@ namespace smx_config
             SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
             bool[] enabledPanels = config.GetEnabledPanels();
 
-            // Up and center are shown in both modes.
+            // Check the list of sensors this slider controls.  If the list is empty, don't show it.
+            // For example, if the user adds all four sensors on the up panel to aux, the up button
+            // has nothing left to control, so we'll hide it.
+            List<ThresholdSettings.PanelAndSensor> panelAndSensors = ThresholdSettings.GetControlledSensorsForSliderType(type, AdvancedModeEnabled);
+            if(panelAndSensors.Count == 0)
+                return false;
+
+            // Hide thresholds that only affect panels that are disabled, so we don't show
+            // corner panel sliders in advanced mode if the corner panels are disabled.  We
+            // don't handle this in GetControlledSensorsForSliderType, since we do want cardinal
+            // and corner to write thresholds to disabled panels, so they're in sync if they're
+            // turned back on.
             switch(type)
             {
-            case "up-left":    return  AdvancedModeEnabled && enabledPanels[0];
-            case "up":         return                         enabledPanels[1];
-            case "up-right":   return  AdvancedModeEnabled && enabledPanels[2];
-            case "left":       return  AdvancedModeEnabled && enabledPanels[3];
-            case "center":     return                         enabledPanels[4];
-            case "right":      return  AdvancedModeEnabled && enabledPanels[5];
-            case "down-left":  return  AdvancedModeEnabled && enabledPanels[6];
-            case "down":       return  AdvancedModeEnabled && enabledPanels[7];
-            case "down-right": return  AdvancedModeEnabled && enabledPanels[8];
+            case "up-left":    return  enabledPanels[0];
+            case "up":         return  enabledPanels[1];
+            case "up-right":   return  enabledPanels[2];
+            case "left":       return  enabledPanels[3];
+            case "center":     return  enabledPanels[4];
+            case "right":      return  enabledPanels[5];
+            case "down-left":  return  enabledPanels[6];
+            case "down":       return  enabledPanels[7];
+            case "down-right": return  enabledPanels[8];
 
             // Show cardinal and corner if at least one panel they affect is enabled.
-            case "cardinal":   return !AdvancedModeEnabled && (enabledPanels[3] || enabledPanels[5] || enabledPanels[8]);
-            case "corner":     return !AdvancedModeEnabled && (enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8]);
+            case "cardinal":   return enabledPanels[3] || enabledPanels[5] || enabledPanels[8];
+            case "corner":     return enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8];
             default:           return true;
             }
         }
@@ -276,8 +287,11 @@ namespace smx_config
                 SMX.SMXConfig config = activePad.Item2;
                 for(int panelIdx = 0; panelIdx < 9; ++panelIdx)
                 {
-                    if(config.ShowThresholdWarning(panelIdx))
-                        ShowThresholdWarningText = true;
+                    for(int sensor = 0; sensor < 4; ++sensor)
+                    {
+                        if(config.ShowThresholdWarning(panelIdx, sensor))
+                            ShowThresholdWarningText = true;
+                    }
                 }
             }
             ThresholdWarningText.Visibility = ShowThresholdWarningText? Visibility.Visible : Visibility.Hidden;

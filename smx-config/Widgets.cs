@@ -136,57 +136,52 @@ namespace smx_config
             });
         }
 
-        Dictionary<string, int> panelNameToIndex = new Dictionary<string, int>() {
-            { "up-left",    0 },
-            { "up",         1 },
-            { "up-right",   2 },
-            { "left",       3 },
-            { "center",     4 },
-            { "right",      5 },
-            { "down-left",  6 },
-            { "down",       7 },
-            { "down-right", 8 },
+        // Return the panel/sensors this widget controls.
+        //
+        // This returns values for FSRs.  We don't configure individual sensors with load cells,
+        // and the sensor value will be ignored.
+        private List<ThresholdSettings.PanelAndSensor> GetControlledSensors()
+        {
+            return ThresholdSettings.GetControlledSensorsForSliderType(Type, AdvancedModeEnabled);
+        }
 
-            // The cardinal and corner sliders write to the down and up-right panels, and
-            // are then synced to the other panels by SyncUnifiedThresholds.
-            { "cardinal",   7 },
-            { "corner",     2 },
-        };
+
         private void SetValueToConfig(ref SMX.SMXConfig config)
         {
-            int panelIdx = panelNameToIndex[Type];
-            if(!config.fsr())
+            List<ThresholdSettings.PanelAndSensor> panelAndSensors = GetControlledSensors();
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in panelAndSensors)
             {
-                byte lower = (byte) slider.LowerValue;
-                byte upper = (byte) slider.UpperValue;
-                config.panelSettings[panelIdx].loadCellLowThreshold = lower;
-                config.panelSettings[panelIdx].loadCellHighThreshold = upper;
-            } else {
-                byte lower = (byte) slider.LowerValue;
-                byte upper = (byte) slider.UpperValue;
-                for(int sensor = 0; sensor < 4; ++sensor)
+                if(!config.fsr())
                 {
-                    config.panelSettings[panelIdx].fsrLowThreshold[sensor] = lower;
-                    config.panelSettings[panelIdx].fsrHighThreshold[sensor] = upper;
+                    byte lower = (byte) slider.LowerValue;
+                    byte upper = (byte) slider.UpperValue;
+                    config.panelSettings[panelAndSensor.panel].loadCellLowThreshold = lower;
+                    config.panelSettings[panelAndSensor.panel].loadCellHighThreshold = upper;
+                } else {
+                    byte lower = (byte) slider.LowerValue;
+                    byte upper = (byte) slider.UpperValue;
+                    config.panelSettings[panelAndSensor.panel].fsrLowThreshold[panelAndSensor.sensor] = lower;
+                    config.panelSettings[panelAndSensor.panel].fsrHighThreshold[panelAndSensor.sensor] = upper;
                 }
             }
-
-            // If we're not in advanced mode, sync the cardinal value to each of the panel values.
-            if(!AdvancedModeEnabled)
-                ConfigPresets.SyncUnifiedThresholds(ref config);
         }
 
         private void GetValueFromConfig(SMX.SMXConfig config, out int lower, out int upper)
         {
-            int panelIdx = panelNameToIndex[Type];
+            lower = upper = 0;
 
-            if(!config.fsr())
+            // Use the first controlled sensor.  The rest should be the same.
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in GetControlledSensors())
             {
-                lower = config.panelSettings[panelIdx].loadCellLowThreshold;
-                upper = config.panelSettings[panelIdx].loadCellHighThreshold;
-            } else {
-                lower = config.panelSettings[panelIdx].fsrLowThreshold[0];
-                upper = config.panelSettings[panelIdx].fsrHighThreshold[0];
+                if(!config.fsr())
+                {
+                    lower = config.panelSettings[panelAndSensor.panel].loadCellLowThreshold;
+                    upper = config.panelSettings[panelAndSensor.panel].loadCellHighThreshold;
+                } else {
+                    lower = config.panelSettings[panelAndSensor.panel].fsrLowThreshold[panelAndSensor.sensor];
+                    upper = config.panelSettings[panelAndSensor.panel].fsrHighThreshold[panelAndSensor.sensor];
+                }
+                return;
             }
         }
 
@@ -245,8 +240,13 @@ namespace smx_config
                 UpperLabel.Content = upper.ToString();
             }
 
-            int panelIdx = panelNameToIndex[Type];
-            bool ShowThresholdWarning = config.ShowThresholdWarning(panelIdx);
+            bool ShowThresholdWarning = false;
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in GetControlledSensors())
+            {
+                if(config.ShowThresholdWarning(panelAndSensor.panel, panelAndSensor.sensor))
+                    ShowThresholdWarning = true;
+            }
+
             ThresholdWarning.Visibility = ShowThresholdWarning? Visibility.Visible:Visibility.Hidden;
 
             UpdatingUI = false;
