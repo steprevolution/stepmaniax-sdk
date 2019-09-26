@@ -69,39 +69,29 @@ namespace smx_config
             };
         }
 
-        List<string> thresholdSliderNames = new List<string>()
-        {
-            "up-left", "up", "up-right", "left", "center", "right", "down-left", "down", "down-right", "cardinal", "corner", "aux",
-        };
-
-        Dictionary<string, string> thresholdToIcon = new Dictionary<string, string>()
-        {
-            { "up-left",   "Resources/pad_up_left.png" },
-            { "up",        "Resources/pad_up.png" },
-            { "up-right",  "Resources/pad_up_right.png" },
-            { "left",      "Resources/pad_left.png" },
-            { "center",    "Resources/pad_center.png" },
-            { "right",     "Resources/pad_right.png" },
-            { "down-left", "Resources/pad_down_left.png" },
-            { "down",      "Resources/pad_down.png" },
-            { "down-right","Resources/pad_down_right.png" },
-            { "cardinal",  "Resources/pad_cardinal.png" },
-            { "corner",    "Resources/pad_diagonal.png" },
-            { "aux",       "Resources/pad_diagonal.png" },
-        };
-
         bool IsThresholdSliderShown(string type)
         {
-            bool AdvancedModeEnabled = (bool)AdvancedModeEnabledCheckbox.IsChecked;
+            bool AdvancedModeEnabled = Properties.Settings.Default.AdvancedMode;
             SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
             bool[] enabledPanels = config.GetEnabledPanels();
 
             // Check the list of sensors this slider controls.  If the list is empty, don't show it.
-            // For example, if the user adds all four sensors on the up panel to aux, the up button
-            // has nothing left to control, so we'll hide it.
-            List<ThresholdSettings.PanelAndSensor> panelAndSensors = ThresholdSettings.GetControlledSensorsForSliderType(type, AdvancedModeEnabled);
-            if(panelAndSensors.Count == 0)
-                return false;
+            // For example, if the user adds all four sensors on the up panel to custom-sensors, the
+            // up button has nothing left to control, so we'll hide it.
+            //
+            // Don't do this for custom, inner-sensors or outer-sensors.  Those are always shown in
+            // advanced mode.
+            List<ThresholdSettings.PanelAndSensor> panelAndSensors = ThresholdSettings.GetControlledSensorsForSliderType(type, AdvancedModeEnabled, false);
+            if(type == "custom-sensors" || type == "inner-sensors" || type == "outer-sensors")
+            {
+                if(!AdvancedModeEnabled || !config.fsr())
+                    return false;
+            }
+            else
+            {
+                if(panelAndSensors.Count == 0)
+                    return false;
+            }
 
             // Hide thresholds that only affect panels that are disabled, so we don't show
             // corner panel sliders in advanced mode if the corner panels are disabled.  We
@@ -131,24 +121,17 @@ namespace smx_config
         {
             ThresholdSlider slider = new ThresholdSlider();
             slider.Type = type;
-            string iconPath = "pack://application:,,,/" + thresholdToIcon[type];
-            slider.Icon = (new ImageSourceConverter()).ConvertFromString(iconPath) as ImageSource;
             return slider;
         }
 
         void CreateThresholdSliders()
         {
-            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
-            bool[] enabledPanels = config.GetEnabledPanels();
-
             // remove the threshold sliders from xaml, create them all here
             //
             // remove the AdvancedModeEnabled binding and ShouldBeDisplayed, handle that here
             // by creating the ones we need
-            //
-            // then we can add custom sliders too
             ThresholdSliderContainer.Children.Clear();
-            foreach(string sliderName in thresholdSliderNames)
+            foreach(string sliderName in ThresholdSettings.thresholdSliderNames)
             {
                 if(!IsThresholdSliderShown(sliderName))
                     continue;
@@ -158,6 +141,8 @@ namespace smx_config
                 slider.Margin = new Thickness(0, 8, 0, 0);
                 ThresholdSliderContainer.Children.Add(slider);
             }
+
+            ThresholdSettings.SyncSliderThresholds();
         }
 
         public override void OnApplyTemplate()
@@ -598,12 +583,6 @@ namespace smx_config
 
                 break;
             }
-        }
-
-        private void SetAuxSensors_Click(object sender, RoutedEventArgs e)
-        {
-            SetAuxSensors dialog = new SetAuxSensors();
-            dialog.ShowDialog();
         }
 
         private void UploadLatestGIF()

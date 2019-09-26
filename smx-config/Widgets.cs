@@ -12,11 +12,7 @@ using System.Collections.Generic;
 
 namespace smx_config
 {
-    // The checkbox to enable and disable the advanced per-panel sliders.
-    //
-    // This is always enabled if the thresholds in the configuration are set to different
-    // values.  If the user enables us, we'll remember that we were forced on.  If the user
-    // disables us, we'll sync the thresholds back up and turn the ForcedOn flag off.
+    // The checkbox to enable and disable the advanced per-panel sliders (Settings.Default.AdvancedMode).
     public class AdvancedThresholdViewCheckbox: CheckBox
     {
         public static readonly DependencyProperty AdvancedModeEnabledProperty = DependencyProperty.Register("AdvancedModeEnabled",
@@ -28,10 +24,6 @@ namespace smx_config
 
         OnConfigChange onConfigChange;
 
-        // If true, the user enabled advanced view and we should display it even if
-        // the thresholds happen to be synced.  If false, we'll only show the advanced
-        // view if we need to because the thresholds aren't synced.
-        bool ForcedOn;
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -48,38 +40,21 @@ namespace smx_config
             bool SupportsAdvancedMode = config.masterVersion != 0xFF && config.masterVersion >= 2;
             Visibility = SupportsAdvancedMode? Visibility.Visible:Visibility.Collapsed;
 
-            // If the thresholds are different, force the checkbox on.  This way, if you load the application
-            // with a platform with per-panel thresholds, and change the thresholds to no longer be different,
-            // advanced mode stays forced on.  It'll only turn off if you uncheck the box, or if you exit
-            // the application with synced thresholds and then restart it.
-            if(SupportsAdvancedMode && !ConfigPresets.AreUnifiedThresholdsSynced(config))
-                ForcedOn = true;
+            // If the controller doesn't support advanced mode, make sure advanced mode is disabled.
+            if(!SupportsAdvancedMode)
+                Properties.Settings.Default.AdvancedMode = false;
 
-            // Enable advanced mode if the master says it's supported, and either the user has checked the
-            // box to turn it on or the thresholds are different in the current configuration.
-            AdvancedModeEnabled = SupportsAdvancedMode && ForcedOn;
+            AdvancedModeEnabled = Properties.Settings.Default.AdvancedMode;
         }
 
         protected override void OnClick()
         {
-            if(AdvancedModeEnabled)
+            Properties.Settings.Default.AdvancedMode = !Properties.Settings.Default.AdvancedMode;
+            if(!Properties.Settings.Default.AdvancedMode)
             {
-                // Stop forcing advanced mode on, and sync the thresholds so we exit advanced mode.
-                ForcedOn = false;
-
-                foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
-                {
-                    int pad = activePad.Item1;
-                    SMX.SMXConfig config = activePad.Item2;
-                    ConfigPresets.SyncUnifiedThresholds(ref config);
-                    SMX.SMX.SetConfig(pad, config);
-                }
-                CurrentSMXDevice.singleton.FireConfigurationChanged(this);
-            }
-            else
-            {
-                // Enable advanced mode.
-                ForcedOn = true;
+                // Sync thresholds when we exit advanced mode.  XXX: not needed since MainWindow is recreating
+                // sliders anyway
+                ThresholdSettings.SyncSliderThresholds();
             }
 
             // Refresh the UI.
@@ -90,20 +65,33 @@ namespace smx_config
     // This implements the threshold slider widget for changing an upper/lower threshold pair.
     public class ThresholdSlider: Control
     {
-        public static readonly DependencyProperty IconProperty = DependencyProperty.Register("Icon",
-            typeof(ImageSource), typeof(ThresholdSlider), new FrameworkPropertyMetadata(null));
-
-        public ImageSource Icon {
-            get { return (ImageSource) GetValue(IconProperty); }
-            set { SetValue(IconProperty, value); }
-        }
-
         public static readonly DependencyProperty TypeProperty = DependencyProperty.Register("Type",
             typeof(string), typeof(ThresholdSlider), new FrameworkPropertyMetadata(""));
 
         public string Type {
             get { return (string) GetValue(TypeProperty); }
             set { SetValue(TypeProperty, value); }
+        }
+
+        // If false, this threshold hasn't been enabled by the user.  The slider will be greyed out.  This
+        // is different from our own IsEnabled, since setting that to false would also disable EnabledCheckbox,
+        // preventing it from being turned back on.
+        public static readonly DependencyProperty ThresholdEnabledProperty = DependencyProperty.Register("ThresholdEnabled",
+            typeof(bool), typeof(ThresholdSlider), new FrameworkPropertyMetadata(true));
+
+        public bool ThresholdEnabled {
+            get { return (bool) GetValue(ThresholdEnabledProperty); }
+            set { SetValue(ThresholdEnabledProperty, value); }
+        }
+
+        // This is set to true if the slider is enabled and the low/high values are displayed.  We set this to
+        // false when the slider is disabled (or has no selected sensors, for custom-sliders).
+        public static readonly DependencyProperty SliderActiveProperty = DependencyProperty.Register("SliderActive",
+            typeof(bool), typeof(ThresholdSlider), new FrameworkPropertyMetadata(true));
+
+        public bool SliderActive {
+            get { return (bool) GetValue(SliderActiveProperty); }
+            set { SetValue(SliderActiveProperty, value); }
         }
 
         public static readonly DependencyProperty AdvancedModeEnabledProperty = DependencyProperty.Register("AdvancedModeEnabled",
@@ -117,6 +105,7 @@ namespace smx_config
         DoubleSlider slider;
         Label LowerLabel, UpperLabel;
         Image ThresholdWarning;
+        PlatformSensorDisplay SensorDisplay;
 
         OnConfigChange onConfigChange;
 
@@ -128,27 +117,46 @@ namespace smx_config
             LowerLabel = GetTemplateChild("LowerValue") as Label;
             UpperLabel = GetTemplateChild("UpperValue") as Label;
             ThresholdWarning = GetTemplateChild("ThresholdWarning") as Image;
+            SensorDisplay = GetTemplateChild("PlatformSensorDisplay") as PlatformSensorDisplay;
 
             slider.ValueChanged += delegate(DoubleSlider slider) { SaveToConfig(); };
+
+            // Show the edit button for the custom-sensors slider.
+            Button EditCustomSensorsButton = GetTemplateChild("EditCustomSensorsButton") as Button;
+            EditCustomSensorsButton.Visibility = Type == "custom-sensors"? Visibility.Visible:Visibility.Hidden;
+            EditCustomSensorsButton.Click += delegate(object sender, RoutedEventArgs e)
+            {
+                SetCustomSensors dialog = new SetCustomSensors();
+                dialog.Owner = Window.GetWindow(this);
+                dialog.ShowDialog();
+            };
 
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
                 LoadUIFromConfig(ActivePad.GetFirstActivePadConfig(args));
             });
         }
 
+        private void RefreshSliderActiveProperty()
+        {
+            if(Type == "custom-sensors")
+                SliderActive = ThresholdSettings.GetCustomSensors().Count > 0;
+            else
+                SliderActive = ThresholdEnabled;
+        }
+
         // Return the panel/sensors this widget controls.
         //
         // This returns values for FSRs.  We don't configure individual sensors with load cells,
         // and the sensor value will be ignored.
-        private List<ThresholdSettings.PanelAndSensor> GetControlledSensors()
+        private List<ThresholdSettings.PanelAndSensor> GetControlledSensors(bool includeOverridden)
         {
-            return ThresholdSettings.GetControlledSensorsForSliderType(Type, AdvancedModeEnabled);
+            return ThresholdSettings.GetControlledSensorsForSliderType(Type, AdvancedModeEnabled, includeOverridden);
         }
 
 
         private void SetValueToConfig(ref SMX.SMXConfig config)
         {
-            List<ThresholdSettings.PanelAndSensor> panelAndSensors = GetControlledSensors();
+            List<ThresholdSettings.PanelAndSensor> panelAndSensors = GetControlledSensors(false);
             foreach(ThresholdSettings.PanelAndSensor panelAndSensor in panelAndSensors)
             {
                 if(!config.fsr())
@@ -171,7 +179,7 @@ namespace smx_config
             lower = upper = 0;
 
             // Use the first controlled sensor.  The rest should be the same.
-            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in GetControlledSensors())
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in GetControlledSensors(false))
             {
                 if(!config.fsr())
                 {
@@ -208,6 +216,8 @@ namespace smx_config
             // Make sure SaveToConfig doesn't treat these as the user changing values.
             UpdatingUI = true;
 
+            RefreshSliderActiveProperty();
+
             // Set the range for the slider.
             if(config.fsr())
             {
@@ -240,8 +250,9 @@ namespace smx_config
                 UpperLabel.Content = upper.ToString();
             }
 
+            List<ThresholdSettings.PanelAndSensor> controlledSensors = GetControlledSensors(false);
             bool ShowThresholdWarning = false;
-            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in GetControlledSensors())
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in controlledSensors)
             {
                 if(config.ShowThresholdWarning(panelAndSensor.panel, panelAndSensor.sensor))
                     ShowThresholdWarning = true;
@@ -249,10 +260,74 @@ namespace smx_config
 
             ThresholdWarning.Visibility = ShowThresholdWarning? Visibility.Visible:Visibility.Hidden;
 
+            // SensorDisplay shows which sensors we control.  If this sensor is enabled, show the
+            // sensors this sensor controls.
+            // 
+            // If we're disabled, the icon will be empty.  That looks
+            // weird, so in that case we show 
+            // Set the icon next to the slider to show which sensors we control.
+            List<ThresholdSettings.PanelAndSensor> defaultControlledSensors = GetControlledSensors(true);
+            SensorDisplay.SetFromPanelAndSensors(controlledSensors, defaultControlledSensors);
+
             UpdatingUI = false;
         }
     }
-    
+
+    // The checkbox next to the threshold slider to turn it on or off.  This is only used
+    // for inner-sensors and outer-sensors, and hides itself automatically for others.
+    public class ThresholdEnabledButton: CheckBox
+    {
+        // Which threshold slider this is for.  This is bound to ThresholdSlider.Type above.
+        public static readonly DependencyProperty TypeProperty = DependencyProperty.Register("Type",
+            typeof(string), typeof(ThresholdEnabledButton), new FrameworkPropertyMetadata(""));
+        public string Type {
+            get { return (string) GetValue(TypeProperty); }
+            set { SetValue(TypeProperty, value); }
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            if(Type != "inner-sensors" && Type != "outer-sensors")
+            {
+                Visibility = Visibility.Hidden;
+                IsChecked = true;
+                return;
+            }
+
+            Checked += delegate(object sender, RoutedEventArgs e) { SaveToSettings(); };
+            Unchecked += delegate(object sender, RoutedEventArgs e) { SaveToSettings(); };
+
+            OnConfigChange onConfigChange;
+            onConfigChange = new OnConfigChange(this, delegate(LoadFromConfigDelegateArgs args) {
+                LoadFromSettings();
+            });
+        }
+
+        private void LoadFromSettings()
+        {
+            if(Type == "inner-sensors")
+                IsChecked = Properties.Settings.Default.UseInnerSensorThresholds;
+            else if(Type == "outer-sensors")
+                IsChecked = Properties.Settings.Default.UseOuterSensorThresholds;
+        }
+
+        private void SaveToSettings()
+        {
+            if(Type == "inner-sensors")
+                Properties.Settings.Default.UseInnerSensorThresholds = (bool) IsChecked;
+            else if(Type == "outer-sensors")
+                Properties.Settings.Default.UseOuterSensorThresholds = (bool) IsChecked;
+
+            Properties.Settings.Default.Save();
+
+            // Sync thresholds after enabling or disabling a slider.
+            ThresholdSettings.SyncSliderThresholds();
+
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+        }
+    }
+
     // A button with a selectable highlight.
     public class SelectableButton: Button
     {
@@ -1007,6 +1082,81 @@ namespace smx_config
                 SMX.SMX.SetConfig(pad, config);
             }
             CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+        }
+    }
+
+    public class PanelIconWithSensorsSensor: Control
+    {
+        // 0: black
+        // 1: dim highlight
+        // 2: bright highlight
+        public static readonly DependencyProperty HighlightProperty = DependencyProperty.Register("Highlight",
+            typeof(int), typeof(PanelIconWithSensorsSensor), new FrameworkPropertyMetadata(0));
+        public int Highlight {
+            get { return (int) GetValue(HighlightProperty); }
+            set { SetValue(HighlightProperty, value); }
+        }
+    }
+
+    // A control with one button for each of four sensors:
+    class PanelIconWithSensors: Control
+    {
+        PanelIconWithSensorsSensor[] panelIconWithSensorsSensor;
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            panelIconWithSensorsSensor = new PanelIconWithSensorsSensor[4];
+            for(int sensor = 0; sensor < 4; ++sensor)
+                panelIconWithSensorsSensor[sensor] = GetTemplateChild("Sensor" + sensor) as PanelIconWithSensorsSensor;
+        }
+
+
+        public PanelIconWithSensorsSensor GetSensorControl(int sensor)
+        {
+            return panelIconWithSensorsSensor[sensor];
+        }
+    }
+
+    public class PlatformSensorDisplay: Control
+    {
+        PanelIconWithSensors[] panelIconWithSensors;
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            panelIconWithSensors = new PanelIconWithSensors[9];
+            for(int panel = 0; panel < 9; ++panel)
+                panelIconWithSensors[panel] = GetTemplateChild("Panel" + panel) as PanelIconWithSensors;
+        }
+
+        private PanelIconWithSensorsSensor GetSensor(int panel, int sensor)
+        {
+            return panelIconWithSensors[panel].GetSensorControl(sensor);
+        }
+
+        // Highlight the sensors included in panelAndSensors, and dimly highlight the sensors in
+        // disabledPanelAndSensors.  If a sensor is in both lists, panelAndSensors takes priority.
+        public void SetFromPanelAndSensors(
+            List<ThresholdSettings.PanelAndSensor> panelAndSensors,
+            List<ThresholdSettings.PanelAndSensor> disabledPanelAndSensors)
+        {
+            UnhighlightAllSensors();
+
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in disabledPanelAndSensors)
+                GetSensor(panelAndSensor.panel, panelAndSensor.sensor).Highlight = 1;
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in panelAndSensors)
+                GetSensor(panelAndSensor.panel, panelAndSensor.sensor).Highlight = 2;
+        }
+
+        // Clear all sensor highlighting.
+        public void UnhighlightAllSensors()
+        {
+            for(int panel = 0; panel < 9; ++panel)
+            {
+                for(int sensor = 0; sensor < 4; ++sensor)
+                    GetSensor(panel, sensor).Highlight = 0;
+            }
         }
     }
 }

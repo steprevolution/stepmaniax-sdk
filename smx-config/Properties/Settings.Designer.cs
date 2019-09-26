@@ -38,12 +38,48 @@ namespace smx_config.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string AuxSensors {
+        public string CustomSensors {
             get {
-                return ((string)(this["AuxSensors"]));
+                return ((string)(this["CustomSensors"]));
             }
             set {
-                this["AuxSensors"] = value;
+                this["CustomSensors"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseInnerSensorThresholds {
+            get {
+                return ((bool)(this["UseInnerSensorThresholds"]));
+            }
+            set {
+                this["UseInnerSensorThresholds"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseOuterSensorThresholds {
+            get {
+                return ((bool)(this["UseOuterSensorThresholds"]));
+            }
+            set {
+                this["UseOuterSensorThresholds"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AdvancedMode {
+            get {
+                return ((bool)(this["AdvancedMode"]));
+            }
+            set {
+                this["AdvancedMode"] = value;
             }
         }
     }

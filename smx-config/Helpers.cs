@@ -379,7 +379,7 @@ namespace smx_config
 
     // The threshold sliders in the advanced tab affect different panels and sensors depending
     // on the user's settings.  This handles managing which sensors each slider controls.
-    static class ThresholdSettings
+    static public class ThresholdSettings
     {
         [Serializable]
         public struct PanelAndSensor
@@ -393,6 +393,17 @@ namespace smx_config
             public int sensor;
         };
         
+        public static List<string> thresholdSliderNames = new List<string>()
+        {
+            "up-left", "up", "up-right",
+            "left", "center", "right",
+            "down-left", "down", "down-right",
+            "cardinal", "corner",
+            "inner-sensors",
+            "outer-sensors",
+            "custom-sensors",
+        };
+
         // These correspond with ThresholdSlider.Type.
         static Dictionary<string, int> panelNameToIndex = new Dictionary<string, int>() {
             { "up-left",    0 },
@@ -409,15 +420,12 @@ namespace smx_config
             // are then synced to the other panels.
             { "cardinal",   7 },
             { "corner",     2 },
-
-            // The aux threshold allows giving a list of specific sensors different thresholds.
-            { "aux",        -1 },
         };
 
-        // Save and load the list of aux sensors to settings.  These aren't saved to the pad, we just
-        // keep them in application settings.
-        static List<PanelAndSensor> cachedAuxSensors;
-        static public void SetAuxSensors(List<PanelAndSensor> panelAndSensors)
+        // Save and load the list of custom threshold sensors to settings.  These aren't saved to the pad, we
+        // just keep them in application settings.
+        static List<PanelAndSensor> cachedCustomSensors;
+        static public void SetCustomSensors(List<PanelAndSensor> panelAndSensors)
         {
             List<object> result = new List<object>();
             foreach(PanelAndSensor panelAndSensor in panelAndSensors)
@@ -426,31 +434,38 @@ namespace smx_config
                 result.Add(panelAndSensorArray);
             }
 
-            Properties.Settings.Default.AuxSensors = SerializeJSON.Serialize(result);
+            SetCustomSensorsJSON(result);
+        }
+
+        // Set CustomSensors from a [[1,1],[2,2]] array.  This is what we save to settings and
+        // export to JSON.
+        static public void SetCustomSensorsJSON(List<object> panelAndSensors)
+        {
+            Properties.Settings.Default.CustomSensors = SerializeJSON.Serialize(panelAndSensors);
             Properties.Settings.Default.Save();
 
             // Clear the cache.  Set it to null instead of assigning panelAndSensors to it to force
             // it to re-parse at least once, to catch problems early.
-            cachedAuxSensors = null;
+            cachedCustomSensors = null;
         }
 
-        // Return the sensors that are controlled by the aux threshold slider.  The other
+        // Return the sensors that are controlled by the custom-sensors slider.  The other
         // threshold sliders will leave these alone.
-        static public List<PanelAndSensor> GetAuxSensors()
+        static public List<PanelAndSensor> GetCustomSensors()
         {
-//                Properties.Settings.Default.AuxSensors = "[[0,0], [1,0]]";
-            // This is only ever changed with calls to SetSavedAuxSensors.
-            if(cachedAuxSensors != null)
-                return Helpers.DeepClone(cachedAuxSensors);
+//            Properties.Settings.Default.CustomSensors = "[[0,0], [1,0]]";
+            // This is only ever changed with calls to SetCustomSensors.
+            if(cachedCustomSensors != null)
+                return Helpers.DeepClone(cachedCustomSensors);
 
             List<PanelAndSensor> result = new List<PanelAndSensor>();
-            if(Properties.Settings.Default.AuxSensors == "")
+            if(Properties.Settings.Default.CustomSensors == "")
                 return result;
 
             try {
                 // This is a list of [panel,sensor] arrays:
                 // [[0,0], [0,1], [1,0]]
-                List<object> sensors = SMXJSON.ParseJSON.Parse<List<object>>(Properties.Settings.Default.AuxSensors);
+                List<object> sensors = GetCustomSensorsJSON();
                 foreach(object panelAndSensorObj in sensors)
                 {
                     List<object> panelAndSensor = (List<object>) panelAndSensorObj;
@@ -465,18 +480,104 @@ namespace smx_config
                 return result;
             }
 
-            cachedAuxSensors = result;
-                // SetAuxSensors(result); // XXX
+            cachedCustomSensors = result;
 
-            // SetSavedAuxSensors(result);
-            return Helpers.DeepClone(cachedAuxSensors);
+            return Helpers.DeepClone(cachedCustomSensors);
         }
 
-        static public List<PanelAndSensor> GetControlledSensorsForSliderType(string Type, bool advancedMode)
+        static public List<object> GetCustomSensorsJSON()
         {
-            // The aux threshold slider always controls the aux sensors.
-            if(Type == "aux")
-                return GetAuxSensors();
+            return SMXJSON.ParseJSON.Parse<List<object>>(Properties.Settings.Default.CustomSensors);
+        }
+
+        const int SensorLeft = 0;
+        const int SensorRight = 1;
+        const int SensorUp = 2;
+        const int SensorDown = 3;
+        static public List<PanelAndSensor> GetInnerSensors()
+        {
+            return new List<PanelAndSensor>()
+            {
+                new PanelAndSensor(1,SensorDown), // up panel, bottom sensor
+                new PanelAndSensor(3,SensorRight), // left panel, right sensor
+                new PanelAndSensor(5,SensorLeft), // right panel, left sensor
+                new PanelAndSensor(7,SensorUp), // down panel, top sensor
+            };
+        }
+
+        static public List<PanelAndSensor> GetOuterSensors()
+        {
+            return new List<PanelAndSensor>()
+            {
+                new PanelAndSensor(1,SensorUp), // up panel, top sensor
+                new PanelAndSensor(3,SensorLeft), // left panel, left sensor
+                new PanelAndSensor(5,SensorRight), // right panel, right sensor
+                new PanelAndSensor(7,SensorDown), // down panel, bottom sensor
+            };
+        }
+        // Return the sensors controlled by the given slider.  Most of the work is done
+        // in GetControlledSensorsForSliderTypeInternal.  This just handles removing overlapping
+        // sensors.  If inner-sensors is enabled, the inner sensors are removed from the normal
+        // thresholds.
+        //
+        // This is really inefficient: it calls GetControlledSensorsForSliderTypeInternal a lot,
+        // and the filtering is a linear search, but it doesn't matter.
+        //
+        // If includeOverridden is true, include sensors that would be controlled by this slider
+        // by default, but which have been overridden by a higher priority slider, or which are
+        // disabled by checkboxes.  This is used for the UI.
+        static public List<PanelAndSensor> GetControlledSensorsForSliderType(string Type, bool advancedMode, bool includeOverridden)
+        {
+            List<PanelAndSensor> result = GetControlledSensorsForSliderTypeInternal(Type, advancedMode, includeOverridden);
+
+            if(!includeOverridden)
+            {
+                // inner-sensors, outer-sensors and custom thresholds overlap each other and the standard
+                // sliders.  inner-sensors and outer-sensors take over the equivalent sensors in the standard
+                // sliders, and custom thresholds take priority over everything else.
+                //
+                // We always pass false to includeOverridden here, since we need to know the real state of the
+                // sliders we're removing.
+                if(Type == "inner-sensors" || Type == "outer-sensors")
+                {
+                    // Remove any sensors controlled by the custom threshold.
+                    RemoveFromSensorList(result, GetControlledSensorsForSliderTypeInternal("custom-sensors", advancedMode, false));
+                }
+                else if(Type != "custom-sensors")
+                {
+                    // This is a regular slider.  Remove any sensors controlled by inner-sensors, outer-sensors
+                    // or custom-sensors.
+                    RemoveFromSensorList(result, GetControlledSensorsForSliderTypeInternal("inner-sensors", advancedMode, false));
+                    RemoveFromSensorList(result, GetControlledSensorsForSliderTypeInternal("outer-sensors", advancedMode, false));
+                    RemoveFromSensorList(result, GetControlledSensorsForSliderTypeInternal("custom-sensors", advancedMode, false));
+                }
+            }
+
+            return result;
+        }
+
+        static private void RemoveFromSensorList(List<PanelAndSensor> target, List<PanelAndSensor> sensorsToRemove)
+        {
+            foreach(PanelAndSensor panelAndSensor in sensorsToRemove)
+                target.Remove(panelAndSensor);
+        }
+
+        static private List<PanelAndSensor> GetControlledSensorsForSliderTypeInternal(string Type, bool advancedMode, bool includeOverridden)
+        {
+            // inner-sensors and outer-sensors do nothing if their checkbox is disabled.  We do this here because we
+            // need to skip this for the RemoveFromSensorList logic above.
+            if(!includeOverridden)
+            {
+                if(Type == "inner-sensors" && !Properties.Settings.Default.UseInnerSensorThresholds)
+                    return new List<PanelAndSensor>();
+                if(Type == "outer-sensors" && !Properties.Settings.Default.UseOuterSensorThresholds)
+                    return new List<PanelAndSensor>();
+            }
+
+            // Special sliders:
+            if(Type == "custom-sensors") return GetCustomSensors();
+            if(Type == "inner-sensors") return GetInnerSensors();
+            if(Type == "outer-sensors") return GetOuterSensors();
 
             List<PanelAndSensor> result = new List<PanelAndSensor>();
 
@@ -498,7 +599,6 @@ namespace smx_config
             // If advanced mode is disabled, save to all panels this slider affects.  The down arrow controls
             // all four cardinal panels.  (If advanced mode is enabled we'll never be a different cardinal
             // direction, since those widgets won't exist.)  If it's disabled, just write to our own panel.
-            List<PanelAndSensor> auxSensors = GetAuxSensors();
             List<int> saveToPanels = new List<int>();
             int ourPanelIdx = panelNameToIndex[Type];
             saveToPanels.Add(ourPanelIdx);
@@ -508,17 +608,59 @@ namespace smx_config
             foreach(int panelIdx in saveToPanels)
             {
                 for(int sensor = 0; sensor < 4; ++sensor)
-                {
-                    // Ignore sensors controlled by the aux threshold.
-                    PanelAndSensor panelAndSensor = new PanelAndSensor(panelIdx, sensor);
-                    if(auxSensors.Contains(panelAndSensor))
-                        continue;
-
-                    result.Add(panelAndSensor);
-                }
+                    result.Add(new PanelAndSensor(panelIdx, sensor));
             }
 
             return result;
+        }
+
+        // If the user disables inner-sensors after setting a value and control of those thresholds
+        // goes back to other sliders, the old inner-sensors thresholds will still be set in config
+        // until the user changes them, which is confusing.  Make sure the value of each slider is
+        // actually set to config, even if the user doesn't change them.
+        //
+        // This isn't perfect.  If the user assigns the first up sensor to custom and then removes it,
+        // so that sensor goes back to the normal up slider, this will sync the custom value to up.
+        // That's because we don't know which thresholds were actually being controlled by the up slider
+        // before it was changed.  This is tricky to fix and not a big problem.
+        private static void SyncSliderThresholdsForConfig(ref SMX.SMXConfig config)
+        {
+            if(!config.fsr())
+                return;
+
+            bool AdvancedModeEnabled = Properties.Settings.Default.AdvancedMode;
+            foreach(string sliderName in thresholdSliderNames)
+            {
+                List<PanelAndSensor> controlledSensors = GetControlledSensorsForSliderType(sliderName, AdvancedModeEnabled, false);
+                if(controlledSensors.Count == 0)
+                    continue;
+                PanelAndSensor firstSensor = controlledSensors[0];
+
+                foreach(PanelAndSensor panelAndSensor in controlledSensors)
+                {
+                    config.panelSettings[panelAndSensor.panel].fsrLowThreshold[panelAndSensor.sensor] = 
+                        config.panelSettings[firstSensor.panel].fsrLowThreshold[firstSensor.sensor];
+                    config.panelSettings[panelAndSensor.panel].fsrHighThreshold[panelAndSensor.sensor] =
+                        config.panelSettings[firstSensor.panel].fsrHighThreshold[firstSensor.sensor];
+                }
+            }
+        }
+
+        public static void SyncSliderThresholds()
+        {
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                SMX.SMXConfig config = activePad.Item2;
+                SyncSliderThresholdsForConfig(ref config);
+                SMX.SMX.SetConfig(activePad.Item1, config);
+            }
+
+            CurrentSMXDevice.singleton.FireConfigurationChanged(null);
+        }
+
+        public static bool IsAdvancedModeRequired()
+        {
+            return false;
         }
     }
 
@@ -735,6 +877,11 @@ namespace smx_config
             }
             dict.Add("panelColors", panelColors);
 
+            dict.Add("advancedMode", Properties.Settings.Default.AdvancedMode);
+            dict.Add("useOuterSensorThresholds", Properties.Settings.Default.UseOuterSensorThresholds);
+            dict.Add("useInnerSensorThresholds", Properties.Settings.Default.UseInnerSensorThresholds);
+            dict.Add("customSensors", ThresholdSettings.GetCustomSensorsJSON());
+
             return SMXJSON.SerializeJSON.Serialize(dict);
         }
 
@@ -798,6 +945,14 @@ namespace smx_config
                     config.stepColor[PanelIndex*3+2] = color.B;
                 }
             }
+
+            // Older exported settings don't have advancedMode.  Set it to true if it's missing.
+            Properties.Settings.Default.AdvancedMode = dict.Get<bool>("advancedMode", true);
+            Properties.Settings.Default.UseOuterSensorThresholds = dict.Get<bool>("useOuterSensorThresholds", false);
+            Properties.Settings.Default.UseInnerSensorThresholds = dict.Get<bool>("useInnerSensorThresholds", false);
+            List<object> customSensors = dict.Get<List<object>>("customSensors", null);
+            if(customSensors != null)
+                ThresholdSettings.SetCustomSensorsJSON(customSensors);
         }
     };
 }

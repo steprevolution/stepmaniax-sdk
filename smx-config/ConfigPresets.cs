@@ -137,7 +137,7 @@ namespace smx_config
         // and corners.  Rev1 firmware uses those only.  Copy cardinal directions (down) to the
         // other cardinal directions (except for up, which already had its own setting) and corners
         // to the other corners.
-        static public void SyncUnifiedThresholds(ref SMX.SMXConfig config)
+        static private void SyncUnifiedThresholds(ref SMX.SMXConfig config)
         {
             for(int fromPanel = 0; fromPanel < 9; ++fromPanel)
             {
@@ -154,15 +154,6 @@ namespace smx_config
                     }
                 }
             }
-        }
-
-        // Return true if the panel thresholds are already synced, so SyncUnifiedThresholds would
-        // have no effect.
-        static public bool AreUnifiedThresholdsSynced(SMX.SMXConfig config)
-        {
-            SMX.SMXConfig config2 = Helpers.DeepClone(config);
-            SyncUnifiedThresholds(ref config2);
-            return SamePreset(config, config2);
         }
     }
 }

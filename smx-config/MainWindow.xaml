@@ -135,15 +135,15 @@ Use if the platform is too sensitive.</clr:String>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type controls:ThresholdSlider}">
-                        <Grid Margin="0,0,0,0" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Image 
+                        <Grid Margin="0,0,0,0" Width="500" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <controls:PlatformSensorDisplay
+                                x:Name="PlatformSensorDisplay"
                                 Margin="-370,0,0,0"
-                                Height="28" Width="28"
-                                VerticalAlignment="Top"
-                                Source="{TemplateBinding Icon}"
                             />
+
                             <Label Margin="-300,0,0,0" x:Name="LowerValue" Content="0" Width="30" HorizontalContentAlignment="Right"
                                    VerticalAlignment="Top"
+                                   Visibility="{Binding Path=SliderActive, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"
                             />
                             <Image x:Name="ThresholdWarning"
                                    Source="Resources/threshold_warning.png" Width="9" Height="28"
@@ -158,10 +158,28 @@ Use if the platform is too sensitive.</clr:String>
                                 Width="240"
                                 Focusable="False"
                                 Style="{DynamicResource DoubleSlider}"
+                                IsEnabled="{Binding Path=SliderActive, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                             />
                             <Label Margin="360,0,0,0" x:Name="UpperValue" Content="0" Width="40" HorizontalContentAlignment="Center"
-                                   VerticalAlignment="Top"
+                                VerticalAlignment="Top"
+                                Visibility="{Binding Path=SliderActive, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"
                             />
+
+                            <!-- This is only shown for inner-sensors and outer-sensors.  It's always hidden and
+                                 checked for other sliders. -->
+                            <controls:ThresholdEnabledButton
+                                x:Name="EnabledCheckbox"
+                                controls:Type="{Binding Path=Type, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Margin="-450,0,0,0"
+                                IsChecked="{Binding Path=ThresholdEnabled, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                            />
+
+                            <Button 
+                                x:Name="EditCustomSensorsButton"
+                                Visibility="Hidden"
+                                Content="Edit" Width="35" Height="30" Margin="-450 0 0 0" Padding="0 0" />
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -333,7 +351,7 @@ Use if the platform is too sensitive.</clr:String>
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <Style TargetType="{x:Type controls:PanelColorButton}"
                 BasedOn="{StaticResource {x:Type controls:ColorButton}}">
 
@@ -601,7 +619,7 @@ Use if the platform is too sensitive.</clr:String>
                                         Text="Some sensors on this panel aren't responding correctly."
                                     />
                                 </DockPanel>
-                                
+
                                 <DockPanel
                                     x:Name="BadSensorDIPSwitches"
                                     Width="200"
@@ -702,7 +720,7 @@ Use if the platform is too sensitive.</clr:String>
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <!-- P1, P2 labels in the top right: -->
         <Style x:Key="EnabledIcon" TargetType="Label">
             <Style.Triggers>
@@ -713,6 +731,76 @@ Use if the platform is too sensitive.</clr:String>
                     <Setter Property="Foreground" Value="#A0A0A0"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style TargetType="{x:Type controls:PlatformSensorDisplay}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PlatformSensorDisplay}">
+                        <Grid Width="34" Height="34">
+                            <controls:PanelIconWithSensors x:Name="Panel0" Margin="-22,-22,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel1" Margin="  0,-22,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel2" Margin="+22,-22,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel3" Margin="-22,  0,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel4" Margin="  0,  0,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel5" Margin="+22,  0,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel6" Margin="-22,+22,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel7" Margin="  0,+22,0,0" />
+                            <controls:PanelIconWithSensors x:Name="Panel8" Margin="+22,+22,0,0" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- An icon that highlights sensors for a panel. -->
+        <Style TargetType="{x:Type controls:PanelIconWithSensors}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PanelIconWithSensors}">
+                        <Border Padding="1">
+                            <Grid Width="10" Height="10" Background="Black">
+                                <controls:PanelIconWithSensorsSensor x:Name="Sensor0"
+                                    Width="2" Height="4" HorizontalAlignment="Left" Margin="1,0,0,0" />
+                                <controls:PanelIconWithSensorsSensor x:Name="Sensor1"
+                                    Width="2" Height="4" HorizontalAlignment="Right" Margin="0,0,1,0" />
+                                <controls:PanelIconWithSensorsSensor x:Name="Sensor2"
+                                    Width="4" Height="2" VerticalAlignment="Top" Margin="0,1,0,0" />
+                                <controls:PanelIconWithSensorsSensor x:Name="Sensor3"
+                                    Width="4" Height="2" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:PanelIconWithSensorsSensor}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:PanelIconWithSensorsSensor}">
+                        <Border x:Name="border" BorderBrush="#000000" BorderThickness="0" SnapsToDevicePixels="true">
+                            <ContentPresenter
+                                SnapsToDevicePixels="true"
+                                Focusable="False"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                            />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Highlight" Value="0">
+                                <Setter Property="Background" TargetName="border" Value="#00000000"/>
+                            </Trigger>
+                            <Trigger Property="Highlight" Value="1">
+                                <Setter Property="Background" TargetName="border" Value="#FFA0A0A0"/>
+                            </Trigger>
+                            <Trigger Property="Highlight" Value="2">
+                                <Setter Property="Background" TargetName="border" Value="#FFFFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
     </Window.Resources>
@@ -729,7 +817,12 @@ Use if the platform is too sensitive.</clr:String>
                     SelectionChanged="MainTab_Selected">
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
-                    <StackPanel Margin="0,0,0,0" VerticalAlignment="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80*"/>
+                        <ColumnDefinition Width="17*"/>
+                        <ColumnDefinition Width="416*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,0,0" VerticalAlignment="Top" Grid.ColumnSpan="3">
                         <TextBlock HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
                                    TextAlignment="Center"
                                    xml:space="preserve" FontSize="16">Panel sensitivity</TextBlock>
@@ -769,7 +862,7 @@ Use if the platform is too sensitive.</clr:String>
                                 Leave this application running to play animations.
                             </TextBlock>
                         </StackPanel>
-                        
+
                         <StackPanel 
                             Visibility="Visible"
                             Name="ColorPickerGroup" HorizontalAlignment="Center" Orientation="Vertical">
@@ -795,7 +888,7 @@ Use if the platform is too sensitive.</clr:String>
                                     </Grid>
                                     <controls:FloorColorButton x:Name="P1_Floor" Pad="0" Content="=" Margin="0,0,0,0" />
                                 </StackPanel>
-                                
+
                                 <StackPanel x:Name="PanelColorP2" Orientation="Vertical">
                                     <Grid Width="100" Height="100">
                                         <controls:PanelColorButton x:Name="P2_0" Panel="9" Content="↖" Margin="-60,-50,0,0" />
@@ -827,7 +920,7 @@ Use if the platform is too sensitive.</clr:String>
                          shifts it by a couple pixels, which makes it fidget around when we connect
                          and disconnect. -->
                     <Label x:Name="Version2" Content="Version"
-                        HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="0 0 0 7" />
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="130,0,227,7" Grid.Column="2" />
                 </Grid>
             </TabItem>
 
@@ -849,7 +942,7 @@ Use if the platform is too sensitive.</clr:String>
                             <DockPanel Margin="0,0,0,0" VerticalAlignment="Top" x:Name="ThresholdSliderContainer">
                                 <!-- CreateThresholdSliders adds ThresholdSliders here.  The slider below is only
                                      for the UI preview, and is removed on refresh. -->
-                                <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-left"    controls:ThresholdSlider.Icon="Resources/pad_up_left.png"    Margin="0,8,0,0" />
+                                <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-left" Margin="0,8,0,0" />
                             </DockPanel>
                         </ScrollViewer>
                         <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,25,0,0" VerticalAlignment="Top"
@@ -935,11 +1028,6 @@ instead of only panels with sensors.</TextBlock>
 
                     <Separator Margin="0,10,0,10" />
                     <TextBlock HorizontalAlignment="Center"
-                                    xml:space="preserve" FontSize="16">Aux sensors</TextBlock>
-                    <Button Content="Set auxilliary sensors" Width="140" Margin="0 10 0 0" Padding="0 4" Click="SetAuxSensors_Click"/>
-
-                    <Separator Margin="0,10,0,10" />
-                    <TextBlock HorizontalAlignment="Center"
                                     xml:space="preserve" FontSize="16">Reset all settings</TextBlock>
                     <Button Content="Factory reset" Width="140" Margin="0 10 0 0" Padding="0 4" Click="FactoryReset_Click"/>
                 </StackPanel>
@@ -950,7 +1038,7 @@ instead of only panels with sensors.</TextBlock>
                 </StackPanel>
             </TabItem>
         </TabControl>
-        
+
         <!-- A list of which pads are connected, overlapping the tab bar in the top right. -->
         <StackPanel x:Name="ConnectedPads" VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal">
             <Label Content="Connected:" FontSize="10"/>

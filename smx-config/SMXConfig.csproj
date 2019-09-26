@@ -105,8 +105,8 @@
     <Compile Include="DiagnosticsWidgets.cs" />
     <Compile Include="DoubleSlider.cs" />
     <Compile Include="Helpers.cs" />
-    <Compile Include="SetAuxSensors.xaml.cs">
-      <DependentUpon>SetAuxSensors.xaml</DependentUpon>
+    <Compile Include="SetCustomSensors.xaml.cs">
+      <DependentUpon>SetCustomSensors.xaml</DependentUpon>
     </Compile>
     <Compile Include="ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
@@ -126,7 +126,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="SetAuxSensors.xaml">
+    <Page Include="SetCustomSensors.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -175,14 +175,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\pad_cardinal.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\pad_center.png" />
-    <Resource Include="Resources\pad_diagonal.png" />
-    <Resource Include="Resources\pad_up.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resources\window icon.png" />
   </ItemGroup>
   <ItemGroup>
@@ -190,15 +182,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="window icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\pad_down.png" />
-    <Resource Include="Resources\pad_down_left.png" />
-    <Resource Include="Resources\pad_down_right.png" />
-    <Resource Include="Resources\pad_left.png" />
-    <Resource Include="Resources\pad_right.png" />
-    <Resource Include="Resources\pad_up_left.png" />
-    <Resource Include="Resources\pad_up_right.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\sdk\Windows\SMX.vcxproj">

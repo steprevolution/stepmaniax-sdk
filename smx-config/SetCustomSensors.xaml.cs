@@ -50,22 +50,25 @@ namespace smx_config
         {
             // Toggle the clicked sensor.
             Console.WriteLine("Clicked sensor " + sensor);
-            List<ThresholdSettings.PanelAndSensor> auxSensors = ThresholdSettings.GetAuxSensors();
-            bool enabled = !IsSensorEnabled(auxSensors, sensor);
+            List<ThresholdSettings.PanelAndSensor> customSensors = ThresholdSettings.GetCustomSensors();
+            bool enabled = !IsSensorEnabled(customSensors, sensor);
 
             if(enabled)
-                auxSensors.Add(new ThresholdSettings.PanelAndSensor(Panel, sensor));
+                customSensors.Add(new ThresholdSettings.PanelAndSensor(Panel, sensor));
             else
-                auxSensors.Remove(new ThresholdSettings.PanelAndSensor(Panel, sensor));
-            ThresholdSettings.SetAuxSensors(auxSensors);
+                customSensors.Remove(new ThresholdSettings.PanelAndSensor(Panel, sensor));
+            ThresholdSettings.SetCustomSensors(customSensors);
+
+            // Sync thresholds after changing custom sensors.
+            ThresholdSettings.SyncSliderThresholds();
 
             CurrentSMXDevice.singleton.FireConfigurationChanged(this);
         }
 
-        // Return true if the given sensor is marked as an aux sensor.
-        bool IsSensorEnabled(List<ThresholdSettings.PanelAndSensor> auxSensors, int sensor)
+        // Return true if the given sensor is included in custom-sensors.
+        bool IsSensorEnabled(List<ThresholdSettings.PanelAndSensor> customSensors, int sensor)
         {
-            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in auxSensors)
+            foreach(ThresholdSettings.PanelAndSensor panelAndSensor in customSensors)
             {
                 if(panelAndSensor.panel == Panel && panelAndSensor.sensor == sensor)
                     return true;
@@ -75,18 +78,18 @@ namespace smx_config
 
         private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
         {
-            // Check the selected aux sensors.
-            List<ThresholdSettings.PanelAndSensor> auxSensors = ThresholdSettings.GetAuxSensors();
+            // Check the selected custom-sensors.
+            List<ThresholdSettings.PanelAndSensor> customSensors = ThresholdSettings.GetCustomSensors();
             for(int sensor = 0; sensor < 4; ++sensor)
-                SensorSelectionButtons[sensor].IsChecked = IsSensorEnabled(auxSensors, sensor);
+                SensorSelectionButtons[sensor].IsChecked = IsSensorEnabled(customSensors, sensor);
         }
     }
 
-    // This dialog sets which sensors are controlled by the auxilliary threshold.  The actual
-    // work is done by SensorSelector above.
-    public partial class SetAuxSensors: Window
+    // This dialog sets which sensors are controlled by custom-sensors.  The actual work is done
+    // by SensorSelector above.
+    public partial class SetCustomSensors: Window
     {
-        public SetAuxSensors()
+        public SetCustomSensors()
         {
             InitializeComponent();
         }
