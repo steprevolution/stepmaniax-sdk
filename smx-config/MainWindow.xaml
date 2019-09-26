@@ -933,6 +933,11 @@ instead of only panels with sensors.</TextBlock>
 
                     <Separator Margin="0,10,0,10" />
                     <TextBlock HorizontalAlignment="Center"
+                                    xml:space="preserve" FontSize="16">Aux sensors</TextBlock>
+                    <Button Content="Set auxilliary sensors" Width="140" Margin="0 10 0 0" Padding="0 4" Click="SetAuxSensors_Click"/>
+
+                    <Separator Margin="0,10,0,10" />
+                    <TextBlock HorizontalAlignment="Center"
                                     xml:space="preserve" FontSize="16">Reset all settings</TextBlock>
                     <Button Content="Factory reset" Width="140" Margin="0 10 0 0" Padding="0 4" Click="FactoryReset_Click"/>
                 </StackPanel>

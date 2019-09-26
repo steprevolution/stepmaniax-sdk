@@ -17,7 +17,8 @@ namespace smx_config
         {
             InitializeComponent();
 
-            onConfigChange = new OnConfigChange(this, delegate(LoadFromConfigDelegateArgs args) {
+            onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args)
+            {
                 LoadUIFromConfig(args);
             });
 
@@ -26,7 +27,7 @@ namespace smx_config
             // to tray to keep playing animations.  If we're not controlling animations,
             // or the firmware supports doing them automatically, don't bug the user
             // with a prompt.
-            Closing += delegate(object sender, System.ComponentModel.CancelEventArgs e)
+            Closing += delegate (object sender, System.ComponentModel.CancelEventArgs e)
             {
                 LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
 
@@ -70,10 +71,10 @@ namespace smx_config
 
         List<string> thresholdSliderNames = new List<string>()
         {
-            "up-left", "up", "up-right", "left", "center", "right", "down-left", "down", "down-right", "cardinal", "corner",
+            "up-left", "up", "up-right", "left", "center", "right", "down-left", "down", "down-right", "cardinal", "corner", "aux",
         };
 
-        Dictionary<string,string> thresholdToIcon = new Dictionary<string, string>()
+        Dictionary<string, string> thresholdToIcon = new Dictionary<string, string>()
         {
             { "up-left",   "Resources/pad_up_left.png" },
             { "up",        "Resources/pad_up.png" },
@@ -86,11 +87,12 @@ namespace smx_config
             { "down-right","Resources/pad_down_right.png" },
             { "cardinal",  "Resources/pad_cardinal.png" },
             { "corner",    "Resources/pad_diagonal.png" },
+            { "aux",       "Resources/pad_diagonal.png" },
         };
 
         bool IsThresholdSliderShown(string type)
         {
-            bool AdvancedModeEnabled = (bool) AdvancedModeEnabledCheckbox.IsChecked;
+            bool AdvancedModeEnabled = (bool)AdvancedModeEnabledCheckbox.IsChecked;
             SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
             bool[] enabledPanels = config.GetEnabledPanels();
 
@@ -108,20 +110,20 @@ namespace smx_config
             // turned back on.
             switch(type)
             {
-            case "up-left":    return  enabledPanels[0];
-            case "up":         return  enabledPanels[1];
-            case "up-right":   return  enabledPanels[2];
-            case "left":       return  enabledPanels[3];
-            case "center":     return  enabledPanels[4];
-            case "right":      return  enabledPanels[5];
-            case "down-left":  return  enabledPanels[6];
-            case "down":       return  enabledPanels[7];
-            case "down-right": return  enabledPanels[8];
+            case "up-left": return enabledPanels[0];
+            case "up": return enabledPanels[1];
+            case "up-right": return enabledPanels[2];
+            case "left": return enabledPanels[3];
+            case "center": return enabledPanels[4];
+            case "right": return enabledPanels[5];
+            case "down-left": return enabledPanels[6];
+            case "down": return enabledPanels[7];
+            case "down-right": return enabledPanels[8];
 
             // Show cardinal and corner if at least one panel they affect is enabled.
-            case "cardinal":   return enabledPanels[3] || enabledPanels[5] || enabledPanels[8];
-            case "corner":     return enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8];
-            default:           return true;
+            case "cardinal": return enabledPanels[3] || enabledPanels[5] || enabledPanels[8];
+            case "corner": return enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8];
+            default: return true;
             }
         }
 
@@ -153,7 +155,7 @@ namespace smx_config
 
                 ThresholdSlider slider = CreateThresholdSlider(sliderName);
                 DockPanel.SetDock(slider, Dock.Top);
-                slider.Margin = new Thickness(0,8,0,0);
+                slider.Margin = new Thickness(0, 8, 0, 0);
                 ThresholdSliderContainer.Children.Add(slider);
             }
         }
@@ -163,20 +165,20 @@ namespace smx_config
             base.OnApplyTemplate();
 
             // Add our WndProc hook.
-            HwndSource source = (HwndSource) PresentationSource.FromVisual(this);
+            HwndSource source = (HwndSource)PresentationSource.FromVisual(this);
             source.AddHook(new HwndSourceHook(WndProcHook));
 
             Version1.Content = "SMXConfig version " + SMX.SMX.Version();
             Version2.Content = "SMXConfig version " + SMX.SMX.Version();
 
-            AutoLightsColor.StartedDragging += delegate() { showAutoLightsColor.Start(); };
-            AutoLightsColor.StoppedDragging += delegate() { showAutoLightsColor.Stop(); };
-            AutoLightsColor.StoppedDragging += delegate() { showAutoLightsColor.Stop(); };
+            AutoLightsColor.StartedDragging += delegate () { showAutoLightsColor.Start(); };
+            AutoLightsColor.StoppedDragging += delegate () { showAutoLightsColor.Stop(); };
+            AutoLightsColor.StoppedDragging += delegate () { showAutoLightsColor.Stop(); };
 
             CreateThresholdSliders();
 
             // This doesn't happen at the same time AutoLightsColor is used, since they're on different tabs.
-            Diagnostics.SetShowAllLights += delegate(bool on)
+            Diagnostics.SetShowAllLights += delegate (bool on)
             {
                 if(on)
                     showAutoLightsColor.Start();
@@ -184,7 +186,7 @@ namespace smx_config
                     showAutoLightsColor.Stop();
             };
 
-            SetAllPanelsToCurrentColor.Click += delegate(object sender, RoutedEventArgs e)
+            SetAllPanelsToCurrentColor.Click += delegate (object sender, RoutedEventArgs e)
             {
                 // Get the color of the selected color button, and apply it to all other buttons.
                 Color color = selectedButton.getColor();
@@ -206,7 +208,7 @@ namespace smx_config
             ColorButton[] buttons = getColorPickerButtons();
             foreach(ColorButton button in buttons)
             {
-                button.Click += delegate(object sender, RoutedEventArgs e)
+                button.Click += delegate (object sender, RoutedEventArgs e)
                 {
                     ColorButton clickedButton = sender as ColorButton;
                     selectedButton = clickedButton;
@@ -221,7 +223,7 @@ namespace smx_config
             // The user pressed either the "panel colors" or "GIF animations" button.
             bool pressedPanelColors = sender == PanelColorsButton;
 
-            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 SMX.SMXConfig config = activePad.Item2;
 
@@ -240,19 +242,19 @@ namespace smx_config
         private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
         {
             bool EitherControllerConnected = args.controller[0].info.connected || args.controller[1].info.connected;
-            Main.Visibility = EitherControllerConnected? Visibility.Visible:Visibility.Hidden;
-            Searching.Visibility = EitherControllerConnected? Visibility.Hidden:Visibility.Visible;
-            ConnectedPads.Visibility = EitherControllerConnected? Visibility.Visible:Visibility.Hidden;
-            PanelColorP1.Visibility = args.controller[0].info.connected? Visibility.Visible:Visibility.Collapsed;
-            PanelColorP2.Visibility = args.controller[1].info.connected? Visibility.Visible:Visibility.Collapsed;
-            EnableCenterTopSensorCheckbox.Visibility = 
-            P1_Floor.Visibility = 
-            P2_Floor.Visibility = 
-                args.firmwareVersion() >= 5? Visibility.Visible:Visibility.Collapsed;
+            Main.Visibility = EitherControllerConnected ? Visibility.Visible : Visibility.Hidden;
+            Searching.Visibility = EitherControllerConnected ? Visibility.Hidden : Visibility.Visible;
+            ConnectedPads.Visibility = EitherControllerConnected ? Visibility.Visible : Visibility.Hidden;
+            PanelColorP1.Visibility = args.controller[0].info.connected ? Visibility.Visible : Visibility.Collapsed;
+            PanelColorP2.Visibility = args.controller[1].info.connected ? Visibility.Visible : Visibility.Collapsed;
+            EnableCenterTopSensorCheckbox.Visibility =
+            P1_Floor.Visibility =
+            P2_Floor.Visibility =
+                args.firmwareVersion() >= 5 ? Visibility.Visible : Visibility.Collapsed;
 
             // Show the color slider or GIF UI depending on which one is set in flags.
             // If both pads are turned on, just use the first one.
-            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 SMX.SMXConfig config = activePad.Item2;
 
@@ -260,8 +262,8 @@ namespace smx_config
                 // If it's not set, show the color slider UI.
                 SMX.SMXConfigFlags flags = config.configFlags;
                 bool usePressedAnimations = (flags & SMX.SMXConfigFlags.AutoLightingUsePressedAnimations) != 0;
-                ColorPickerGroup.Visibility = usePressedAnimations? Visibility.Collapsed:Visibility.Visible;
-                GIFGroup.Visibility = usePressedAnimations? Visibility.Visible:Visibility.Collapsed;
+                ColorPickerGroup.Visibility = usePressedAnimations ? Visibility.Collapsed : Visibility.Visible;
+                GIFGroup.Visibility = usePressedAnimations ? Visibility.Visible : Visibility.Collapsed;
 
                 // Tell the color mode buttons which one is selected, to set the button highlight.
                 PanelColorsButton.Selected = !usePressedAnimations;
@@ -294,7 +296,7 @@ namespace smx_config
                     }
                 }
             }
-            ThresholdWarningText.Visibility = ShowThresholdWarningText? Visibility.Visible : Visibility.Hidden;
+            ThresholdWarningText.Visibility = ShowThresholdWarningText ? Visibility.Visible : Visibility.Hidden;
 
             // If a second controller has connected and we're on Both, see if we need to prompt
             // to sync configs.  We only actually need to do this if a controller just connected.
@@ -355,9 +357,9 @@ namespace smx_config
             foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 SMX.SMXConfig config = activePad.Item2;
-                
+
                 bool uploadsSupported = config.masterVersion >= 4;
-                LeaveRunning.Visibility = uploadsSupported? Visibility.Collapsed:Visibility.Visible;
+                LeaveRunning.Visibility = uploadsSupported ? Visibility.Collapsed : Visibility.Visible;
                 break;
             }
         }
@@ -455,12 +457,12 @@ namespace smx_config
             bool TwoControllersConnected = args.controller[0].info.connected && args.controller[1].info.connected;
 
             // Only show the dropdown if two controllers are connected.
-            ConnectedPadList.Visibility = TwoControllersConnected? Visibility.Visible:Visibility.Collapsed;
+            ConnectedPadList.Visibility = TwoControllersConnected ? Visibility.Visible : Visibility.Collapsed;
 
             // Only show the P1/P2 text if only one controller is connected, since it takes the place
             // of the dropdown.
-            P1Connected.Visibility = (!TwoControllersConnected && args.controller[0].info.connected)? Visibility.Visible:Visibility.Collapsed;
-            P2Connected.Visibility = (!TwoControllersConnected && args.controller[1].info.connected)? Visibility.Visible:Visibility.Collapsed;
+            P1Connected.Visibility = (!TwoControllersConnected && args.controller[0].info.connected) ? Visibility.Visible : Visibility.Collapsed;
+            P2Connected.Visibility = (!TwoControllersConnected && args.controller[1].info.connected) ? Visibility.Visible : Visibility.Collapsed;
 
             if(!TwoControllersConnected)
                 return;
@@ -478,7 +480,7 @@ namespace smx_config
 
         private void FactoryReset_Click(object sender, RoutedEventArgs e)
         {
-            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 int pad = activePad.Item1;
                 SMX.SMX.FactoryReset(pad);
@@ -494,7 +496,7 @@ namespace smx_config
         private void ExportSettings(object sender, RoutedEventArgs e)
         {
             // Save the current thresholds on the first available pad as a preset.
-            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 int pad = activePad.Item1;
                 SMX.SMXConfig config = activePad.Item2;
@@ -505,7 +507,7 @@ namespace smx_config
                 dialog.DefaultExt = ".smxcfg";
                 dialog.Filter = "StepManiaX settings (.smxcfg)|*.smxcfg";
                 bool? result = dialog.ShowDialog();
-                if(result == null || !(bool) result)
+                if(result == null || !(bool)result)
                     return;
 
                 System.IO.File.WriteAllText(dialog.FileName, json);
@@ -521,13 +523,13 @@ namespace smx_config
             dialog.DefaultExt = ".smxcfg";
             dialog.Filter = "StepManiaX settings (.smxcfg)|*.smxcfg";
             bool? result = dialog.ShowDialog();
-            if(result == null || !(bool) result)
+            if(result == null || !(bool)result)
                 return;
 
             string json = Helpers.ReadFile(dialog.FileName);
 
             // Apply settings from the file to all active pads.
-            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 int pad = activePad.Item1;
                 SMX.SMXConfig config = activePad.Item2;
@@ -551,13 +553,13 @@ namespace smx_config
             dialog.DefaultExt = ".gif";
             dialog.Filter = "Animated GIF (.gif)|*.gif";
             bool? result = dialog.ShowDialog();
-            if(result == null || !(bool) result)
+            if(result == null || !(bool)result)
                 return;
 
             byte[] buf = Helpers.ReadBinaryFile(dialog.FileName);
-            SMX.SMX.LightsType type = pressed? SMX.SMX.LightsType.LightsType_Pressed:SMX.SMX.LightsType.LightsType_Released;
+            SMX.SMX.LightsType type = pressed ? SMX.SMX.LightsType.LightsType_Pressed : SMX.SMX.LightsType.LightsType_Released;
 
-            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 int pad = activePad.Item1;
 
@@ -583,7 +585,7 @@ namespace smx_config
 
             // For firmwares that support it, upload the animation to the pad now.  Otherwise,
             // we'll run the animation directly.
-            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
                 int pad = activePad.Item1;
 
@@ -596,6 +598,12 @@ namespace smx_config
 
                 break;
             }
+        }
+
+        private void SetAuxSensors_Click(object sender, RoutedEventArgs e)
+        {
+            SetAuxSensors dialog = new SetAuxSensors();
+            dialog.ShowDialog();
         }
 
         private void UploadLatestGIF()

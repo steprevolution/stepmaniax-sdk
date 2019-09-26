@@ -1,0 +1,102 @@
+﻿<Window x:Class="smx_config.SetAuxSensors"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Icon="Resources/window icon.png"
+        Background="#DDD"
+        Height="418" Width="325" ResizeMode="NoResize"
+        xmlns:controls="clr-namespace:smx_config"
+        x:Name="root"
+        Title="Select Auxilliary Sensors"
+        UseLayoutRounding="True">
+    <Window.Resources>
+        <Style x:Key="SensorSelectionButton" TargetType="{x:Type ToggleButton}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="#FFDDDDDD"/>
+            <Setter Property="BorderBrush" Value="#FF707070"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:SensorSelectionButton}">
+                        <Border x:Name="border" BorderBrush="#000000" BorderThickness="1" SnapsToDevicePixels="true">
+                            <ContentPresenter
+                                SnapsToDevicePixels="true"
+                                Focusable="False"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                            />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Background" TargetName="border" Value="#FF2020A0"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Background" TargetName="border" Value="#FF00F000"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="#FFC4E5F6"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF2C628B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type controls:SensorSelector}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:SensorSelector}">
+                        <Border Padding="1">
+                            <Grid Width="70" Height="70">
+                                <!-- XXX: the order of these is wrong -->
+                                <controls:SensorSelectionButton x:Name="Sensor0" Style="{StaticResource SensorSelectionButton}" 
+                                    Width="40" Height="13" VerticalAlignment="Top" />
+                                <controls:SensorSelectionButton x:Name="Sensor1" Style="{StaticResource SensorSelectionButton}" 
+                                    Width="40" Height="13" VerticalAlignment="Bottom" />
+                                <controls:SensorSelectionButton x:Name="Sensor2" Style="{StaticResource SensorSelectionButton}" 
+                                    Width="13" Height="40" HorizontalAlignment="Left" />
+                                <controls:SensorSelectionButton x:Name="Sensor3" Style="{StaticResource SensorSelectionButton}" 
+                                    Width="13" Height="40" HorizontalAlignment="Right" />
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>        
+
+    </Window.Resources>
+
+    <StackPanel Background="#FFE5E5E5">
+        <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,15,0,10" TextAlignment="Center" FontSize="16">Select which sensors are controlled
+by the auxilliary threshold.</TextBlock>
+
+        <Grid Width="250" Height="250" Background="#FFAAAAAA" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <controls:SensorSelector Grid.Row="0" Grid.Column="0" Panel="0" Focusable="false" />
+            <controls:SensorSelector Grid.Row="0" Grid.Column="1" Panel="1" Focusable="false" />
+            <controls:SensorSelector Grid.Row="0" Grid.Column="2" Panel="2" Focusable="false" />
+            <controls:SensorSelector Grid.Row="1" Grid.Column="0" Panel="3" Focusable="false" />
+            <controls:SensorSelector Grid.Row="1" Grid.Column="1" Panel="4" Focusable="false" />
+            <controls:SensorSelector Grid.Row="1" Grid.Column="2" Panel="5" Focusable="false" />
+            <controls:SensorSelector Grid.Row="2" Grid.Column="0" Panel="6" Focusable="false" />
+            <controls:SensorSelector Grid.Row="2" Grid.Column="1" Panel="7" Focusable="false" />
+            <controls:SensorSelector Grid.Row="2" Grid.Column="2" Panel="8" Focusable="false" />
+        </Grid>
+
+        <Button x:Name="OK" Content="OK" IsDefault="True" Click="OK_Click" HorizontalAlignment="Center" FontSize="20" Padding="10,4" Margin="0,10,0,0" />
+    </StackPanel>
+</Window>

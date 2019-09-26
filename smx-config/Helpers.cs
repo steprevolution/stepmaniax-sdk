@@ -381,6 +381,7 @@ namespace smx_config
     // on the user's settings.  This handles managing which sensors each slider controls.
     static class ThresholdSettings
     {
+        [Serializable]
         public struct PanelAndSensor
         {
             public PanelAndSensor(int panel, int sensor)
@@ -408,10 +409,75 @@ namespace smx_config
             // are then synced to the other panels.
             { "cardinal",   7 },
             { "corner",     2 },
+
+            // The aux threshold allows giving a list of specific sensors different thresholds.
+            { "aux",        -1 },
         };
+
+        // Save and load the list of aux sensors to settings.  These aren't saved to the pad, we just
+        // keep them in application settings.
+        static List<PanelAndSensor> cachedAuxSensors;
+        static public void SetAuxSensors(List<PanelAndSensor> panelAndSensors)
+        {
+            List<object> result = new List<object>();
+            foreach(PanelAndSensor panelAndSensor in panelAndSensors)
+            {
+                List<int> panelAndSensorArray = new List<int>() { panelAndSensor.panel, panelAndSensor.sensor };
+                result.Add(panelAndSensorArray);
+            }
+
+            Properties.Settings.Default.AuxSensors = SerializeJSON.Serialize(result);
+            Properties.Settings.Default.Save();
+
+            // Clear the cache.  Set it to null instead of assigning panelAndSensors to it to force
+            // it to re-parse at least once, to catch problems early.
+            cachedAuxSensors = null;
+        }
+
+        // Return the sensors that are controlled by the aux threshold slider.  The other
+        // threshold sliders will leave these alone.
+        static public List<PanelAndSensor> GetAuxSensors()
+        {
+//                Properties.Settings.Default.AuxSensors = "[[0,0], [1,0]]";
+            // This is only ever changed with calls to SetSavedAuxSensors.
+            if(cachedAuxSensors != null)
+                return Helpers.DeepClone(cachedAuxSensors);
+
+            List<PanelAndSensor> result = new List<PanelAndSensor>();
+            if(Properties.Settings.Default.AuxSensors == "")
+                return result;
+
+            try {
+                // This is a list of [panel,sensor] arrays:
+                // [[0,0], [0,1], [1,0]]
+                List<object> sensors = SMXJSON.ParseJSON.Parse<List<object>>(Properties.Settings.Default.AuxSensors);
+                foreach(object panelAndSensorObj in sensors)
+                {
+                    List<object> panelAndSensor = (List<object>) panelAndSensorObj;
+                    int panel = panelAndSensor.Get(0, -1);
+                    int sensor = panelAndSensor.Get(1, -1);
+                    if(panel == -1 || sensor == -1)
+                        continue;
+
+                    result.Add(new PanelAndSensor(panel, sensor));
+                }
+            } catch(ParseError) {
+                return result;
+            }
+
+            cachedAuxSensors = result;
+                // SetAuxSensors(result); // XXX
+
+            // SetSavedAuxSensors(result);
+            return Helpers.DeepClone(cachedAuxSensors);
+        }
 
         static public List<PanelAndSensor> GetControlledSensorsForSliderType(string Type, bool advancedMode)
         {
+            // The aux threshold slider always controls the aux sensors.
+            if(Type == "aux")
+                return GetAuxSensors();
+
             List<PanelAndSensor> result = new List<PanelAndSensor>();
 
             // Check if this slider is shown in this mode.
@@ -432,6 +498,7 @@ namespace smx_config
             // If advanced mode is disabled, save to all panels this slider affects.  The down arrow controls
             // all four cardinal panels.  (If advanced mode is enabled we'll never be a different cardinal
             // direction, since those widgets won't exist.)  If it's disabled, just write to our own panel.
+            List<PanelAndSensor> auxSensors = GetAuxSensors();
             List<int> saveToPanels = new List<int>();
             int ourPanelIdx = panelNameToIndex[Type];
             saveToPanels.Add(ourPanelIdx);
@@ -442,23 +509,15 @@ namespace smx_config
             {
                 for(int sensor = 0; sensor < 4; ++sensor)
                 {
+                    // Ignore sensors controlled by the aux threshold.
                     PanelAndSensor panelAndSensor = new PanelAndSensor(panelIdx, sensor);
+                    if(auxSensors.Contains(panelAndSensor))
+                        continue;
+
                     result.Add(panelAndSensor);
                 }
             }
 
-            return result;
-        }
-
-        // Return the sensors that are controlled by the aux threshold slider.  The other
-        // threshold sliders will leave these alone.
-        static public List<PanelAndSensor> GetAuxSensors()
-        {
-            List<PanelAndSensor> result = new List<PanelAndSensor>();
-            result.Add(new PanelAndSensor(1,0));
-            result.Add(new PanelAndSensor(1,1));
-            result.Add(new PanelAndSensor(1,2));
-            result.Add(new PanelAndSensor(1,3));
             return result;
         }
     }
