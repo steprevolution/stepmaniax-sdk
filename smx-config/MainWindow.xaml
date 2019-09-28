@@ -1009,7 +1009,7 @@ instead of only panels with sensors.</TextBlock>
 
                     <controls:EnableCenterTopSensorCheckbox VerticalAlignment="Center"
                             x:Name="EnableCenterTopSensorCheckbox"
-                            DockPanel.Dock="Right" Content="Enable top sensor on center panel (usually off)"
+                            DockPanel.Dock="Right" Content="Enable top sensor on center panel"
                             HorizontalAlignment="Center"
                             Margin="0 10 0 0"
                             IsChecked="{Binding Path=EnableSensor, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
