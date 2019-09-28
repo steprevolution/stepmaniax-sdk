@@ -224,7 +224,7 @@ namespace smx_config
                 // 16-bit FSR thresholds.
                 slider.Minimum = 5;
                 slider.Maximum = 250;
-                slider.MinimumDistance = 5;
+                slider.MinimumDistance = 2;
             } else {
                 // 8-bit load cell thresholds
                 slider.Minimum = 20;
