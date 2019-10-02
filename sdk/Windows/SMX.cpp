@@ -96,6 +96,23 @@ SMX_API void SMX_SetLights2(const char *lightData, int lightDataSize)
 
     SMXManager::g_pSMX->SetLights(lights);
 }
+
+// This is internal for SMXConfig.  These lights aren't meant to be animated.
+SMX_API void SMX_SetPlatformLights(const char lightData[88*3], int lightDataSize)
+{
+    if(lightDataSize != 88*3)
+    {
+        Log(ssprintf("SMX_SetPlatformLights: lightDataSize is invalid (must be %i)\n",
+            88*3));
+        return;
+    }
+
+    string lights[2];
+    lights[0] = string(lightData, 44*3);
+    lights[1] = string(lightData + 44*3, 44*3);
+    SMXManager::g_pSMX->SetPlatformLights(lights);
+}
+
 SMX_API void SMX_ReenableAutoLights() { SMXManager::g_pSMX->ReenableAutoLights(); }
 SMX_API const char *SMX_Version() { return SMX_BUILD_VERSION; }
 

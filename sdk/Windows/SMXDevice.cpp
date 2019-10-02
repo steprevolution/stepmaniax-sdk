@@ -334,6 +334,17 @@ void SMX::SMXDevice::SendConfig()
     if(m_bWaitingForConfigResponse)
         return;
 
+    // Rate limit updating the configuration, to prevent excess EEPROM wear.  This is just
+    // a safeguard in case applications try to change the configuration in realtime.  If we've
+    // written the configuration recently, stop.  We'll write the most recent configuration
+    // once enough time has passed.  This is hidden to the application, since GetConfig returns
+    // wanted_config if it's set.
+    const float fTimeBetweenConfigUpdates = 1.0f;
+    double fNow = SMX::GetMonotonicTime();
+    if(m_fDelayConfigUpdatesUntil > fNow)
+        return;
+    m_fDelayConfigUpdatesUntil = fNow + 1.0f;
+
     SMXDeviceInfo deviceInfo = m_pConnection->GetDeviceInfo();
 
     // Write configuration command.  This is "w" in versions 1-4, and "W" in versions 5

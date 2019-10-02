@@ -380,6 +380,8 @@ namespace SMX
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_SetLights2(byte[] buf, int lightDataSize);
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern bool SMX_SetPlatformLights(byte[] buf, int lightDataSize);
+        [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool SMX_ReenableAutoLights();
         [DllImport("SMX.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         private static extern IntPtr SMX_Version();
@@ -563,6 +565,13 @@ namespace SMX
             if(!DLLAvailable()) return;
 
             SMX_SetLights2(buf, buf.Length);
+        }
+
+        public static void SMX_SetPlatformLights(byte[] buf)
+        {
+            if(!DLLAvailable()) return;
+
+            SMX_SetPlatformLights(buf, buf.Length);
         }
 
         public static void ReenableAutoLights()

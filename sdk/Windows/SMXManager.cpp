@@ -485,6 +485,47 @@ void SMX::SMXManager::SetLights(const string sPanelLights[2])
     SetEvent(m_hEvent->value());
 }
 
+void SMX::SMXManager::SetPlatformLights(const string sPanelLights[2])
+{
+    g_Lock.AssertNotLockedByCurrentThread();
+    LockMutex L(g_Lock);
+
+    // Read the linearly arranged color data we've been given and split it into top and
+    // bottom commands for each pad.
+    for(int iPad = 0; iPad < 2; ++iPad)
+    {
+        // If there's no data for this pad, skip it.
+        string sLightsDataForPad = sPanelLights[iPad];
+        if(sLightsDataForPad.empty())
+            continue;
+
+        if(sLightsDataForPad.size() != 44*3)
+        {
+            Log(ssprintf("SetPlatformLights: Platform lights data should be %i bytes, received %i",
+                44*3, sLightsDataForPad.size()));
+            continue;
+        }
+
+        // If this master doesn't support this, skip it.
+        SMXConfig config;
+        if(!m_pDevices[iPad]->GetConfigLocked(config))
+            continue;
+        if(config.masterVersion < 4)
+            continue;
+
+        string sLightCommand;
+        sLightCommand.push_back('L');
+        sLightCommand.push_back(0); // LED strip index (always 0)
+        sLightCommand.push_back(44); // number of LEDs to set
+        sLightCommand += sLightsDataForPad;
+
+        m_pDevices[iPad]->SendCommandLocked(sLightCommand);
+    }
+
+    // Wake up the I/O thread if it's blocking on WaitForMultipleObjectsEx.
+    SetEvent(m_hEvent->value());
+}
+
 void SMX::SMXManager::ReenableAutoLights()
 {
     g_Lock.AssertNotLockedByCurrentThread();

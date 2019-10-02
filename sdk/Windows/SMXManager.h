@@ -44,6 +44,7 @@ public:
     void Shutdown();
     shared_ptr<SMXDevice> GetDevice(int pad);
     void SetLights(const string sLights[2]);
+    void SetPlatformLights(const string sLights[2]);
     void ReenableAutoLights();
     void SetPanelTestMode(PanelTestMode mode);
     void SetSerialNumbers();

@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Data;
 using System.Windows.Shapes;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using System.ComponentModel;
 using System.Collections.Generic;
 
@@ -633,14 +634,14 @@ namespace smx_config
             SMX.SMXConfig config = args.controller[pad].config;
             return config.masterVersion >= 4;
         }
-        
+
         public override void setColor(Color color)
         {
             // Apply the change and save it to the device.
             int pad = getPadNo();
             SMX.SMXConfig config;
             if(!SMX.SMX.GetConfig(pad, out config))
-                    return;
+                return;
 
             config.platformStripColor[0] = color.R;
             config.platformStripColor[1] = color.G;
@@ -648,6 +649,50 @@ namespace smx_config
 
             SMX.SMX.SetConfig(pad, config);
             CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+
+            QueueSetPlatformLights();
+        }
+
+        // Queue SetPlatformLights to happen after a brief delay.  This rate limits setting
+        // the color, so we don't spam the device when dragging the color slider.
+        DispatcherTimer PlatformLightsTimer;
+        void QueueSetPlatformLights()
+        {
+            // Stop if SetPlatformLights is already queued.
+            if(PlatformLightsTimer!= null)
+                return;
+
+            PlatformLightsTimer = new DispatcherTimer();
+            PlatformLightsTimer.Interval = new TimeSpan(0,0,0,0,33);
+            PlatformLightsTimer.Start();
+
+            PlatformLightsTimer.Tick += delegate(object sender, EventArgs e)
+            {
+                PlatformLightsTimer.Stop();
+                PlatformLightsTimer = null;
+                SetPlatformLights();
+            };
+        }
+
+        // The config update doesn't happen in realtime, so set the platform LED colors directly.
+        void SetPlatformLights()
+        {
+            CommandBuffer cmd = new CommandBuffer();
+
+            for(int pad = 0; pad < 2; ++pad)
+            {
+                // Use this panel's color.  If a panel isn't connected, we still need to run the
+                // loop below to insert data for the panel.
+                byte[] color = new byte[3];
+                SMX.SMXConfig config;
+                if(SMX.SMX.GetConfig(pad, out config))
+                    color = config.platformStripColor;
+                for(int i = 0; i < 44; ++i)
+                    cmd.Write(color);
+            }
+
+            SMX.SMX.SMX_SetPlatformLights(cmd.Get());
+
         }
 
         // Return the color set for this panel in config.

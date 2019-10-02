@@ -105,6 +105,7 @@ private:
     SMXConfig config;
     vector<uint8_t> rawConfig;
     bool m_bHaveConfig = false;
+    double m_fDelayConfigUpdatesUntil = 0;
 
     // This is the configuration the user has set, if he's changed anything.  We send this to
     // the device if m_bSendConfig is true.  Once we send it once, m_bSendConfig is cleared, and
