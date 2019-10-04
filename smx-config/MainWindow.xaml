@@ -817,11 +817,6 @@ Use if the platform is too sensitive.</clr:String>
                     SelectionChanged="MainTab_Selected">
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="80*"/>
-                        <ColumnDefinition Width="17*"/>
-                        <ColumnDefinition Width="416*"/>
-                    </Grid.ColumnDefinitions>
                     <StackPanel Margin="0,0,0,0" VerticalAlignment="Top" Grid.ColumnSpan="3">
                         <TextBlock HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
                                    TextAlignment="Center"
@@ -920,7 +915,7 @@ Use if the platform is too sensitive.</clr:String>
                          shifts it by a couple pixels, which makes it fidget around when we connect
                          and disconnect. -->
                     <Label x:Name="Version2" Content="Version"
-                        HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="130,0,227,7" Grid.Column="2" />
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="1,0,0,7" Grid.Column="1" />
                 </Grid>
             </TabItem>
 
