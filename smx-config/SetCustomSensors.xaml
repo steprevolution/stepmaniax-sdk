@@ -9,7 +9,7 @@
         Height="422" Width="325" ResizeMode="NoResize"
         xmlns:controls="clr-namespace:smx_config"
         x:Name="root"
-        Title="Select Auxilliary Sensors"
+        Title="Select Custom Sensors"
         UseLayoutRounding="True">
     <Window.Resources>
         <Style x:Key="SensorSelectionButton" TargetType="{x:Type ToggleButton}">
@@ -71,7 +71,7 @@
 
     <StackPanel Background="#FFE5E5E5">
         <TextBlock xml:space="preserve" HorizontalAlignment="Center" Margin="0,15,0,10" TextAlignment="Center" FontSize="16">Select which sensors are controlled
-by the auxilliary threshold.</TextBlock>
+by the custom threshold.</TextBlock>
 
         <Grid Width="250" Height="250" Background="#FFAAAAAA" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
