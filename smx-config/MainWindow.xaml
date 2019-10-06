@@ -919,7 +919,7 @@ Use if the platform is too sensitive.</clr:String>
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Sensitivity">
+            <TabItem x:Name="SensitivityTab" Header="Sensitivity">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
                     <DockPanel Margin="0,0,0,0" VerticalAlignment="Stretch">
                         <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
