@@ -296,13 +296,16 @@ namespace smx_config
                 return;
             }
 
-            Checked += delegate(object sender, RoutedEventArgs e) { SaveToSettings(); };
-            Unchecked += delegate(object sender, RoutedEventArgs e) { SaveToSettings(); };
-
             OnConfigChange onConfigChange;
             onConfigChange = new OnConfigChange(this, delegate(LoadFromConfigDelegateArgs args) {
                 LoadFromSettings();
             });
+        }
+
+        protected override void OnClick()
+        {
+            IsChecked = !IsChecked;
+            SaveToSettings();
         }
 
         private void LoadFromSettings()

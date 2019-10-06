@@ -126,10 +126,7 @@ namespace smx_config
 
         void CreateThresholdSliders()
         {
-            // remove the threshold sliders from xaml, create them all here
-            //
-            // remove the AdvancedModeEnabled binding and ShouldBeDisplayed, handle that here
-            // by creating the ones we need
+            // Remove and recreate threshold sliders.
             ThresholdSliderContainer.Children.Clear();
             foreach(string sliderName in ThresholdSettings.thresholdSliderNames)
             {
