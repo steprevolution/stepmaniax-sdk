@@ -360,6 +360,27 @@ namespace smx_config
             SMX.SMX.LightsAnimation_Load(gif, pad, type, out error);
         }
 
+        // Some broken antivirus software locks files when they're read.  This is horrifying and
+        // breaks lots of software, including WPF's settings class.  This is a race condition,
+        // so try to work around this by trying repeatedly.  There's not much else we can do about
+        // it other than asking users to use a better antivirus.
+        public static void SaveApplicationSettings()
+        {
+            for(int i = 0; i < 10; ++i)
+            {
+                try {
+                    Properties.Settings.Default.Save();
+                    return;
+                } catch(IOException e)
+                {
+                    Console.WriteLine("Error writing settings.  Trying again: " + e);
+                }
+            }
+
+            MessageBox.Show("Settings couldn't be saved.\n\nThis is usually caused by faulty antivirus software.",
+                "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
         // Create a .lnk.
         public static void CreateShortcut(string outputFile, string targetPath, string arguments)
         {
@@ -442,7 +463,7 @@ namespace smx_config
         static public void SetCustomSensorsJSON(List<object> panelAndSensors)
         {
             Properties.Settings.Default.CustomSensors = SerializeJSON.Serialize(panelAndSensors);
-            Properties.Settings.Default.Save();
+            Helpers.SaveApplicationSettings();
 
             // Clear the cache.  Set it to null instead of assigning panelAndSensors to it to force
             // it to re-parse at least once, to catch problems early.
@@ -715,10 +736,13 @@ namespace smx_config
             }
 
             set {
+                if(Properties.Settings.Default.LaunchOnStartup == value)
+                    return;
+
                 // Remember whether we want to be launched on startup.  This is used as a sanity
                 // check in case we're not able to remove our launch shortcut.
                 Properties.Settings.Default.LaunchOnStartup = value;
-                Properties.Settings.Default.Save();
+                Helpers.SaveApplicationSettings();
 
                 string shortcutFilename = GetLaunchShortcutFilename();
                 if(value)

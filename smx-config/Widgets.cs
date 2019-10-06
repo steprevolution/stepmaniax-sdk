@@ -323,7 +323,7 @@ namespace smx_config
             else if(Type == "outer-sensors")
                 Properties.Settings.Default.UseOuterSensorThresholds = (bool) IsChecked;
 
-            Properties.Settings.Default.Save();
+            Helpers.SaveApplicationSettings();
 
             // Sync thresholds after enabling or disabling a slider.
             ThresholdSettings.SyncSliderThresholds();
