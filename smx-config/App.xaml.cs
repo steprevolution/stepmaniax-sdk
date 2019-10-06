@@ -30,6 +30,9 @@ namespace smx_config
                 return;
             }
 
+            // This is used by the installer to close a running instance automatically when updating.
+            ListenForShutdownRequest();
+
             // If we're being launched on startup, but the LaunchOnStartup setting is false,
             // then the user turned off auto-launching but we're still being launched for some
             // reason (eg. a renamed launch shortcut that we couldn't find to remove).  As
@@ -178,6 +181,23 @@ namespace smx_config
             Application.Current.Dispatcher.Invoke(new Action(() => {
                 App application = (App) Application.Current;
                 application.BringToForeground();
+            }));
+        }
+
+        private void ListenForShutdownRequest()
+        {
+            // We've already checked that we're the only instance when we get here, so this event shouldn't
+            // exist.  If it already exists for some reason, we'll listen to it anyway.
+            EventWaitHandle SMXConfigShutdown = new EventWaitHandle(false, EventResetMode.AutoReset, "SMXConfigShutdown");
+            ThreadPool.RegisterWaitForSingleObject(SMXConfigShutdown, ShutdownApplicationCallback, this, Timeout.Infinite, false);
+        }
+
+        private static void ShutdownApplicationCallback(Object self, Boolean timedOut)
+        {
+            // This is called when another instance sends us a message over SMXConfigShutdown.
+            Application.Current.Dispatcher.Invoke(new Action(() => {
+                App application = (App) Application.Current;
+                application.Shutdown();
             }));
         }
 
