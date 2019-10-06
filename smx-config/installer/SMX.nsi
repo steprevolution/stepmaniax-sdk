@@ -71,6 +71,57 @@ Function InstallMSVCRuntime
     ExecWait '"$TEMP\vcredist_x86.exe" /passive /norestart'
 FunctionEnd
 
+# Global variables and lots of gotos.  That's all NSIS can do.  I feel like I'm 8 again, writing in BASIC.
+Function CheckRunning
+    # Reset ShutdownRetries.
+    Var /Global "ShutdownRetries"
+    StrCpy $ShutdownRetries "0"
+
+retry:
+    # Check if SMXConfig is running.  For now we use SMXConfigEvent for this, which is used to foreground
+    # the application, since it's been around for a while.  SMXConfigShutdown is only available in newer
+    # versions.
+    System::Call 'kernel32::OpenEventW(i 0x00100000, b 0, w "SMXConfigEvent") i .R0'
+    IntCmp $R0 0 done
+    System::Call 'kernel32::CloseHandle(i $R0)'
+
+try_to_shut_down:
+    IntOp $ShutdownRetries $ShutdownRetries + 1
+    IntCmp $ShutdownRetries 10 failed_to_shut_down
+
+    # SMXConfig is running.  See if SMXConfigShutdown is available, to let us exit it automatically.
+    System::Call 'kernel32::OpenEventW(i 0x00100000|0x0002, b 0, w "SMXConfigShutdown") i .R0'
+    IntCmp $R0 0 CantShutdownAutomatically
+
+    # We have the shutdown handle.  Signal it to tell SMXConfig to exit.
+    System::Call 'kernel32::SetEvent(i $R0) i .R0'
+    System::Call 'kernel32::CloseHandle(i $R0)'
+
+    # Wait briefly to give it a chance to shut down, then loop and check that it's shut down.  If it isn't,
+    # we'll retry a few times.
+    Sleep 100    
+    goto retry
+#    goto done
+
+#    System::Call "Kernel32::GetLastError() i() .r1"
+
+failed_to_shut_down:
+    StrCpy $ShutdownRetries "0"
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Please close SMXConfig before updating." /SD IDCANCEL IDRETRY retry IDCANCEL cancel
+    Quit
+
+CantShutdownAutomatically:
+    # SMXConfig is running, but it's an older version that doesn't have a shutdown signal.  Ask the
+    # user to shut it down.  Retry will restart and check if it's not running.
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Please close SMXConfig before updating." /SD IDCANCEL IDRETRY retry IDCANCEL cancel
+    Quit
+
+cancel:
+    Quit
+done:
+FunctionEnd
+
+Page custom CheckRunning
 Page directory
 Page instfiles
 
