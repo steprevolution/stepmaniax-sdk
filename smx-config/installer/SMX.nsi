@@ -72,9 +72,11 @@ Function InstallMSVCRuntime
 FunctionEnd
 
 # Global variables and lots of gotos.  That's all NSIS can do.  I feel like I'm 8 again, writing in BASIC.
-Function CheckRunning
+# Also, we need to use some macro nastiness to convince NSIS to include this in both the installer and uninstaller.
+Var /Global "ShutdownRetries"
+!macro myfunc un
+Function ${un}CheckRunning
     # Reset ShutdownRetries.
-    Var /Global "ShutdownRetries"
     StrCpy $ShutdownRetries "0"
 
 retry:
@@ -113,13 +115,17 @@ failed_to_shut_down:
 CantShutdownAutomatically:
     # SMXConfig is running, but it's an older version that doesn't have a shutdown signal.  Ask the
     # user to shut it down.  Retry will restart and check if it's not running.
-    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Please close SMXConfig before updating." /SD IDCANCEL IDRETRY retry IDCANCEL cancel
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Please close SMXConfig." /SD IDCANCEL IDRETRY retry IDCANCEL cancel
     Quit
 
 cancel:
     Quit
 done:
 FunctionEnd
+!macroend
+ 
+!insertmacro myfunc ""
+!insertmacro myfunc "un."
 
 Page custom CheckRunning
 Page directory
@@ -146,7 +152,12 @@ Section
                      "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
 SectionEnd
 
+#Section "un.CheckRunning"
+#SectionEnd
+
 Section "Uninstall"
+    # Make sure SMXConfig isn't running.
+    Call un.CheckRunning
     Delete $INSTDIR\SMX.dll
     Delete $INSTDIR\SMXConfig.exe
     Delete $INSTDIR\uninstall.exe
