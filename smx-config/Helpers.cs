@@ -918,7 +918,13 @@ namespace smx_config
         // Import a saved JSON configuration to an SMXConfig.
         public static void ImportSettingsFromJSON(string json, ref SMX.SMXConfig config)
         {
-            Dictionary<string, Object> dict = SMXJSON.ParseJSON.Parse<Dictionary<string, Object>>(json);
+            Dictionary<string, Object> dict;
+            try {
+                dict = SMXJSON.ParseJSON.Parse<Dictionary<string, Object>>(json);
+            } catch(ParseError e) {
+                MessageBox.Show(e.Message, "Error importing configuration", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             // Read the thresholds.  If any values are missing, we'll leave the value in config alone.
             if(config.fsr())

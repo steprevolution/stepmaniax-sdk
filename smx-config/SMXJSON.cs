@@ -9,7 +9,8 @@ namespace SMXJSON
 {
     public class JSONError: Exception
     {
-        public JSONError(string error)
+        public JSONError(string error):
+            base(error)
         {
         }
     };
