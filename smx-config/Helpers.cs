@@ -508,7 +508,13 @@ namespace smx_config
 
         static public List<object> GetCustomSensorsJSON()
         {
-            return SMXJSON.ParseJSON.Parse<List<object>>(Properties.Settings.Default.CustomSensors);
+            try {
+                return SMXJSON.ParseJSON.Parse<List<object>>(Properties.Settings.Default.CustomSensors);
+            } catch(ParseError) {
+                // CustomSensors is empty by default.  We could test if it's empty, but as a more general
+                // safety, just catch any JSON errors in case something invalid is saved to it.
+                return new List<object>();
+            }
         }
 
         const int SensorLeft = 0;
