@@ -30,7 +30,7 @@ Use if the platform is too sensitive.</clr:String>
         <SolidColorBrush x:Key="DoubleSlider.Pressed.Background" Color="#FFDAECFC"/>
         <SolidColorBrush x:Key="DoubleSlider.Pressed.Border" Color="#FF569DE5"/>
 
-        <Style x:Key="DoubleSliderThumb" TargetType="{x:Type Thumb}">
+        <Style TargetType="{x:Type controls:DoubleSliderThumb}">
             <Setter Property="Height" Value="18"/>
             <Setter Property="Width" Value="11"/>
             <Setter Property="Focusable" Value="False"/>
@@ -41,7 +41,22 @@ Use if the platform is too sensitive.</clr:String>
                     <ControlTemplate TargetType="{x:Type Thumb}">
                         <Grid HorizontalAlignment="Center" UseLayoutRounding="True" VerticalAlignment="Center"
                                                   Height="18" Width="11">
-                            <Path x:Name="grip" Data="M 0,0 C0,0 11,0 11,0 11,0 11,18 11,18 11,18 0,18 0,18 0,18 0,0 0,0 z" Fill="{StaticResource DoubleSlider.Static.Background}" Stretch="Fill" SnapsToDevicePixels="True" Stroke="{StaticResource DoubleSlider.Static.Border}" StrokeThickness="1" UseLayoutRounding="True" VerticalAlignment="Center"/>
+                            <Path x:Name="grip" Data="M 0,0 C0,0 11,0 11,0 11,0 11,18 11,18 11,18 0,18 0,18 0,18 0,0 0,0 z"
+                                  Fill="{StaticResource DoubleSlider.Static.Background}"
+                                  Stretch="Fill"
+                                  SnapsToDevicePixels="True"
+                                  Stroke="{StaticResource DoubleSlider.Static.Border}"
+                                  StrokeThickness="1" UseLayoutRounding="True" VerticalAlignment="Center"/>
+                            <Path x:Name="up" Data="M 3,12 C3,12 5.5,6 5.5,6 5.5,6 8,12 8,12"
+                                  Stroke="#000000"
+                                  StrokeThickness="1"
+                                  Visibility="{Binding Path=ShowUpArrow, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            />
+                            <Path x:Name="down" Data="M 3,6 C3,6 5.5,12 5.5,12 5.5,12 8,6 8,6"
+                                  Stroke="#000000"
+                                  StrokeThickness="1"
+                                  Visibility="{Binding Path=ShowDownArrow, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            />
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="true">
@@ -101,8 +116,8 @@ Use if the platform is too sensitive.</clr:String>
                             <RepeatButton x:Name="PART_DecreaseButton" Style="{StaticResource DoubleSliderRepeatButton}"/>
                             <RepeatButton x:Name="PART_IncreaseButton" Style="{StaticResource DoubleSliderRepeatButton}"/>
 
-                            <Thumb x:Name="PART_UpperThumb" Style="{StaticResource DoubleSliderThumb}" />
-                            <Thumb x:Name="PART_LowerThumb" Style="{StaticResource DoubleSliderThumb}" />
+                            <controls:DoubleSliderThumb ShowUpArrow="false" ShowDownArrow="true" x:Name="PART_UpperThumb" />
+                            <controls:DoubleSliderThumb ShowUpArrow="true" ShowDownArrow="false" x:Name="PART_LowerThumb" />
 
                             <!-- The connecting bar: -->
                             <Thumb x:Name="PART_Middle"

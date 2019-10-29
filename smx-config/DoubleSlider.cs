@@ -200,4 +200,23 @@ namespace smx_config
             InvalidateArrange();
         }
     }
+
+    class DoubleSliderThumb: Thumb
+    {
+        public static readonly DependencyProperty ShowUpArrowProperty = DependencyProperty.Register("ShowUpArrow",
+            typeof(bool), typeof(DoubleSliderThumb));
+
+        public bool ShowUpArrow {
+            get { return (bool) this.GetValue(ShowUpArrowProperty); }
+            set { this.SetValue(ShowUpArrowProperty, value); }
+        }
+
+        public static readonly DependencyProperty ShowDownArrowProperty = DependencyProperty.Register("ShowDownArrow",
+            typeof(bool), typeof(DoubleSliderThumb));
+
+        public bool ShowDownArrow {
+            get { return (bool) this.GetValue(ShowDownArrowProperty); }
+            set { this.SetValue(ShowDownArrowProperty, value); }
+        }
+    }
 }
