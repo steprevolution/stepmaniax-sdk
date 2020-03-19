@@ -208,6 +208,27 @@ void SMX::SMXDevice::FactoryReset()
     [&](string response) {
         // We now have the new configuration.
         m_Lock.AssertLockedByCurrentThread();
+
+        if(deviceInfo.m_iFirmwareVersion >= 5)
+        {
+            // Factory reset resets the platform strip color saved to the configuration, but doesn't
+            // apply it to the lights.  Do that now.
+            string sLightCommand;
+            sLightCommand.push_back('L');
+            sLightCommand.push_back(0); // LED strip index (always 0)
+            sLightCommand.push_back(44); // number of LEDs to set
+
+            config.platformStripColor[0];
+            for(int i = 0; i < 44; ++i)
+            {
+                sLightCommand += config.platformStripColor[0];
+                sLightCommand += config.platformStripColor[1];
+                sLightCommand += config.platformStripColor[2];
+            }
+
+            SendCommandLocked(sLightCommand);
+        }
+
         CallUpdateCallback(SMXUpdateCallback_FactoryResetCommandComplete);
     });
 }
