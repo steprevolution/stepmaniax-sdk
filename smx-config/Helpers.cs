@@ -314,14 +314,13 @@ namespace smx_config
             { SMX.SMX.LightsType.LightsType_Released, "released" },
         };
 
-        // Load any saved animations from disk.  If useDefault is true, load the default
-        // animation even if there's a user animation saved.
-        public static void LoadSavedPanelAnimations(bool useDefault=false)
+        // Load any saved animations from disk.
+        public static void LoadSavedPanelAnimations()
         {
             for(int pad = 0; pad < 2; ++pad)
             {
                 foreach(var it in LightsTypeNames)
-                    LoadSavedAnimationType(pad, it.Key, useDefault);
+                    LoadSavedAnimationType(pad, it.Key);
             }
         }
 
@@ -336,12 +335,12 @@ namespace smx_config
         //
         // Data will always be returned.  If the user hasn't saved anything, we'll return
         // our default animation.
-        public static byte[] ReadSavedAnimationType(int pad, SMX.SMX.LightsType type, bool useDefault=false)
+        private static byte[] ReadSavedAnimationType(int pad, SMX.SMX.LightsType type)
         {
             string filename = LightsTypeNames[type] + ".gif";
             string path = "Animations/Pad" + (pad+1) + "/" + filename;
             byte[] gif = Helpers.ReadFileFromSettings(path);
-            if(gif == null || useDefault)
+            if(gif == null)
             {
                 // If the user has never loaded a file, load our default.
                 Uri url = new Uri("pack://application:,,,/Resources/" + filename);
@@ -353,9 +352,9 @@ namespace smx_config
         }
 
         // Load a PanelAnimation from disk.
-        public static void LoadSavedAnimationType(int pad, SMX.SMX.LightsType type, bool useDefault=false)
+        private static void LoadSavedAnimationType(int pad, SMX.SMX.LightsType type)
         {
-            byte[] gif = ReadSavedAnimationType(pad, type, useDefault);
+            byte[] gif = ReadSavedAnimationType(pad, type);
             string error;
             SMX.SMX.LightsAnimation_Load(gif, pad, type, out error);
         }
