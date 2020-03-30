@@ -200,6 +200,19 @@ namespace smx_config
             }
         }
 
+        // We have two main modes: color mode and GIF animation mode.  These behave differently
+        // on gen1-3 pads and gen4 pads.
+        //
+        // On gen4 pads, this determines whether we show animations on press, or show a solid color.
+        // This makes it easy to pick a solid color if that's all you want to change, instead of having
+        // to make a GIF with the color.  We always show animations on release in both modes.
+        //
+        // On gen1-3 pads, panels are black in color mode, so they behave the same as they did originally.
+        // Animations are only shown in GIF animation mode.  These animations are enabled with
+        // LightsAnimation_SetAuto.
+        //
+        // The gen1-3 firmware ignores the AutoLightingUsePressedAnimations flag, but we still use it to
+        // store which mode the user has selected.
         private void PressedColorModeButton(object sender, RoutedEventArgs e)
         {
             // The user pressed either the "panel colors" or "GIF animations" button.
@@ -223,6 +236,11 @@ namespace smx_config
 
         private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
         {
+            // Refresh whether LightsAnimation_SetAuto should be enabled.
+            SMX.SMXConfig firstConfig = ActivePad.GetFirstActivePadConfig();
+            bool usePressedAnimationsEnabled = (firstConfig.configFlags & SMX.SMXConfigFlags.AutoLightingUsePressedAnimations) != 0;
+            SMX.SMX.LightsAnimation_SetAuto(usePressedAnimationsEnabled);
+
             bool EitherControllerConnected = args.controller[0].info.connected || args.controller[1].info.connected;
             Main.Visibility = EitherControllerConnected ? Visibility.Visible : Visibility.Hidden;
             Searching.Visibility = EitherControllerConnected ? Visibility.Hidden : Visibility.Visible;

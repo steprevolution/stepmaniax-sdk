@@ -797,11 +797,6 @@ namespace smx_config
             if(LightsTimer.IsEnabled)
                 return;
 
-            // We normally leave lights animation control enabled while this application is
-            // running.  Turn it off temporarily while we're showing the lights sample, or the
-            // two will fight.
-            SMX.SMX.LightsAnimation_SetAuto(false);
-
             // Don't wait for an interval to send the first update.
             //AutoLightsColorRefreshColor();
 
@@ -815,10 +810,6 @@ namespace smx_config
             // Reenable pad auto-lighting.  If we're running animations in SMXPanelAnimation,
             // this will be overridden by it once it sends lights.
             SMX.SMX.ReenableAutoLights();
-
-            // Turn lighting control back on.  This will only do anything on pads without
-            // support for animations.
-            SMX.SMX.LightsAnimation_SetAuto(true);
         }
 
         private void AutoLightsColorRefreshColor()

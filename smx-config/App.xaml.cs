@@ -64,10 +64,8 @@ namespace smx_config
 
             CurrentSMXDevice.singleton = new CurrentSMXDevice();
 
-            // Load animations, and tell the SDK to handle auto-lighting as long as
-            // we're running.
+            // Load animations.
             Helpers.LoadSavedPanelAnimations();
-            SMX.SMX.LightsAnimation_SetAuto(true);
 
             CreateTrayIcon();
 
