@@ -95,6 +95,9 @@ SMX_API void SMX_SetLights2(const char *lightData, int lightDataSize)
     }
 
     SMXManager::g_pSMX->SetLights(lights);
+
+    // If we're running auto animations, stop them when we get an API call to set lights.
+    SMXAutoPanelAnimations::TemporaryStopAnimating();
 }
 
 // This is internal for SMXConfig.  These lights aren't meant to be animated.

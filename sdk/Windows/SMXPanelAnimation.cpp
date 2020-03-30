@@ -383,6 +383,18 @@ bool SMX_LightsAnimation_Load(const char *gif, int size, int pad, SMX_LightsType
     return true;
 }
 
+namespace
+{
+    double g_fStopAnimatingUntil = -1;
+}
+
+void SMXAutoPanelAnimations::TemporaryStopAnimating()
+{
+    // Stop animating for 100ms.
+    double fStopForSeconds = 1/10.0f;
+    g_fStopAnimatingUntil = SMX::GetMonotonicTime() + fStopForSeconds;
+}
+
 // A thread to handle setting light animations.  We do this in a separate
 // thread rather than in the SMXManager thread so this can be treated as
 // if it's external application thread, and it's making normal threaded
@@ -407,8 +419,12 @@ private:
 
         while(!m_bShutdown)
         {
+            // Check if we've temporarily stopped updating lights.
+            bool bSkipUpdate = g_fStopAnimatingUntil > SMX::GetMonotonicTime();
+
             // Run a single panel lights update.
-            UpdateLights();
+            if(!bSkipUpdate)
+                UpdateLights();
 
             // Wait up to 30 FPS, or until we're signalled.  We can only be signalled
             // if we're shutting down, so we don't need to worry about partial frame

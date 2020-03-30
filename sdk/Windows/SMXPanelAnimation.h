@@ -28,6 +28,13 @@ public:
     std::vector<float> m_iFrameDurations;
 };
 
+namespace SMXAutoPanelAnimations
+{
+    // If SMX_LightsAnimation_SetAuto is active, stop sending animations briefly.  This is
+    // called when lights are set directly, so they don't compete with the animation.
+    void TemporaryStopAnimating();
+}
+
 // For SMX_API:
 #include "../SMX.h"
 
