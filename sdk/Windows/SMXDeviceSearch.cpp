@@ -37,7 +37,7 @@ static set<wstring> GetAllHIDDevicePaths(wstring &error)
             int iError = GetLastError();
             if(iError != ERROR_INSUFFICIENT_BUFFER)
             {
-		Log(ssprintf("SetupDiGetDeviceInterfaceDetail failed: %ls", GetErrorString(iError).c_str()));
+                Log(wssprintf(L"SetupDiGetDeviceInterfaceDetail failed: %ls", GetErrorString(iError).c_str()));
                 continue;
             }
         }
@@ -50,7 +50,7 @@ static set<wstring> GetAllHIDDevicePaths(wstring &error)
         DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
         if(!SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DeviceInterfaceDetailData, iSize, NULL, &DeviceInfoData))
         {
-            Log(ssprintf("SetupDiGetDeviceInterfaceDetail failed: %ls", GetErrorString(GetLastError()).c_str()));
+            Log(wssprintf(L"SetupDiGetDeviceInterfaceDetail failed: %ls", GetErrorString(GetLastError()).c_str()));
             continue;
         }
 
@@ -74,8 +74,8 @@ static shared_ptr<AutoCloseHandle> OpenUSBDevice(LPCTSTR DevicePath, wstring &er
 
     if(OpenDevice == INVALID_HANDLE_VALUE)
     {
-	// Many unrelated devices will fail to open, so don't return this as an error.
-        Log(ssprintf("Error opening device %ls: %ls", DevicePath, GetErrorString(GetLastError()).c_str()));
+        // Many unrelated devices will fail to open, so don't return this as an error.
+        Log(wssprintf(L"Error opening device %ls: %ls", DevicePath, GetErrorString(GetLastError()).c_str()));
         return nullptr;
     }
 

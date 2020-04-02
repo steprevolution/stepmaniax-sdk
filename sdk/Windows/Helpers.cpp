@@ -15,6 +15,11 @@ void SMX::Log(string s)
     g_LogCallback(s);
 }
 
+void SMX::Log(wstring s)
+{
+    Log(WideStringToUTF8(s));
+}
+
 void SMX::SetLogCallback(function<void(const string &log)> callback)
 {
     g_LogCallback = callback;
@@ -69,6 +74,8 @@ wstring SMX::GetErrorString(int err)
 string SMX::vssprintf(const char *szFormat, va_list argList)
 {
     int iChars = vsnprintf(NULL, 0, szFormat, argList);
+    if(iChars == -1)
+        return string("Error formatting string: ") + szFormat;
 
     string sStr;
     sStr.resize(iChars+1);
@@ -83,6 +90,27 @@ string SMX::ssprintf(const char *fmt, ...)
     va_list va;
     va_start(va, fmt);
     return vssprintf(fmt, va);
+}
+
+wstring SMX::wvssprintf(const wchar_t *szFormat, va_list argList)
+{
+    int iChars = _vsnwprintf(NULL, 0, szFormat, argList);
+    if(iChars == -1)
+        return wstring(L"Error formatting string: ") + szFormat;
+
+    wstring sStr;
+    sStr.resize(iChars+1);
+    _vsnwprintf((wchar_t *) sStr.data(), iChars+1, szFormat, argList);
+    sStr.resize(iChars);
+
+    return sStr;
+}
+
+wstring SMX::wssprintf(const wchar_t *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    return wvssprintf(fmt, va);
 }
 
 string SMX::BinaryToHex(const void *pData_, int iNumBytes)
@@ -216,6 +244,20 @@ void SMX::GenerateRandom(void *pOut, int iSize)
 
     if(!CryptReleaseContext(cryptProv, 0))
         throw exception("CryptReleaseContext error");
+}
+
+string SMX::WideStringToUTF8(wstring s)
+{
+    if(s.empty())
+        return "";
+
+    int iBytes = WideCharToMultiByte( CP_ACP, 0, s.data(), s.size(), NULL, 0, NULL, FALSE );
+
+    string ret;
+    ret.resize(iBytes);
+    WideCharToMultiByte( CP_ACP, 0, s.data(), s.size(), (char *) ret.data(), iBytes, NULL, FALSE );
+
+    return ret;
 }
 
 const char *SMX::CreateError(string error)
