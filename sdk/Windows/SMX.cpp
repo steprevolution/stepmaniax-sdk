@@ -11,11 +11,43 @@
 using namespace std;
 using namespace SMX;
 
+#include <dbghelp.h>
+#include <shlobj_core.h>
+
+#pragma comment(lib, "dbghelp.lib")
+
+long __stdcall GenerateDump(EXCEPTION_POINTERS *pExceptionPointers)
+{
+    SYSTEMTIME time;
+    GetLocalTime(&time);
+
+    wchar_t desktopPath[MAX_PATH+1];
+    SHGetFolderPathW(HWND_DESKTOP, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, desktopPath);
+
+    WCHAR filename[MAX_PATH]; 
+    wsprintf(filename, L"%s/StepManiaX-%04d-%02d-%02d-%02d%02d%02d.dmp", 
+        desktopPath, time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
+
+    HANDLE file = CreateFile(filename, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_WRITE|FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+
+    MINIDUMP_EXCEPTION_INFORMATION ExpParam;
+    ExpParam.ThreadId = GetCurrentThreadId();
+    ExpParam.ExceptionPointers = pExceptionPointers;
+    ExpParam.ClientPointers = true;
+
+    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), file, MiniDumpWithDataSegs, &ExpParam, NULL, NULL);
+
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
     switch(ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
+        SetUnhandledExceptionFilter(GenerateDump);
+        break;
+
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
     case DLL_PROCESS_DETACH:
