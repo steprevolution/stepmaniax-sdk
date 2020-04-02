@@ -12,6 +12,7 @@ using namespace std;
 namespace SMX
 {
 void Log(string s);
+void Log(wstring s);
 
 // Set a function to receive logs written by SMX::Log.  By default, logs are written
 // to stdout.
@@ -22,11 +23,14 @@ void StripCrnl(wstring &s);
 wstring GetErrorString(int err);
 string vssprintf(const char *szFormat, va_list argList);
 string ssprintf(const char *fmt, ...);
+wstring wvssprintf(const wchar_t *szFormat, va_list argList);
+wstring wssprintf(const wchar_t *fmt, ...);
 string BinaryToHex(const void *pData_, int iNumBytes);
 string BinaryToHex(const string &sString);
 bool GetRandomBytes(void *pData, int iBytes);
 double GetMonotonicTime();
 void GenerateRandom(void *pOut, int iSize);
+string WideStringToUTF8(wstring s);
 
 // Create a char* string that will be valid until the next call to CreateError.
 // This is used to return error messages to the caller.
