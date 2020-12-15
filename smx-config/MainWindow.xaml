@@ -676,7 +676,7 @@ Use if the platform is too sensitive.</clr:String>
                                     <controls:PanelTestModeCheckbox
                                         x:Name="PanelTestModeCheckbox"
                                         HorizontalAlignment="Left" VerticalAlignment="Top"
-                                        Content="Panel test mode"
+                                        Content="Raw panel display"
                                     />
                                 </StackPanel>
                             </StackPanel>
