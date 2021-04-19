@@ -110,7 +110,7 @@ colors, one for each LED.
 lightDataSize is the number of bytes in lightsData.  This should be 1350 (2 pads * 9 panels *
 25 lights * 3 RGB colors).  For backwards-compatibility, this can also be 864.
 <p>
-Each panel has lights in the following order:
+25-LED panels have lights in the following order:
 <p>
 <pre>
 00  01  02  03
@@ -121,15 +121,9 @@ Each panel has lights in the following order:
   22  23  24
 12  13  14  15
 </pre>
-
-Each panel has lights in the following order:
 <p>
-<pre>
-0123
-4567
-89AB
-CDEF
-</pre>
+
+16-LED panels have the same layout, ignoring LEDs 16 and up.
 <p>
 Panels are in the following order:
 <p>
