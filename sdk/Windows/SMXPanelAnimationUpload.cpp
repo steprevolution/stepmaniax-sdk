@@ -6,6 +6,7 @@
 #include "Helpers.h"
 #include <string>
 #include <vector>
+#include <array>
 using namespace std;
 using namespace SMX;
 
@@ -23,12 +24,12 @@ using namespace SMX;
 namespace
 {
     // Panel names for error messages.
-    static const char *panel_names[] = {
+    static const std::array<const char*, 9> panel_names = {
         "up-left", "up", "up-right",
         "left", "center", "right",
         "down-left", "down", "down-right",
     };
-}
+}  // namespace
 
 // These structs are the protocol we use to send offline graphics to the pad.
 // This isn't related to realtime lighting.
@@ -89,8 +90,9 @@ namespace PanelLightGraphic
 
         uint16_t offset = 0;
         uint8_t size = 0;
-        uint8_t data[240];
+        std::array<uint8_t, 240> data = { 0 }; // Initialize the array with zeros
     };
+
 #pragma pack(pop)
 
 #pragma pack(push, 1)
@@ -316,7 +318,7 @@ namespace ProtocolHelpers
 
             int bytes_left = size - offset;
             packet.size = min(sizeof(PanelLightGraphic::upload_packet::data), bytes_left);
-            memcpy(packet.data, buf, packet.size);
+            memcpy(packet.data.data(), buf, packet.size); // Use data() to get the pointer
             packets.push_back(packet);
 
             offset += packet.size;

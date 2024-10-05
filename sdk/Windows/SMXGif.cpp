@@ -83,8 +83,11 @@ public:
     void ReadBytes(string &s, int count)
     {
         s.clear();
-        while(count--)
+        s.reserve(count); // Reserve memory to avoid multiple allocations
+        for (int i = 0; i < count; ++i)
+        {
             s.push_back(ReadByte());
+        }
     }
 
     void skip(int bytes)
@@ -142,9 +145,9 @@ public:
         while(1)
         {
             uint8_t blocksize = stream.ReadByte();
-            stream.skip(blocksize);
-            if(bytes_remaining == 0)
+            if (blocksize == 0)
                 break;
+            stream.skip(blocksize);
         }
     }
 
@@ -211,6 +214,8 @@ string LWZDecoder::DecodeImage()
             next_free_slot = clear + 2;
             prev_code1 = -1;
             prev_code2 = -1;
+            dictionary.clear();
+            dictionary.resize(1 << GIFBITS);
             continue;
         }
 
