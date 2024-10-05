@@ -3,7 +3,7 @@
 #include "SMXDeviceConnection.h"
 #include "SMXDeviceSearchThreaded.h"
 #include "Helpers.h"
-
+#include <stdexcept>
 #include <windows.h>
 #include <memory>
 using namespace std;
