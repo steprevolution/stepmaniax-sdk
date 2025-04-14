@@ -5,6 +5,7 @@
 #include "Helpers.h"
 
 #include <windows.h>
+#include <stdexcept>
 #include <memory>
 using namespace std;
 using namespace SMX;
