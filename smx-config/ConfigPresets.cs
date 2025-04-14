@@ -96,21 +96,21 @@ namespace smx_config
         {
             SetPreset(ref config,
                 20, 25, 20, 30,
-                148, 150, 145, 160);
+                152, 153, 152, 153);
         }
 
         static private void SetNormalPreset(ref SMX.SMXConfig config)
         {
             SetPreset(ref config,
                 33, 42, 35, 60,
-                162, 175, 202, 225);
+                174, 175, 199, 200);
         }
 
         static private void SetLowPreset(ref SMX.SMXConfig config)
         {
             SetPreset(ref config,
                 70, 80, 100, 120,
-                200, 219, 212, 225);
+                217, 218, 217, 218);
         }
 
         // Return the extra panels that the given panel's sensitivities control when
