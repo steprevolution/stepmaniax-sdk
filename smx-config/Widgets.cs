@@ -345,6 +345,70 @@ namespace smx_config
         }
     }
 
+
+    // A button that selects a preset, and shows a checkmark if that preset is set.
+    public class PresetDropdown: ComboBox
+    {
+        private OnConfigChange onConfigChange;
+        private string[] presets = new string[] { "low", "normal", "high" };
+        private bool UpdatingUI = false;
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
+                LoadUIFromConfig(args);
+            });
+        }
+
+        private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
+        {
+            UpdatingUI = true;
+            try {
+                foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+                {
+                    SMX.SMXConfig config = activePad.Item2;
+                    string CurrentPreset = ConfigPresets.GetPreset(config);
+                    int presetIdx = Array.IndexOf(presets, CurrentPreset);
+                    if(presetIdx < 0)
+                        presetIdx = 3; // custom
+                    
+                    SelectedIndex = presetIdx;
+                    break;
+                }
+            } finally {
+                UpdatingUI = false;
+            }
+        }
+
+        protected override void OnSelectionChanged(SelectionChangedEventArgs e)
+        {
+            base.OnSelectionChanged(e);
+
+            if(UpdatingUI)
+                return;
+
+            int selection = SelectedIndex;
+            if(selection == 3)
+            {
+                // For "Custom", leave the current preset alone.
+                return;
+            }
+            string preset = presets[selection];
+
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                int pad = activePad.Item1;
+                SMX.SMXConfig config = activePad.Item2;
+
+                ConfigPresets.SetPreset(preset, ref config);
+                SMX.SMX.SetConfig(pad, config);
+            }
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+        }
+    }
+
     // A button that selects a preset, and shows a checkmark if that preset is set.
     public class PresetButton: Control
     {
