@@ -296,6 +296,8 @@ namespace smx_config
                 return;
             }
 
+            LoadFromSettings();
+
             OnConfigChange onConfigChange;
             onConfigChange = new OnConfigChange(this, delegate(LoadFromConfigDelegateArgs args) {
                 LoadFromSettings();
@@ -306,6 +308,11 @@ namespace smx_config
         {
             IsChecked = !IsChecked;
             SaveToSettings();
+
+            // Sync thresholds after enabling or disabling a slider.
+            ThresholdSettings.SyncSliderThresholds();
+
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
         }
 
         private void LoadFromSettings()
@@ -324,11 +331,6 @@ namespace smx_config
                 Properties.Settings.Default.UseOuterSensorThresholds = (bool) IsChecked;
 
             Helpers.SaveApplicationSettings();
-
-            // Sync thresholds after enabling or disabling a slider.
-            ThresholdSettings.SyncSliderThresholds();
-
-            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
         }
     }
 
