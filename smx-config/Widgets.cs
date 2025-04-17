@@ -36,6 +36,11 @@ namespace smx_config
 
         private void LoadUIFromConfig(SMX.SMXConfig config)
         {
+            // If masterVersion is 0, there's no controller connected and GetFirstActivePadConfig
+            // returned a placeholder.  Don't refresh, so we don't clear AdvancedMode when disconnected.
+            if(config.masterVersion == 0)
+                return;
+
             // The master version doesn't actually matter, but we use this as a signal that the panels
             // have a new enough firmware to support this.
             bool SupportsAdvancedMode = config.masterVersion != 0xFF && config.masterVersion >= 2;
