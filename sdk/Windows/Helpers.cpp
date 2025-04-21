@@ -333,4 +333,5 @@ extern "C" __declspec(dllexport) void SMX_Internal_OpenConsole()
     AllocConsole();
     freopen("CONOUT$","wb", stdout);
     freopen("CONOUT$","wb", stderr);
+    AttachConsole(ATTACH_PARENT_PROCESS);
 }
