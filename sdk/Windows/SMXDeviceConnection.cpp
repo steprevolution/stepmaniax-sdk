@@ -44,7 +44,8 @@ bool SMX::SMXDeviceConnection::Open(shared_ptr<AutoCloseHandle> DeviceHandle, ws
     // Begin the first async read.
     BeginAsyncRead(sError);
 
-    // Request device info.
+    // Request device info.  Once this finishes, SMXDevice::CheckActive() will request the
+    // configuration, and we'll activate the device once that finishes.
     RequestDeviceInfo([&](string response) {
         Log(ssprintf("Received device info.  Master version: %i, P%i", m_DeviceInfo.m_iFirmwareVersion, m_DeviceInfo.m_bP2+1));
         m_bGotInfo = true;
