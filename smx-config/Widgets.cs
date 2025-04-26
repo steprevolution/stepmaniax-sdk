@@ -362,6 +362,10 @@ namespace smx_config
         {
             base.OnApplyTemplate();
 
+            this.SelectionChanged += (s2, e2) => {
+                SaveToConfig();
+            };
+
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
                 LoadUIFromConfig(args);
             });
@@ -387,10 +391,8 @@ namespace smx_config
             }
         }
 
-        protected override void OnSelectionChanged(SelectionChangedEventArgs e)
+        private void SaveToConfig()
         {
-            base.OnSelectionChanged(e);
-
             if(UpdatingUI)
                 return;
 
@@ -401,6 +403,7 @@ namespace smx_config
                 return;
             }
             string preset = presets[selection];
+            Console.WriteLine("Applying preset: " + preset);
 
             foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
             {
