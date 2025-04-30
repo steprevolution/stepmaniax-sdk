@@ -8,6 +8,155 @@ using System.Windows.Interop;
 
 namespace smx_config
 {
+    public class SensitivityTab: Control
+    {
+        OnConfigChange onConfigChange;
+
+        private TextBlock ThresholdWarningText {
+            get { return GetTemplateChild("ThresholdWarningText") as TextBlock; }
+        }
+
+        private DockPanel ThresholdSliderContainer {
+            get { return GetTemplateChild("ThresholdSliderContainer") as DockPanel; }
+        }
+        private TextBlock LegacyHelp {
+            get { return GetTemplateChild("LegacyHelp") as TextBlock; }
+        }
+        private TextBlock NonLegacyHelp {
+            get { return GetTemplateChild("NonLegacyHelp") as TextBlock; }
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            // Recreate the threshold sliders if either of these settings change.
+            var AdvancedModeEnabledCheckbox = GetTemplateChild("AdvancedModeEnabledCheckbox") as CheckBox;
+            AdvancedModeEnabledCheckbox.Checked += delegate(object sender, RoutedEventArgs e) { CreateThresholdSliders(); };
+            AdvancedModeEnabledCheckbox.Unchecked += delegate(object sender, RoutedEventArgs e) { CreateThresholdSliders(); };
+
+            var LegacyViewCheckbox = GetTemplateChild("LegacyViewCheckbox") as CheckBox;
+            LegacyViewCheckbox.Checked += delegate(object sender, RoutedEventArgs e) { CreateThresholdSliders(); };
+            LegacyViewCheckbox.Unchecked += delegate(object sender, RoutedEventArgs e) { CreateThresholdSliders(); };
+
+            CreateThresholdSliders();
+
+            onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args)
+            {
+                LoadUIFromConfig(args);
+            });
+        }
+
+        private bool IsLegacyViewEnabled()
+        {
+            var LegacyViewCheckbox = GetTemplateChild("LegacyViewCheckbox") as CheckBox;
+            return LegacyViewCheckbox.IsChecked == true;
+        }
+
+        private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
+        {
+            SMX.SMXConfig firstConfig = ActivePad.GetFirstActivePadConfig();
+
+            // If a device has connected or disconnected, refresh the displayed threshold
+            // sliders.  Don't do this otherwise, or we'll do this when the sliders are
+            // dragged.
+            if(args.ConnectionsChanged)
+                CreateThresholdSliders();
+
+            bool ShowThresholdWarningText = false;
+            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                SMX.SMXConfig config = activePad.Item2;
+                for(int panelIdx = 0; panelIdx < 9; ++panelIdx)
+                {
+                    for(int sensor = 0; sensor < 4; ++sensor)
+                    {
+                        if(config.ShowThresholdWarning(panelIdx, sensor))
+                            ShowThresholdWarningText = true;
+                    }
+                }
+            }
+            ThresholdWarningText.Visibility = ShowThresholdWarningText ? Visibility.Visible : Visibility.Hidden;
+            LegacyHelp.Visibility = IsLegacyViewEnabled() ? Visibility.Visible : Visibility.Collapsed;
+            NonLegacyHelp.Visibility = IsLegacyViewEnabled() ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        bool IsThresholdSliderShown(string type)
+        {
+            bool AdvancedModeEnabled = Properties.Settings.Default.AdvancedMode;
+            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
+            bool[] enabledPanels = config.GetEnabledPanels();
+
+            // Check the list of sensors this slider controls.  If the list is empty, don't show it.
+            // For example, if the user adds all four sensors on the up panel to custom-sensors, the
+            // up button has nothing left to control, so we'll hide it.
+            //
+            // Don't do this for custom, inner-sensors or outer-sensors.  Those are always shown in
+            // advanced mode.
+            List<ThresholdSettings.PanelAndSensor> panelAndSensors = ThresholdSettings.GetControlledSensorsForSliderType(type, AdvancedModeEnabled, false);
+            if(type == "custom-sensors" || type == "inner-sensors" || type == "outer-sensors")
+            {
+                if(!AdvancedModeEnabled || !config.fsr())
+                    return false;
+            }
+            else
+            {
+                if(panelAndSensors.Count == 0)
+                    return false;
+            }
+
+            // Hide thresholds that only affect panels that are disabled, so we don't show
+            // corner panel sliders in advanced mode if the corner panels are disabled.  We
+            // don't handle this in GetControlledSensorsForSliderType, since we do want cardinal
+            // and corner to write thresholds to disabled panels, so they're in sync if they're
+            // turned back on.
+            switch(type)
+            {
+            case "up-left": return enabledPanels[0];
+            case "up": return enabledPanels[1];
+            case "up-right": return enabledPanels[2];
+            case "left": return enabledPanels[3];
+            case "center": return enabledPanels[4];
+            case "right": return enabledPanels[5];
+            case "down-left": return enabledPanels[6];
+            case "down": return enabledPanels[7];
+            case "down-right": return enabledPanels[8];
+
+            // Show cardinal and corner if at least one panel they affect is enabled.
+            case "cardinal": return enabledPanels[3] || enabledPanels[5] || enabledPanels[8];
+            case "corner": return enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8];
+            default: return true;
+            }
+        }
+
+        ThresholdSlider CreateThresholdSlider(string type)
+        {
+            ThresholdSlider slider = new ThresholdSlider();
+            slider.EnableLegacyView = IsLegacyViewEnabled();
+            slider.Type = type;
+            return slider;
+        }
+
+        void CreateThresholdSliders()
+        {
+            // Remove and recreate threshold sliders.
+            ThresholdSliderContainer.Children.Clear();
+            foreach(string sliderName in ThresholdSettings.thresholdSliderNames)
+            {
+                if(!IsThresholdSliderShown(sliderName))
+                    continue;
+
+                ThresholdSlider slider = CreateThresholdSlider(sliderName);
+                DockPanel.SetDock(slider, Dock.Top);
+                slider.Margin = new Thickness(0, 8, 0, 0);
+                ThresholdSliderContainer.Children.Add(slider);
+            }
+
+            ThresholdSettings.SyncSliderThresholds();
+        }
+
+    }
+
     public partial class MainWindow: Window
     {
         OnConfigChange onConfigChange;
@@ -69,79 +218,6 @@ namespace smx_config
             };
         }
 
-        bool IsThresholdSliderShown(string type)
-        {
-            bool AdvancedModeEnabled = Properties.Settings.Default.AdvancedMode;
-            SMX.SMXConfig config = ActivePad.GetFirstActivePadConfig();
-            bool[] enabledPanels = config.GetEnabledPanels();
-
-            // Check the list of sensors this slider controls.  If the list is empty, don't show it.
-            // For example, if the user adds all four sensors on the up panel to custom-sensors, the
-            // up button has nothing left to control, so we'll hide it.
-            //
-            // Don't do this for custom, inner-sensors or outer-sensors.  Those are always shown in
-            // advanced mode.
-            List<ThresholdSettings.PanelAndSensor> panelAndSensors = ThresholdSettings.GetControlledSensorsForSliderType(type, AdvancedModeEnabled, false);
-            if(type == "custom-sensors" || type == "inner-sensors" || type == "outer-sensors")
-            {
-                if(!AdvancedModeEnabled || !config.fsr())
-                    return false;
-            }
-            else
-            {
-                if(panelAndSensors.Count == 0)
-                    return false;
-            }
-
-            // Hide thresholds that only affect panels that are disabled, so we don't show
-            // corner panel sliders in advanced mode if the corner panels are disabled.  We
-            // don't handle this in GetControlledSensorsForSliderType, since we do want cardinal
-            // and corner to write thresholds to disabled panels, so they're in sync if they're
-            // turned back on.
-            switch(type)
-            {
-            case "up-left": return enabledPanels[0];
-            case "up": return enabledPanels[1];
-            case "up-right": return enabledPanels[2];
-            case "left": return enabledPanels[3];
-            case "center": return enabledPanels[4];
-            case "right": return enabledPanels[5];
-            case "down-left": return enabledPanels[6];
-            case "down": return enabledPanels[7];
-            case "down-right": return enabledPanels[8];
-
-            // Show cardinal and corner if at least one panel they affect is enabled.
-            case "cardinal": return enabledPanels[3] || enabledPanels[5] || enabledPanels[8];
-            case "corner": return enabledPanels[0] || enabledPanels[2] || enabledPanels[6] || enabledPanels[8];
-            default: return true;
-            }
-        }
-
-        ThresholdSlider CreateThresholdSlider(string type)
-        {
-            ThresholdSlider slider = new ThresholdSlider();
-            slider.Type = type;
-            return slider;
-        }
-
-        void CreateThresholdSliders()
-        {
-            // Remove and recreate threshold sliders.
-            ThresholdSliderContainer.Children.Clear();
-            foreach(string sliderName in ThresholdSettings.thresholdSliderNames)
-            {
-                if(!IsThresholdSliderShown(sliderName))
-                    continue;
-
-                ThresholdSlider slider = CreateThresholdSlider(sliderName);
-                DockPanel.SetDock(slider, Dock.Top);
-                slider.Margin = new Thickness(0, 8, 0, 0);
-                ThresholdSliderContainer.Children.Add(slider);
-            }
-
-            ThresholdSettings.SyncSliderThresholds();
-        }
-
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
@@ -156,8 +232,6 @@ namespace smx_config
             AutoLightsColor.StartedDragging += delegate () { showAutoLightsColor.Start(); };
             AutoLightsColor.StoppedDragging += delegate () { showAutoLightsColor.Stop(); };
             AutoLightsColor.StoppedDragging += delegate () { showAutoLightsColor.Stop(); };
-
-            CreateThresholdSliders();
 
             // This doesn't happen at the same time AutoLightsColor is used, since they're on different tabs.
             Diagnostics.SetShowAllLights += delegate (bool on)
@@ -236,8 +310,9 @@ namespace smx_config
 
         private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
         {
-            // Refresh whether LightsAnimation_SetAuto should be enabled.
             SMX.SMXConfig firstConfig = ActivePad.GetFirstActivePadConfig();
+
+            // Refresh whether LightsAnimation_SetAuto should be enabled.
             bool usePressedAnimationsEnabled = (firstConfig.configFlags & SMX.SMXConfigFlags.AutoLightingUsePressedAnimations) != 0;
             SMX.SMX.LightsAnimation_SetAuto(usePressedAnimationsEnabled);
 
@@ -276,28 +351,7 @@ namespace smx_config
             RefreshUploadPadText(args);
             RefreshSelectedColorPicker();
 
-            // If a device has connected or disconnected, refresh the displayed threshold
-            // sliders.  Don't do this otherwise, or we'll do this when the sliders are
-            // dragged.
-            if(args.ConnectionsChanged)
-                CreateThresholdSliders();
-
             // Show the threshold warning explanation if any panels are showing the threshold warning icon.
-            bool ShowThresholdWarningText = false;
-            foreach(Tuple<int, SMX.SMXConfig> activePad in ActivePad.ActivePads())
-            {
-                SMX.SMXConfig config = activePad.Item2;
-                for(int panelIdx = 0; panelIdx < 9; ++panelIdx)
-                {
-                    for(int sensor = 0; sensor < 4; ++sensor)
-                    {
-                        if(config.ShowThresholdWarning(panelIdx, sensor))
-                            ShowThresholdWarningText = true;
-                    }
-                }
-            }
-            ThresholdWarningText.Visibility = ShowThresholdWarningText ? Visibility.Visible : Visibility.Hidden;
-
             // If a second controller has connected and we're on Both, see if we need to prompt
             // to sync configs.  We only actually need to do this if a controller just connected.
             if(args.ConfigurationChanged)
@@ -488,11 +542,6 @@ namespace smx_config
             CurrentSMXDevice.singleton.FireConfigurationChanged(null);
         }
 
-        private void AdvancedModeEnabledCheckbox_Changed(object sender, RoutedEventArgs e)
-        {
-            CreateThresholdSliders();
-        }
-
         private void ExportSettings(object sender, RoutedEventArgs e)
         {
             // Save the current thresholds on the first available pad as a preset.
@@ -653,16 +702,6 @@ namespace smx_config
             }
 
             return IntPtr.Zero;
-        }
-
-        private void MainTab_Selected(object sender, RoutedEventArgs e)
-        {
-            if(Main.SelectedItem == SensitivityTab)
-            {
-                // Refresh the threshold sliders, in case the enabled panels were changed
-                // on the advanced tab.
-                CreateThresholdSliders();
-            }
         }
     }
 } 

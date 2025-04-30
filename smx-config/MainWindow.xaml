@@ -1,7 +1,7 @@
 <Window x:Class="smx_config.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:d="http://schemas.microsoft.com/expressSystem.Windows.Markup.XamlParseException: ''Failed to create a 'Checked' from the text 'AdvancedModeEnabledCheckbox_Changed'.' Line number '84' and line position '37'.'ion/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:clr="clr-namespace:System;assembly=mscorlib"
         xmlns:controls="clr-namespace:smx_config"
@@ -29,6 +29,84 @@ Use if the platform is too sensitive.</clr:String>
         <SolidColorBrush x:Key="DoubleSlider.MouseOver.Border" Color="#FF7Eb4EA"/>
         <SolidColorBrush x:Key="DoubleSlider.Pressed.Background" Color="#FFDAECFC"/>
         <SolidColorBrush x:Key="DoubleSlider.Pressed.Border" Color="#FF569DE5"/>
+
+        <Style TargetType="{x:Type controls:SensitivityTab}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type controls:SensitivityTab}">
+                        <DockPanel Margin="0,0,0,0" VerticalAlignment="Stretch">
+                            <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
+                                    TextAlignment="Center"
+                                    xml:space="preserve" FontSize="16">Custom sensitivity</TextBlock>
+                            <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,0,0,10" VerticalAlignment="Top"
+                                    xml:space="preserve"
+                                    TextAlignment="Center"
+    >Set the force required to trigger each arrow.</TextBlock>
+                            <ScrollViewer
+                                Height="350"
+                                HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                DockPanel.Dock="Top"
+                                >
+                                <DockPanel Margin="0,0,0,0" VerticalAlignment="Top" x:Name="ThresholdSliderContainer">
+                                    <!-- CreateThresholdSliders adds ThresholdSliders here.  The slider below is only
+                                        for the UI preview, and is removed on refresh. -->
+                                    <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-left" Margin="0,8,0,0" />
+                                </DockPanel>
+                            </ScrollViewer>
+                            <TextBlock x:Name="LegacyHelp" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,25,0,0" VerticalAlignment="Top"
+                                    xml:space="preserve"
+                                    TextAlignment="Center"
+    >Each slider sets the amount of weight necessary for
+    a panel to activate and deactivate.
+                                
+    A panel will activate when it reaches the right side of the
+    slider, and deactivate when it reaches the left side of the slider.</TextBlock>
+                            <TextBlock x:Name="NonLegacyHelp" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,25,0,0" VerticalAlignment="Top"
+                                    xml:space="preserve"
+                                    TextAlignment="Center"
+                                    Visibility="Collapsed"
+    >Each slider sets the amount of weight necessary for
+    a panel to activate and deactivate.
+                                
+    A panel will activate when above the selected amount of pressure.</TextBlock>
+                            <TextBlock x:Name="ThresholdWarningText" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,0" VerticalAlignment="Top"
+                                    xml:space="preserve"
+                                    TextAlignment="Center"
+                                    Foreground="#F00"
+    >Thresholds above 140 are recommended.  Higher thresholds allow the
+    panel to detect releases more quickly.
+                            </TextBlock>
+
+                            <DockPanel DockPanel.Dock="Bottom"
+                                        VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="0,0,5,0">
+                                <Label Content="Preset:" VerticalAlignment="Center" />
+                                <controls:PresetDropdown x:Name="CurrentPreset" Width="120" Height="25" SelectedIndex="0">
+                                    <ComboBoxItem Content="Low" />
+                                    <ComboBoxItem Content="Medium" />
+                                    <ComboBoxItem Content="High" />
+                                    <ComboBoxItem Content="Custom" />
+                                </controls:PresetDropdown>
+
+                                <controls:AdvancedThresholdViewCheckbox
+                                    x:Name="AdvancedModeEnabledCheckbox"
+                                    DockPanel.Dock="Right" Content="Advanced view"
+                                    VerticalAlignment="Center" HorizontalAlignment="Right"
+                                    IsChecked="{Binding Path=AdvancedModeEnabled, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
+                                />
+                                
+                                <controls:LegacyViewCheckbox
+                                    x:Name="LegacyViewCheckbox"
+                                    DockPanel.Dock="Right" Content="Legacy view"
+                                    Margin="0,0,25,0"
+                                    VerticalAlignment="Center" HorizontalAlignment="Right"
+                                    IsChecked="{Binding Path=LegacyViewEnabled, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
+                                />
+                            </DockPanel>
+                        </DockPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <Style TargetType="{x:Type controls:DoubleSliderThumb}">
             <Setter Property="Height" Value="18"/>
@@ -165,7 +243,15 @@ Use if the platform is too sensitive.</clr:String>
                                    Margin="-240,0,0,0"
                                    Visibility="Visible"
                             />
-                            <controls:DoubleSlider x:Name="Slider"
+                            <Slider x:Name="SingleSlider"
+                                Margin="50,5,0,0"
+                                VerticalAlignment="Top"
+                                Width="240"
+                                Focusable="False"
+                                IsEnabled="{Binding Path=SliderActive, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                            />
+                            <controls:DoubleSlider x:Name="DoubleSlider"
+                                Visibility="Hidden"
                                 Margin="50,5,0,0"
                                 MinimumDistance="10"
                                 LowerValue="20" UpperValue="35"
@@ -175,10 +261,14 @@ Use if the platform is too sensitive.</clr:String>
                                 Style="{DynamicResource DoubleSlider}"
                                 IsEnabled="{Binding Path=SliderActive, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                             />
-                            <Label Margin="360,0,0,0" x:Name="UpperValue" Content="0" Width="40" HorizontalContentAlignment="Center"
-                                VerticalAlignment="Top"
-                                Visibility="{Binding Path=SliderActive, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"
-                            />
+                            <!-- This wrapper ContentControl is here so we can show and hide this value
+                                 separately from the visibility binding on the label itself. -->
+                            <ContentControl x:Name="UpperValueVisibility">
+                                <Label Margin="360,0,0,0" x:Name="UpperValue" Content="0" Width="40" HorizontalContentAlignment="Center"
+                                    VerticalAlignment="Top"
+                                    Visibility="{Binding Path=SliderActive, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                />
+                            </ContentControl>
 
                             <!-- This is only shown for inner-sensors and outer-sensors.  It's always hidden and
                                  checked for other sliders. -->
@@ -828,8 +918,7 @@ Use if the platform is too sensitive.</clr:String>
                    HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="15" Margin="0 0 0 10" />
         </Grid>
 
-        <TabControl x:Name="Main" Margin="0,0,0,0" Visibility='Visible' HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                    SelectionChanged="MainTab_Selected">
+        <TabControl x:Name="Main" Margin="0,0,0,0" Visibility='Visible' HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
                     <StackPanel Margin="0,0,0,0" VerticalAlignment="Top" Grid.ColumnSpan="3">
@@ -934,64 +1023,9 @@ Use if the platform is too sensitive.</clr:String>
                 </Grid>
             </TabItem>
 
-            <TabItem x:Name="SensitivityTab" Header="Sensitivity">
+            <TabItem Header="Sensitivity">
                 <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.5,0.5">
-                    <DockPanel Margin="0,0,0,0" VerticalAlignment="Stretch">
-                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,10" VerticalAlignment="Top"
-                                   TextAlignment="Center"
-                                   xml:space="preserve" FontSize="16">Custom sensitivity</TextBlock>
-                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,0,0,10" VerticalAlignment="Top"
-                                   xml:space="preserve"
-                                   TextAlignment="Center"
->Set the force required to trigger each arrow.</TextBlock>
-                        <ScrollViewer
-                            Height="350"
-                            HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
-                            DockPanel.Dock="Top"
-                            >
-                            <DockPanel Margin="0,0,0,0" VerticalAlignment="Top" x:Name="ThresholdSliderContainer">
-                                <!-- CreateThresholdSliders adds ThresholdSliders here.  The slider below is only
-                                     for the UI preview, and is removed on refresh. -->
-                                <controls:ThresholdSlider DockPanel.Dock="Top" controls:ThresholdSlider.Type="up-left" Margin="0,8,0,0" />
-                            </DockPanel>
-                        </ScrollViewer>
-                        <TextBlock DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,25,0,0" VerticalAlignment="Top"
-                                   xml:space="preserve"
-                                   TextAlignment="Center"
->Each slider sets the amount of weight necessary for
-a panel to activate and deactivate.
-                            
-A panel will activate when it reaches the right side of the
-slider, and deactivate when it reaches the left side of the slider.</TextBlock>
-                        <TextBlock x:Name="ThresholdWarningText" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="0,15,0,0"
-                                   xml:space="preserve"
-                                   TextAlignment="Center"
-                                   Foreground="#F00"
->Low thresholds above 140 are recommended.  Higher thresholds allow the
-panel to detect releases more quickly.
-                        </TextBlock>
-
-
-                        <DockPanel DockPanel.Dock="Bottom"
-                                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Margin="0,0,5,0">
-                            <Label Content="Preset:" VerticalAlignment="Center" />
-                            <controls:PresetDropdown x:Name="CurrentPreset" Width="120" Height="25" SelectedIndex="0">
-                                <ComboBoxItem Content="Low" />
-                                <ComboBoxItem Content="Medium" />
-                                <ComboBoxItem Content="High" />
-                                <ComboBoxItem Content="Custom" />
-                            </controls:PresetDropdown>
-
-                            <controls:AdvancedThresholdViewCheckbox
-                                x:Name="AdvancedModeEnabledCheckbox"
-                                DockPanel.Dock="Right" Content="Advanced view"
-                                VerticalAlignment="Center" HorizontalAlignment="Right"
-                                IsChecked="{Binding Path=AdvancedModeEnabled, Mode=TwoWay, RelativeSource={RelativeSource Self}}"
-                                Checked="AdvancedModeEnabledCheckbox_Changed"
-                                Unchecked="AdvancedModeEnabledCheckbox_Changed"
-                            />
-                        </DockPanel>
-                    </DockPanel>
+                    <controls:SensitivityTab />
                 </Grid>
             </TabItem>
 

@@ -68,6 +68,68 @@ namespace smx_config
         }
     }
 
+    public class LegacyViewCheckbox: CheckBox
+    {
+        OnConfigChange onConfigChange;
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
+                LoadUIFromConfig(ActivePad.GetFirstActivePadConfig(args));
+            });
+        }
+
+        private void LoadUIFromConfig(SMX.SMXConfig config)
+        {
+            // If masterVersion is 0, there's no controller connected and GetFirstActivePadConfig
+            // returned a placeholder.  Don't refresh, so we don't clear AdvancedMode when disconnected.
+            if(config.masterVersion == 0)
+                return;
+
+            if(ShouldForceLegacyMode(config))
+                IsChecked = true;
+        }
+
+        // Return true if we should force legacy mode, because we're on a load cell pad
+        // or any threshold is more than one apart.
+        private bool ShouldForceLegacyMode(SMX.SMXConfig config)
+        {
+            // Load cell pads always use legacy mode.
+            if(!config.fsr())
+                return true;
+
+            bool AdvancedModeEnabled = Properties.Settings.Default.AdvancedMode;
+            foreach(string type in ThresholdSettings.thresholdSliderNames)
+            {
+                List<ThresholdSettings.PanelAndSensor> panelAndSensors = ThresholdSettings.GetControlledSensorsForSliderType(type, AdvancedModeEnabled, false);
+                foreach(ThresholdSettings.PanelAndSensor panelAndSensor in panelAndSensors)
+                {
+                    int lower = config.panelSettings[panelAndSensor.panel].fsrLowThreshold[panelAndSensor.sensor];
+                    int upper = config.panelSettings[panelAndSensor.panel].fsrHighThreshold[panelAndSensor.sensor];
+                    if(upper != lower + 1)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        protected override void OnClick()
+        {
+            bool newValue = IsChecked != true;
+            if(!newValue)
+            {
+                // When disabling legacy mode, force the thresholds one apart.  Do this before setting
+                // the new checkbox value, so refreshes that happen during this call don't re-enable it.
+                ThresholdSettings.ForceAllThresholdsOneApart();
+            }
+
+            IsChecked = newValue;
+        }
+    }
+
     // This implements the threshold slider widget for changing an upper/lower threshold pair.
     public class ThresholdSlider: Control
     {
@@ -87,7 +149,10 @@ namespace smx_config
 
         public bool ThresholdEnabled {
             get { return (bool) GetValue(ThresholdEnabledProperty); }
-            set { SetValue(ThresholdEnabledProperty, value); }
+            set {
+                SetValue(ThresholdEnabledProperty, false);
+                CurrentSMXDevice.singleton.FireConfigurationChanged(this);
+            }
         }
 
         // This is set to true if the slider is enabled and the low/high values are displayed.  We set this to
@@ -108,8 +173,21 @@ namespace smx_config
             set { SetValue(AdvancedModeEnabledProperty, value); }
         }
 
-        DoubleSlider slider;
+        // If false, we'll only show the double slider if the thresholds aren't one apart.  If
+        // true, we'll always show it.
+        private bool enableLegacyView = false;
+        public bool EnableLegacyView {
+            get { return enableLegacyView; }
+            set {
+                enableLegacyView = value;
+                RefreshSliderVisibility();
+            }
+        }
+
+        Slider singleSlider;
+        DoubleSlider doubleSlider;
         Label LowerLabel, UpperLabel;
+        ContentControl upperValueVisibility;
         Image ThresholdWarning;
         PlatformSensorDisplay SensorDisplay;
 
@@ -119,13 +197,16 @@ namespace smx_config
         {
             base.OnApplyTemplate();
 
-            slider = GetTemplateChild("Slider") as DoubleSlider;
+            singleSlider = GetTemplateChild("SingleSlider") as Slider;
+            doubleSlider = GetTemplateChild("DoubleSlider") as DoubleSlider;
             LowerLabel = GetTemplateChild("LowerValue") as Label;
             UpperLabel = GetTemplateChild("UpperValue") as Label;
+            upperValueVisibility = GetTemplateChild("UpperValueVisibility") as ContentControl;
             ThresholdWarning = GetTemplateChild("ThresholdWarning") as Image;
             SensorDisplay = GetTemplateChild("PlatformSensorDisplay") as PlatformSensorDisplay;
 
-            slider.ValueChanged += delegate(DoubleSlider slider) { SaveToConfig(); };
+            singleSlider.ValueChanged += delegate(object sender, RoutedPropertyChangedEventArgs<double> e) { SaveToConfig(); };
+            doubleSlider.ValueChanged += delegate(DoubleSlider doubleSlider) { SaveToConfig(); };
 
             // Show the edit button for the custom-sensors slider.
             Button EditCustomSensorsButton = GetTemplateChild("EditCustomSensorsButton") as Button;
@@ -159,23 +240,27 @@ namespace smx_config
             return ThresholdSettings.GetControlledSensorsForSliderType(Type, AdvancedModeEnabled, includeOverridden);
         }
 
-
         private void SetValueToConfig(ref SMX.SMXConfig config)
         {
+            double lowerValue = enableLegacyView? doubleSlider.LowerValue:singleSlider.Value;
+            double upperValue = enableLegacyView? doubleSlider.UpperValue:(singleSlider.Value + 1);
+
             List<ThresholdSettings.PanelAndSensor> panelAndSensors = GetControlledSensors(false);
             foreach(ThresholdSettings.PanelAndSensor panelAndSensor in panelAndSensors)
             {
                 if(!config.fsr())
                 {
-                    byte lower = (byte) slider.LowerValue;
-                    byte upper = (byte) slider.UpperValue;
+                    byte lower = (byte) lowerValue;
+                    byte upper = (byte) upperValue;
                     config.panelSettings[panelAndSensor.panel].loadCellLowThreshold = lower;
                     config.panelSettings[panelAndSensor.panel].loadCellHighThreshold = upper;
                 } else {
-                    byte lower = (byte) slider.LowerValue;
-                    byte upper = (byte) slider.UpperValue;
+                    byte lower = (byte) lowerValue;
+                    byte upper = (byte) upperValue;
                     config.panelSettings[panelAndSensor.panel].fsrLowThreshold[panelAndSensor.sensor] = lower;
                     config.panelSettings[panelAndSensor.panel].fsrHighThreshold[panelAndSensor.sensor] = upper;
+
+                    Console.WriteLine("Setting panel {0} sensor {1} to {2} {3}", panelAndSensor.panel, panelAndSensor.sensor, lower, upper);
                 }
             }
         }
@@ -216,6 +301,15 @@ namespace smx_config
             }
         }
 
+        private void RefreshSliderVisibility()
+        {
+            if(singleSlider == null)
+                return;
+
+            singleSlider.Visibility = enableLegacyView? Visibility.Hidden:Visibility.Visible;
+            doubleSlider.Visibility = enableLegacyView? Visibility.Visible:Visibility.Hidden;
+        }
+
         bool UpdatingUI = false;
         private void LoadUIFromConfig(SMX.SMXConfig config)
         {
@@ -223,19 +317,24 @@ namespace smx_config
             UpdatingUI = true;
 
             RefreshSliderActiveProperty();
+            RefreshSliderVisibility();
 
             // Set the range for the slider.
             if(config.fsr())
             {
                 // 16-bit FSR thresholds.
-                slider.Minimum = 5;
-                slider.Maximum = 250;
-                slider.MinimumDistance = 1;
+                singleSlider.Minimum = 5;
+                singleSlider.Maximum = 250;
+                doubleSlider.Minimum = 5;
+                doubleSlider.Maximum = 250;
+                doubleSlider.MinimumDistance = 1;
             } else {
                 // 8-bit load cell thresholds
-                slider.Minimum = 20;
-                slider.Maximum = 200;
-                slider.MinimumDistance = 10;
+                singleSlider.Minimum = 20;
+                singleSlider.Maximum = 200;
+                doubleSlider.Minimum = 20;
+                doubleSlider.Maximum = 200;
+                doubleSlider.MinimumDistance = 10;
             }
 
             int lower, upper;
@@ -250,11 +349,15 @@ namespace smx_config
             }
             else
             {
-                slider.LowerValue = lower;
-                slider.UpperValue = upper;
+                singleSlider.Value = lower;
+                doubleSlider.LowerValue = lower;
+                doubleSlider.UpperValue = upper;
                 LowerLabel.Content = lower.ToString();
                 UpperLabel.Content = upper.ToString();
             }
+
+            // Only show the upper value in the legacy view.
+            upperValueVisibility.Visibility = enableLegacyView? Visibility.Visible:Visibility.Hidden;
 
             List<ThresholdSettings.PanelAndSensor> controlledSensors = GetControlledSensors(false);
             bool ShowThresholdWarning = false;
@@ -451,14 +554,19 @@ namespace smx_config
             button.Click += delegate(object sender, RoutedEventArgs e) { Select(); };
 
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
-                foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
-                {
-                    SMX.SMXConfig config = activePad.Item2;
-                    string CurrentPreset = ConfigPresets.GetPreset(config);
-                    Selected = CurrentPreset == Type;
-                    break;
-                }
+                LoadUIFromConfig(args);
             });
+        }
+
+        private void LoadUIFromConfig(LoadFromConfigDelegateArgs args)
+        {
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                SMX.SMXConfig config = activePad.Item2;
+                string CurrentPreset = ConfigPresets.GetPreset(config);
+                Selected = CurrentPreset == Type;
+                break;
+            }
         }
 
         private void Select()
@@ -531,6 +639,8 @@ namespace smx_config
     // A button that selects which color is being set.
     public abstract class ColorButton: PanelSelectButton
     {
+        private OnConfigChange onConfigChange;
+
         // The color configured for this panel:
         public static readonly DependencyProperty PanelColorProperty = DependencyProperty.RegisterAttached("PanelColor",
             typeof(SolidColorBrush), typeof(ColorButton), new FrameworkPropertyMetadata(new SolidColorBrush()));
@@ -554,7 +664,6 @@ namespace smx_config
         {
             base.OnApplyTemplate();
 
-            OnConfigChange onConfigChange;
             onConfigChange = new OnConfigChange(this, delegate (LoadFromConfigDelegateArgs args) {
                 LoadUIFromConfig(args);
             });
@@ -854,6 +963,7 @@ namespace smx_config
     {
         ColorPickerSlider HueSlider;
         public delegate void Event();
+        private OnConfigChange onConfigChange;
 
         // The selected ColorButton.  This handles getting and setting the color to the
         // config.
@@ -893,7 +1003,6 @@ namespace smx_config
                 ticks.Add(i);
             HueSlider.Ticks = ticks;
 
-            OnConfigChange onConfigChange;
             onConfigChange = new OnConfigChange(this, delegate(LoadFromConfigDelegateArgs args) {
                 LoadUIFromConfig(args);
             });
@@ -1044,6 +1153,8 @@ namespace smx_config
 
                 SMX.SMX.SetConfig(pad, config);
             }
+
+            CurrentSMXDevice.singleton.FireConfigurationChanged(this);
         }
     };
 

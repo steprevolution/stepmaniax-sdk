@@ -17,6 +17,7 @@ namespace smx_config
     {
         public delegate void ValueChangedDelegate(DoubleSlider slider);
         public event ValueChangedDelegate ValueChanged;
+        private void FireValueChanged() { ValueChanged?.Invoke(this); }
 
         // The minimum value for either knob.
         public static readonly DependencyProperty MinimumProperty = DependencyProperty.Register("Minimum",
@@ -71,16 +72,9 @@ namespace smx_config
             return value;
         }
 
-        private static void SliderValueChangedCallback(DependencyObject target, DependencyPropertyChangedEventArgs args)
-        {
-            DoubleSlider slider = target as DoubleSlider;
-            if(slider.ValueChanged != null)
-                slider.ValueChanged.Invoke(slider);
-        }
-
         public static readonly DependencyProperty LowerValueProperty = DependencyProperty.Register("LowerValue",
             typeof(double), typeof(DoubleSlider),
-            new FrameworkPropertyMetadata(10.0, FrameworkPropertyMetadataOptions.AffectsArrange, SliderValueChangedCallback, LowerValueCoerceValueCallback));
+            new FrameworkPropertyMetadata(10.0, FrameworkPropertyMetadataOptions.AffectsArrange, null, LowerValueCoerceValueCallback));
 
         public double LowerValue {
             get { return (double) GetValue(LowerValueProperty); }
@@ -89,7 +83,7 @@ namespace smx_config
 
         public static readonly DependencyProperty UpperValueProperty = DependencyProperty.Register("UpperValue",
             typeof(double), typeof(DoubleSlider),
-            new FrameworkPropertyMetadata(15.0, FrameworkPropertyMetadataOptions.AffectsArrange, SliderValueChangedCallback, UpperValueCoerceValueCallback));
+            new FrameworkPropertyMetadata(15.0, FrameworkPropertyMetadataOptions.AffectsArrange, null, UpperValueCoerceValueCallback));
 
         public double UpperValue {
             get { return (double) GetValue(UpperValueProperty); }
@@ -147,6 +141,8 @@ namespace smx_config
                 LowerValue -= delta;
                 UpperValue -= delta;
             }
+
+            FireValueChanged();
         }
 
         private double GetValueToSize()
@@ -179,6 +175,7 @@ namespace smx_config
                 double NewValue = LowerValue + e.HorizontalChange * sizeToValue;
                 NewValue = Math.Min(NewValue, UpperValue - MinimumDistance);
                 LowerValue = NewValue;
+                FireValueChanged();
             };
 
             UpperThumb.DragDelta += delegate(object sender, DragDeltaEventArgs e)
@@ -187,6 +184,7 @@ namespace smx_config
                 double NewValue = UpperValue + e.HorizontalChange * sizeToValue;
                 NewValue = Math.Max(NewValue, LowerValue + MinimumDistance);
                 UpperValue = NewValue;
+                FireValueChanged();
             };
 
             Middle.DragDelta += delegate(object sender, DragDeltaEventArgs e)

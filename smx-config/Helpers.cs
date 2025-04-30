@@ -684,6 +684,24 @@ namespace smx_config
             CurrentSMXDevice.singleton.FireConfigurationChanged(null);
         }
 
+        // Set all high thresholds to one greater than the low threshold.  This is required
+        // for non-legacy mode.
+        public static void ForceAllThresholdsOneApart()
+        {
+            foreach(Tuple<int,SMX.SMXConfig> activePad in ActivePad.ActivePads())
+            {
+                SMX.SMXConfig config = activePad.Item2;
+                for(int panel = 0; panel < 8; ++panel)
+                {
+                    for(int sensor = 0; sensor < 4; ++sensor)
+                        config.panelSettings[panel].fsrHighThreshold[sensor] = (byte) (config.panelSettings[panel].fsrLowThreshold[sensor] + 1);
+                }
+                SMX.SMX.SetConfig(activePad.Item1, config);
+            }
+
+            CurrentSMXDevice.singleton.FireConfigurationChanged(null);
+        }
+
         public static bool IsAdvancedModeRequired()
         {
             return false;

@@ -168,8 +168,7 @@ namespace smx_config
     }
 
     // Call a delegate on configuration change.  Configuration changes are notified by calling
-    // FireConfigurationChanged.  Listeners won't receive notifications for changes that they
-    // fired themselves.
+    // FireConfigurationChanged.
     public class OnConfigChange
     {
         public delegate void LoadFromConfigDelegate(LoadFromConfigDelegateArgs args);
@@ -193,7 +192,7 @@ namespace smx_config
             set { _RefreshOnTestDataChange = value; }
         }
 
-        // Owner is the Control that we're calling.  This callback will be disable when the
+        // Owner is the Control that we're calling.  This callback will be disabled when the
         // control is unloaded, and we won't call it if it's the same control that fired
         // the change via FireConfigurationChanged.
         //
@@ -206,15 +205,23 @@ namespace smx_config
 
             Owner.Loaded += delegate(object sender, RoutedEventArgs e)
             {
-                if(CurrentSMXDevice.singleton != null)
-                    CurrentSMXDevice.singleton.ConfigurationChanged += ConfigurationChanged;
-                Refresh();
+                if(CurrentSMXDevice.singleton == null)
+                    return;
+                CurrentSMXDevice.singleton.ConfigurationChanged += ConfigurationChanged;
+
+                // When a control is loaded, run the callback with the current state
+                // as though a device was changed, so we'll refresh things like the
+                // sensitivity sliders.
+                LoadFromConfigDelegateArgs args = CurrentSMXDevice.singleton.GetState();
+                args.ConnectionsChanged = true;
+                Callback(args);
             };
 
             Owner.Unloaded += delegate(object sender, RoutedEventArgs e)
             {
-                if(CurrentSMXDevice.singleton != null)
-                    CurrentSMXDevice.singleton.ConfigurationChanged -= ConfigurationChanged;
+                if(CurrentSMXDevice.singleton == null)
+                    return;
+                CurrentSMXDevice.singleton.ConfigurationChanged -= ConfigurationChanged;
             };
         }
 
@@ -226,12 +233,6 @@ namespace smx_config
             {
                 Callback(args);
             }
-        }
-
-        private void Refresh()
-        {
-            if(CurrentSMXDevice.singleton != null)
-                Callback(CurrentSMXDevice.singleton.GetState());
         }
     };
 
