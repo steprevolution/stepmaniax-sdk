@@ -571,6 +571,7 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
     memset(output.iDIPSwitchPerPanel, 0, sizeof(output.iDIPSwitchPerPanel));
     memset(output.iBadJumper, 0, sizeof(output.iBadJumper));
     
+    int iMasterVersion = m_pConnection->GetDeviceInfo().m_iFirmwareVersion;
     for(int iPanel = 0; iPanel < 9; ++iPanel)
     {
         // Decode the response from this panel.
@@ -598,6 +599,14 @@ void SMX::SMXDevice::HandleSensorTestDataResponse(const string &sReadBuffer)
         output.iBadJumper[iPanel][1] = pad_data.bad_sensor_dip_1;
         output.iBadJumper[iPanel][2] = pad_data.bad_sensor_dip_2;
         output.iBadJumper[iPanel][3] = pad_data.bad_sensor_dip_3;
+
+        // Disable bad sensor flags for FSRs.  It's used for load cells, and
+        // activates spuriously with FSRs.
+        if(iMasterVersion >= 5)
+        {
+            for(int iSensor = 0; iSensor < 4; ++iSensor)
+                output.bBadSensorInput[iPanel][iSensor] = false;
+        }
 
         for(int iSensor = 0; iSensor < 4; ++iSensor)
             output.sensorLevel[iPanel][iSensor] = pad_data.sensors[iSensor];
