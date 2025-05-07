@@ -89,7 +89,7 @@ namespace PanelLightGraphic
 
         uint16_t offset = 0;
         uint8_t size = 0;
-        uint8_t data[240];
+        uint8_t data[240] = { };
     };
 #pragma pack(pop)
 
