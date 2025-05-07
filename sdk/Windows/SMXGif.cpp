@@ -142,9 +142,9 @@ public:
         while(1)
         {
             uint8_t blocksize = stream.ReadByte();
-            stream.skip(blocksize);
-            if(bytes_remaining == 0)
+            if(blocksize == 0)
                 break;
+            stream.skip(blocksize);
         }
     }
 
