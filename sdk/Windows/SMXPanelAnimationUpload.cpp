@@ -338,7 +338,7 @@ bool SMX_LightsUpload_PrepareUpload(int pad, SMX_LightsType type, const SMXPanel
     memset(&master_animation_data, 0xFF, sizeof(master_animation_data));
 
     // All animations of each type have the same timing for all panels, since
-    // they come from the same GIF, so just use the first frame to generate the
+    // they come from the same GIF, so just use the first panel to generate the
     // master data.
     if(!ProtocolHelpers::CreateMasterAnimationData(type, animations[0], master_animation_data, error))
         return false;
@@ -438,6 +438,12 @@ bool SMX_LightsUpload_PrepareUpload(int pad, SMX_LightsType type, const SMXPanel
         if(!added_any_packets)
             break;
     }
+
+    // As a safety in case any data wasn't written due to timing or communication errors,
+    // send the data twice.  The panels will ignore any data that they wrote the first
+    // time, since it won't change.  We only do this for the panel data, it isn't needed
+    // for the master data below.
+    pad_commands.insert(pad_commands.end(), pad_commands.begin(), pad_commands.end());
 
     // Add the master data.
     vector<PanelLightGraphic::upload_packet> masterPackets;
